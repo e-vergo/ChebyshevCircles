@@ -1,1 +1,4 @@
 import ChebyshevCircles.Basic
+import ChebyshevCircles.RootsOfUnity
+import ChebyshevCircles.PolynomialConstruction
+import ChebyshevCircles.MainTheorem

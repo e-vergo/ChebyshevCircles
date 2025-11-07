@@ -29,10 +29,10 @@ def rotate_complex_numbers(complex_list, angle):
     return rotated
 
 
-# function that takes in a list of complex polynomial coefficients, scales them by 2^n-2, where n is the degree of the polynomial, and returns a list containing the real components of the scaled coefficients
+# function that takes in a list of complex polynomial coefficients, scales them by 2^(n-1), where n is the degree of the polynomial, and returns a list containing the real components of the scaled coefficients
 def scale_polynomial_coefficients(complex_coeffs):
     n = len(complex_coeffs)
-    scale_factor = 2 ** (n - 2)
+    scale_factor = 2 ** (n - 1)
     scaled_real_parts = [z.real * scale_factor for z in complex_coeffs]
     return scaled_real_parts
 
