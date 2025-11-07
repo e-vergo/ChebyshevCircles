@@ -40,11 +40,11 @@ rotated_roots = [r * (np.cos(theta) + 1j * np.sin(theta)) for r in roots]
 real_parts = [r.real for r in rotated_roots]
 poly_coeffs = np.poly(real_parts)  # Monic polynomial
 
-# Scale by 2^(N-2)
-scale_factor = 2 ** (N-2)
+# Scale by 2^(N-1)
+scale_factor = 2 ** (N-1)
 scaled_coeffs = [c * scale_factor for c in poly_coeffs]
 
-print(f"Our polynomial (scaled by 2^{N-2} = {scale_factor}):")
+print(f"Our polynomial (scaled by 2^{N-1} = {scale_factor}):")
 print(f"Coefficients (x^5 to x^0): {[f'{c:.2f}' for c in scaled_coeffs]}")
 print()
 
