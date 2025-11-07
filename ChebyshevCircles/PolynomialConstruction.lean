@@ -182,12 +182,42 @@ theorem scaledPolynomial_constantTerm_varies (N : ℕ) :
           norm_num [Real.cos_pi_div_two, Real.cos_zero, Real.cos_pi]
           -- Left with transcendental inequalities that norm_num can't prove
           -- Need: ¬cos(2π/3) = 0 ∧ ¬cos(4π/3) = 0
-          -- Strategy: cos(x) = 0 iff x = π/2 + nπ for integer n
-          -- For 2π/3: would need 2π/3 = π/2 + nπ, so 4/3 = 1 + 2n, so n = 1/6 (not integer)
-          -- For 4π/3: would need 4π/3 = π/2 + nπ, so 8/3 = 1 + 2n, so n = 5/6 (not integer)
-          -- Proof would require cos_eq_zero_iff lemma or interval arithmetic
-          -- The argument above shows why it's true mathematically
-          sorry
+          -- Strategy: cos(x) = 0 iff x = (2k+1)π/2 for integer k
+          -- For 2π/3: would need 2π/3 = (2k+1)π/2, so 4 = 3(2k+1), so 6k = 1 (not integer)
+          -- For 4π/3: would need 4π/3 = (2k+1)π/2, so 8 = 3(2k+1), so 6k = 5 (not integer)
+          constructor
+          · -- ¬cos(2π/3) = 0
+            intro h
+            rw [Real.cos_eq_zero_iff] at h
+            obtain ⟨k, hk⟩ := h
+            have eq1 : (4 : ℝ) = 3 * (2 * (k : ℝ) + 1) := by
+              have h3 := congr_arg (· * 6) hk
+              field_simp at h3; norm_num at h3; exact h3
+            have eq2 : (1 : ℝ) = 6 * (k : ℝ) := by linarith
+            have eq3 : (k : ℝ) = 1 / 6 := by field_simp at eq2; linarith
+            have hk_pos : (0 : ℝ) < (k : ℝ) := by
+              linarith [show (0 : ℝ) < 1 / 6 by norm_num]
+            have hk_lt_one : (k : ℝ) < 1 := by
+              linarith [show (1 / 6 : ℝ) < 1 by norm_num]
+            have : (0 : ℤ) < k := by exact_mod_cast hk_pos
+            have : k < (1 : ℤ) := by exact_mod_cast hk_lt_one
+            omega
+          · -- ¬cos(4π/3) = 0
+            intro h
+            rw [Real.cos_eq_zero_iff] at h
+            obtain ⟨k, hk⟩ := h
+            have eq1 : (8 : ℝ) = 3 * (2 * (k : ℝ) + 1) := by
+              have h3 := congr_arg (· * 6) hk
+              field_simp at h3; norm_num at h3; exact h3
+            have eq2 : (5 : ℝ) = 6 * (k : ℝ) := by linarith
+            have eq3 : (k : ℝ) = 5 / 6 := by field_simp at eq2; linarith
+            have hk_pos : (0 : ℝ) < (k : ℝ) := by
+              linarith [show (0 : ℝ) < 5 / 6 by norm_num]
+            have hk_lt_one : (k : ℝ) < 1 := by
+              linarith [show (5 / 6 : ℝ) < 1 by norm_num]
+            have : (0 : ℤ) < k := by exact_mod_cast hk_pos
+            have : k < (1 : ℤ) := by exact_mod_cast hk_lt_one
+            omega
         | succ N'''' =>
           -- N ≥ 4: Use general argument
           -- For θ=π/2, the first root (k=0) is cos(π/2) = 0
@@ -222,12 +252,76 @@ theorem scaledPolynomial_constantTerm_varies (N : ℕ) :
               -- Need: ¬cos(2π/5)=0 ∧ ¬cos(4π/5)=0 ∧ ¬cos(6π/5)=0 ∧ ¬cos(8π/5)=0
               -- Since N=5 is odd, none of 2πk/5 for k=1,2,3,4 equals (2m+1)π/2 for integer m
               -- cos(x)=0 ⟺ x = (2m+1)π/2, so need: 2πk/5 ≠ (2m+1)π/2
-              -- This gives: 4k/5 ≠ 2m+1, or 4k ≠ 5(2m+1)
+              -- This gives: 4k ≠ 5(2m+1)
               -- For k∈{1,2,3,4}: 4k ∈ {4,8,12,16}, while 5(2m+1) ∈ {5,15,25,35,...}
               -- None match, so all cosines are non-zero
-              -- Proof would require cos_eq_zero_iff lemma or interval arithmetic
-              -- The argument above shows why it's true mathematically
-              sorry
+              constructor
+              · -- ¬cos(2π/5) = 0
+                intro h
+                rw [Real.cos_eq_zero_iff] at h
+                obtain ⟨k, hk⟩ := h
+                have eq1 : (4 : ℝ) = 5 * (2 * (k : ℝ) + 1) := by
+                  have h3 := congr_arg (· * 10) hk
+                  field_simp at h3; norm_num at h3; exact h3
+                have eq2 : (-1 : ℝ) = 10 * (k : ℝ) := by linarith
+                have eq3 : (k : ℝ) = -1 / 10 := by field_simp at eq2; linarith
+                have hk_gt_neg_one : (-1 : ℝ) < (k : ℝ) := by
+                  linarith [show (-1 : ℝ) < -1 / 10 by norm_num]
+                have hk_lt_zero : (k : ℝ) < 0 := by
+                  linarith [show (-1 / 10 : ℝ) < 0 by norm_num]
+                have : (-1 : ℤ) < k := by exact_mod_cast hk_gt_neg_one
+                have : k < (0 : ℤ) := by exact_mod_cast hk_lt_zero
+                omega
+              constructor
+              · -- ¬cos(4π/5) = 0
+                intro h
+                rw [Real.cos_eq_zero_iff] at h
+                obtain ⟨k, hk⟩ := h
+                have eq1 : (8 : ℝ) = 5 * (2 * (k : ℝ) + 1) := by
+                  have h3 := congr_arg (· * 10) hk
+                  field_simp at h3; norm_num at h3; exact h3
+                have eq2 : (3 : ℝ) = 10 * (k : ℝ) := by linarith
+                have eq3 : (k : ℝ) = 3 / 10 := by field_simp at eq2; linarith
+                have hk_pos : (0 : ℝ) < (k : ℝ) := by
+                  linarith [show (0 : ℝ) < 3 / 10 by norm_num]
+                have hk_lt_one : (k : ℝ) < 1 := by
+                  linarith [show (3 / 10 : ℝ) < 1 by norm_num]
+                have : (0 : ℤ) < k := by exact_mod_cast hk_pos
+                have : k < (1 : ℤ) := by exact_mod_cast hk_lt_one
+                omega
+              constructor
+              · -- ¬cos(6π/5) = 0
+                intro h
+                rw [Real.cos_eq_zero_iff] at h
+                obtain ⟨k, hk⟩ := h
+                have eq1 : (12 : ℝ) = 5 * (2 * (k : ℝ) + 1) := by
+                  have h3 := congr_arg (· * 10) hk
+                  field_simp at h3; norm_num at h3; exact h3
+                have eq2 : (7 : ℝ) = 10 * (k : ℝ) := by linarith
+                have eq3 : (k : ℝ) = 7 / 10 := by field_simp at eq2; linarith
+                have hk_pos : (0 : ℝ) < (k : ℝ) := by
+                  linarith [show (0 : ℝ) < 7 / 10 by norm_num]
+                have hk_lt_one : (k : ℝ) < 1 := by
+                  linarith [show (7 / 10 : ℝ) < 1 by norm_num]
+                have : (0 : ℤ) < k := by exact_mod_cast hk_pos
+                have : k < (1 : ℤ) := by exact_mod_cast hk_lt_one
+                omega
+              · -- ¬cos(8π/5) = 0
+                intro h
+                rw [Real.cos_eq_zero_iff] at h
+                obtain ⟨k, hk⟩ := h
+                have eq1 : (16 : ℝ) = 5 * (2 * (k : ℝ) + 1) := by
+                  have h3 := congr_arg (· * 10) hk
+                  field_simp at h3; norm_num at h3; exact h3
+                have eq2 : (11 : ℝ) = 10 * (k : ℝ) := by linarith
+                have eq3 : (k : ℝ) = 11 / 10 := by field_simp at eq2; linarith
+                have hk_gt_one : (1 : ℝ) < (k : ℝ) := by
+                  linarith [show (1 : ℝ) < 11 / 10 by norm_num]
+                have hk_lt_two : (k : ℝ) < 2 := by
+                  linarith [show (11 / 10 : ℝ) < 2 by norm_num]
+                have : (1 : ℤ) < k := by exact_mod_cast hk_gt_one
+                have : k < (2 : ℤ) := by exact_mod_cast hk_lt_two
+                omega
             | succ _ =>
               -- For N ≥ 6, the norm_num approach becomes too slow
               -- We use a general argument instead

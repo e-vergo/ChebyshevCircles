@@ -39,7 +39,7 @@ noncomputable section
 open Polynomial Real Complex
 open scoped Polynomial
 
-/-- **AXIOM 1**: For a canonical choice of θ (say θ=0), the scaled polynomial
+/-- **THEOREM (UNPROVEN)**: For a canonical choice of θ (say θ=0), the scaled polynomial
 coefficients match Chebyshev for k > 0.
 
 This is the key mathematical fact that needs to be established. It would require:
@@ -47,24 +47,33 @@ This is the key mathematical fact that needs to be established. It would require
 2. Using properties of roots of unity and symmetric polynomials, or
 3. Establishing the connection to the definition/characterization of Chebyshev polynomials
 
-This axiom, combined with Axiom 2 below, completes the proof of the main theorem.
--/
-axiom scaledPolynomial_matches_chebyshev_at_zero (N : ℕ) (k : ℕ) (hN : 0 < N) (hk : 0 < k) :
-    (scaledPolynomial N 0).coeff k = (Polynomial.Chebyshev.T ℝ N).coeff k
+This theorem, combined with the coefficient invariance theorem below, completes the proof
+of the main theorem.
 
-/-- **AXIOM 2**: Coefficients for k > 0 don't vary with θ.
+**DIFFICULTY**: Very Hard (~12-15 hours) - This is the deepest connection to Chebyshev theory.
+-/
+theorem scaledPolynomial_matches_chebyshev_at_zero (N : ℕ) (k : ℕ) (hN : 0 < N) (hk : 0 < k) :
+    (scaledPolynomial N 0).coeff k = (Polynomial.Chebyshev.T ℝ N).coeff k := by
+  sorry
+
+/-- **THEOREM (UNPROVEN)**: Coefficients for k > 0 don't vary with θ.
 
 This states that the non-constant coefficients of the scaled polynomial are independent
 of the rotation angle θ. This is a consequence of the rotation invariance of elementary
-symmetric polynomials, which would follow from `esymm_rotated_roots_invariant` below.
+symmetric polynomials, which follows from `esymm_rotated_roots_invariant` below.
 
-A proof outline exists in the `constant_term_only_varies` theorem below (line ~197),
-but it depends on helper lemmas that are marked as sorry.
+**NOTE**: This theorem has a full proof outline in `constant_term_only_varies` (line ~360),
+but it depends on `esymm_rotated_roots_invariant` which has ~190 LOC of work remaining.
+Once `esymm_rotated_roots_invariant` is complete, this theorem should be replaced by
+`constant_term_only_varies` throughout the file.
+
+**DIFFICULTY**: Medium (~2-3 hours) - Proof structure exists, needs esymm lemma completion.
 -/
-axiom constant_term_only_varies_axiom (N : ℕ) (θ₁ θ₂ : ℝ) (k : ℕ) (hN : 0 < N) (hk : 0 < k) :
-    (scaledPolynomial N θ₁).coeff k = (scaledPolynomial N θ₂).coeff k
+theorem constant_term_only_varies_axiom (N : ℕ) (θ₁ θ₂ : ℝ) (k : ℕ) (hN : 0 < N) (hk : 0 < k) :
+    (scaledPolynomial N θ₁).coeff k = (scaledPolynomial N θ₂).coeff k := by
+  sorry
 
-/-- **Main Theorem 1 (Polynomial Equality Form)**: ✓ PROVEN (modulo 2 axioms)
+/-- **Main Theorem 1 (Polynomial Equality Form)**: ✓ PROVEN (modulo 2 unproven theorems)
 
 The polynomial constructed from N rotated roots of unity projected onto the real axis,
 when appropriately scaled, equals the N-th Chebyshev polynomial of the first kind
@@ -79,13 +88,13 @@ on the rotation angle θ. All non-constant coefficients match exactly.
 2. Use Polynomial.ext to reduce to coefficient-wise equality
 3. Case split on coefficient index n:
    - n = 0: Trivial by definition of c
-   - n > 0: Use the two axioms:
-     * Axiom 1 (scaledPolynomial_matches_chebyshev_at_zero): Coefficients match at θ=0
-     * Axiom 2 (constant_term_only_varies_axiom): Coefficients invariant under rotation for k>0
+   - n > 0: Use two key theorems:
+     * scaledPolynomial_matches_chebyshev_at_zero: Coefficients match at θ=0
+     * constant_term_only_varies_axiom: Coefficients invariant under rotation for k>0
 
 **Dependencies:**
-- Axiom 1: scaledPolynomial_matches_chebyshev_at_zero (requires deep mathematical work)
-- Axiom 2: constant_term_only_varies_axiom (proof outline exists below, needs helper lemmas)
+- scaledPolynomial_matches_chebyshev_at_zero (unproven - requires deep Chebyshev theory)
+- constant_term_only_varies_axiom (unproven - needs esymm_rotated_roots_invariant completion)
 -/
 theorem rotated_roots_yield_chebyshev (N : ℕ) (θ : ℝ) (hN : 0 < N) :
     ∃ (c : ℝ), scaledPolynomial N θ = Polynomial.Chebyshev.T ℝ N + C c := by
@@ -129,7 +138,7 @@ With the correct scaling factor of 2^(N-1), all non-constant coefficients match 
 4. Conclude: (scaledPolynomial N θ).coeff k = (T_N).coeff k
 -/
 theorem rotated_roots_coeffs_match_chebyshev (N : ℕ) (θ : ℝ) (k : ℕ)
-    (hN : 0 < N) (hk : 0 < k) (hk' : k ≤ N) :
+    (hN : 0 < N) (hk : 0 < k) :
     (scaledPolynomial N θ).coeff k = (Polynomial.Chebyshev.T ℝ N).coeff k := by
   -- This follows directly from theorem 1
   -- From rotated_roots_yield_chebyshev, we get:
@@ -229,24 +238,128 @@ lemma list_foldr_eq_multiset_prod (l : List ℝ) :
     simp only [Multiset.map_cons, Multiset.prod_cons]
     rw [ih]
 
+/-- **Phase A Helper**: For 0 < m < N, the sum ∑_{k=0}^{N-1} cos(m(θ + 2πk/N)) = 0.
+    This is the key to showing power sums of cosines are independent of θ. -/
+lemma sum_cos_multiple_rotated_roots (N : ℕ) (m : ℕ) (θ : ℝ)
+    (hN : 0 < N) (hm : 0 < m) (hm' : m < N) :
+    ∑ k ∈ Finset.range N, Real.cos (m * (θ + 2 * π * k / N)) = 0 := by
+  -- Strategy: Convert cos to Re(e^(ix)), factor out e^(imθ), use geometric sum
+  -- Step 1: cos(x) = Re(e^(ix))
+  conv_lhs =>
+    arg 2
+    ext k
+    rw [← Complex.exp_ofReal_mul_I_re (m * (θ + 2 * π * k / N))]
+  -- Step 2: Sum of Re = Re of sum
+  rw [← Complex.re_sum]
+  simp only [Complex.ofReal_mul, Complex.ofReal_add, Complex.ofReal_div, Complex.ofReal_natCast]
+  -- Step 3: Define primitive root ζ = e^(2πi/N) early
+  have hN' : N ≠ 0 := Nat.pos_iff_ne_zero.mp hN
+  let ζ := Complex.exp (2 * π * I / N)
+  have hζ : IsPrimitiveRoot ζ N := Complex.isPrimitiveRoot_exp N hN'
+  -- Step 4: Show sum = Re(e^(imθ) · ∑ ζ^(mk)) = 0
+  suffices h_sum_zero : ∑ k ∈ Finset.range N, cexp (↑m * (↑2 * ↑π * ↑k / ↑N) * I) = 0 by
+    sorry  -- Factor out e^(imθ) and use h_sum_zero
+  -- Step 5: Prove ∑ ζ^(mk) = 0 using geometric sum
+  calc ∑ k ∈ Finset.range N, cexp (↑m * (↑2 * ↑π * ↑k / ↑N) * I)
+      = ∑ k ∈ Finset.range N, ζ ^ (m * k) := by
+        congr 1 with k
+        simp only [ζ]
+        rw [← Complex.exp_nat_mul]
+        congr 1
+        field_simp
+        sorry  -- ~3 LOC: norm_cast; ring
+    _ = ∑ k ∈ Finset.range N, (ζ ^ m) ^ k := by
+        congr 1 with k
+        rw [← pow_mul]
+    _ = 0 := by
+        -- ζ^m ≠ 1 (since 0 < m < N and ζ is primitive N-th root)
+        have h_ne_one : ζ ^ m ≠ 1 := by
+          intro h_eq
+          have h_div : N ∣ m := by
+            have := hζ.pow_eq_one_iff_dvd m
+            exact this.mp h_eq
+          -- N | m and m < N contradicts each other
+          have : N ≤ m := Nat.le_of_dvd (by omega) h_div
+          omega
+        -- The key fact: ζ^m is a primitive (N / gcd(N,m))-th root
+        -- Since m < N, we have N / gcd(N,m) ≥ 2, so can use geom_sum_eq_zero
+        sorry
+
+/-- **Phase B Helper**: Power sum of cosines is θ-invariant for 0 < j < N.
+    The j-th power sum ∑_{k=0}^{N-1} cos(θ + 2πk/N)^j is independent of θ. -/
+lemma powerSumCos_invariant (N : ℕ) (j : ℕ) (θ₁ θ₂ : ℝ)
+    (hN : 0 < N) (hj : 0 < j) (hj' : j < N) :
+    ∑ k ∈ Finset.range N, (Real.cos (θ₁ + 2 * π * k / N)) ^ j =
+    ∑ k ∈ Finset.range N, (Real.cos (θ₂ + 2 * π * k / N)) ^ j := by
+  -- Strategy: Expand cos^j using binomial theorem with cos = (e^(ix) + e^(-ix))/2
+  -- After expansion, each term becomes a multiple of e^(i·freq·x) for various frequencies
+  -- Apply linearity of sum and use sum_cos_multiple_rotated_roots for each frequency
+  -- The only surviving terms are when frequency = 0, which happens when j is even
+  -- But crucially, ALL terms are θ-independent!
+  sorry  -- PARTIAL: ~70 LOC needed for binomial expansion and freq analysis
+
+/-- **Phase C Helper**: Connection between Multiset.esymm and power sums.
+    This adapts Newton's identity from MvPolynomial to the Multiset context.
+
+    Newton's identity shows that e_m can be expressed in terms of e_0,...,e_{m-1} and p_1,...,p_m,
+    where p_j = ∑ x^j for x in the multiset. -/
+lemma multiset_esymm_from_psum (s : Multiset ℝ) (m : ℕ) (hm : 0 < m) (hm' : m < s.card) :
+    ∃ (c : ℝ), m * c * s.esymm m =
+      (Finset.range m).sum (fun i =>
+        s.esymm i * (s.map (fun x => x ^ (m - i))).sum) := by
+  -- Strategy: Use Finset.esymm_map_val and connect to MvPolynomial.psum_eq_mul_esymm_sub_sum
+  -- Newton's identity: k·e_k = (-1)^(k+1) ∑_{i+j=k, i<k} (-1)^i e_i p_j
+  -- This gives e_k recursively in terms of e_0, ..., e_{k-1} and p_1, ..., p_k
+  sorry  -- PARTIAL: ~50 LOC for Multiset ↔ MvPolynomial bridge
+
 /-- Elementary symmetric polynomial invariance under rotation.
     The m-th elementary symmetric polynomial in the roots cos(θ + 2πk/N)
     is independent of θ when 0 < m < N.
 
-    NOTE: This is a key lemma needed for the main theorem. The actual statement
-    should relate the elementary symmetric polynomials at different θ values,
-    but the proper formalization requires Mathlib's multiset esymm machinery. -/
+    **PROOF STRATEGY (4-phase approach):**
+    - Phase A (sum_cos_multiple_rotated_roots): ∑ cos(m(θ+2πk/N)) = 0 for 0<m<N
+    - Phase B (powerSumCos_invariant): Power sums are θ-invariant
+    - Phase C (multiset_esymm_from_psum): Newton's identity connects esymm to power sums
+    - Phase D (strong induction): Combine phases to show esymm_m is θ-invariant
+-/
 lemma esymm_rotated_roots_invariant (N : ℕ) (m : ℕ) (θ₁ θ₂ : ℝ)
-    (_hN : 0 < N) (_hm : 0 < m) (_hm' : m < N) :
+    (hN : 0 < N) (hm : 0 < m) (hm' : m < N) :
     let l1 := (realProjectionsList N θ₁ : Multiset ℝ)
     let l2 := (realProjectionsList N θ₂ : Multiset ℝ)
     l1.esymm m = l2.esymm m := by
-  -- This is a placeholder for the key mathematical fact:
-  -- The elementary symmetric polynomials of {cos(θ + 2πk/N) | k < N}
-  -- are independent of θ when 0 < esymm_degree < N
-  -- The proof would use the fact that these roots come from rotation on the unit circle
-  -- and symmetric functions are preserved under such rotations (except the product of all roots)
-  sorry
+  -- PHASE D: Strong induction on m ∈ (0, N)
+  -- Base case: m = 1, e_1 = ∑ roots = 0 (by sum_cos_roots_of_unity)
+  -- Inductive step: Assume e_k independent of θ for all k < m
+  --   By Newton's identity (Phase C): m·e_m = f(e_1,...,e_{m-1}, p_1,...,p_m)
+  --   By IH: e_1,...,e_{m-1} are θ-independent
+  --   By Phase B: p_1,...,p_m are θ-independent
+  --   Therefore: e_m is θ-independent
+
+  intro l1 l2
+  -- Use strong induction
+  induction m using Nat.strong_induction_on with
+  | h k IH =>
+    cases k with
+    | zero =>
+      -- m = 0 contradicts hm : 0 < m
+      omega
+    | succ k' =>
+      cases k' with
+      | zero =>
+        -- Base case: m = 1
+        -- e_1 = ∑ cos(θ + 2πi/N) = 0 by sum_cos_roots_of_unity
+        -- Need to connect Multiset.esymm 1 to sum
+        sorry  -- ~15 LOC to apply sum_cos_roots_of_unity and Multiset.esymm_one
+      | succ k'' =>
+        -- Inductive case: m = k'' + 2 ≥ 2
+        -- Apply Newton's identity via Phase C helper
+        have h_psum := multiset_esymm_from_psum l1 (k'' + 2) (by omega) (by
+          simp only [l1]
+          rw [Multiset.coe_card, card_realProjectionsList]
+          have : k'' + 2 = k'' + 1 + 1 := by omega
+          rw [this]
+          exact hm')
+        sorry  -- ~25 LOC to combine IH, Phase B, Phase C
 
 /-- **Theorem**: The constant term is the only coefficient that varies with θ.
     All non-constant polynomial coefficients are independent of the rotation angle. -/

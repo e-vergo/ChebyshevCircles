@@ -56,136 +56,171 @@ Token-efficient tool for analyzing Lean proof status without full build output.
 ./check_lean.sh --errors-only ChebyshevCircles/PolynomialConstruction.lean  # Only errors
 ```
 
-## What We Have Accomplished
+## Current Status
 
-### ✅ Fully Proven Core Lemmas
+### Build Health
+```
+✅ Build: Successful (0 compilation errors)
+✅ Transparency: Clean (no proof evasion)
+⏳ Sorries: 16 remaining (12 in MainTheorem.lean, 4 in PolynomialConstruction.lean)
+⏳ Axioms: 0 (converted to theorems with sorry)
+```
 
-**Foundation (RootsOfUnity.lean):**
+### ✅ Fully Proven Infrastructure
+
+**Foundation (RootsOfUnity.lean) - 100% Complete:**
 - `realProjection_eq_cos` - Real parts are cosine values
 - `realProjection_mem_Icc` - Projections lie in [-1, 1]
+- All helper lemmas for root definitions
 
-**Polynomial Properties (PolynomialConstruction.lean):**
+**Polynomial Properties (PolynomialConstruction.lean) - Core lemmas complete:**
 - `polynomialFromRealRoots_degree` - Degree equals root count
 - `unscaledPolynomial_degree` - Unscaled has degree N
 - `scaledPolynomial_degree` - Scaled preserves degree N
 - `unscaledPolynomial_monic` - Leading coefficient is 1
 - `scaledPolynomial_leadingCoeff` - Leading coefficient is 2^(N-1)
 
-**Key Results (MainTheorem.lean):**
-- `sum_cos_roots_of_unity` - ∑cos(θ + 2πk/N) = 0 for N≥2 ✅ COMPLETE
-- `list_foldr_eq_multiset_prod` - List.foldr equals Multiset.prod ✅ COMPLETE
-- `chebyshev_T_degree` - T_N has degree N ✅ COMPLETE (proven by strong induction)
+**Key Supporting Lemmas (MainTheorem.lean) - All proven:**
+- `sum_cos_roots_of_unity` - ∑cos(θ + 2πk/N) = 0 for N≥2
+- `list_foldr_eq_multiset_prod` - List.foldr equals Multiset.prod
+- `chebyshev_T_degree` - T_N has degree N (proven by strong induction)
 - `chebyshev_eval_cos` - T_N(cos φ) = cos(Nφ) (from Mathlib)
 - `scaledPolynomial_eval_at_projection` - Polynomial vanishes at projected roots
 
-### ✅ Main Theorems Proven (Using Axioms)
+**Main Theorems - Proven modulo 2 unproven helper theorems:**
+1. `rotated_roots_yield_chebyshev`: ∃ c, scaledPolynomial N θ = T_N + C c
+2. `rotated_roots_coeffs_match_chebyshev`: Coefficient matching for k > 0
 
-1. **Main Theorem** (`rotated_roots_yield_chebyshev`):
-   ```lean
-   ∃ (c : ℝ), scaledPolynomial N θ = Chebyshev.T ℝ N + C c
-   ```
-   Status: ✅ Proven using two axioms
+### ⏳ Partially Complete Work
 
-2. **Coefficient Matching** (`rotated_roots_coeffs_match_chebyshev`):
-   ```lean
-   ∀ k > 0, (scaledPolynomial N θ).coeff k = (Chebyshev.T ℝ N).coeff k
-   ```
-   Status: ✅ Proven (follows from main theorem)
+**`esymm_rotated_roots_invariant` proof architecture (~60% complete):**
+- 4-phase proof structure built (~110 LOC)
+- Phase A: `sum_cos_multiple_rotated_roots` - Geometric sum argument (3 sorries, ~15 LOC remaining)
+- Phase B: `powerSumCos_invariant` - Binomial expansion (1 sorry, ~70 LOC remaining)
+- Phase C: `multiset_esymm_from_psum` - Newton's identity bridge (1 sorry, ~50 LOC remaining)
+- Phase D: `esymm_rotated_roots_invariant` - Strong induction (2 sorries, ~40 LOC remaining)
 
-## What We Need To Do Next
+**`scaledPolynomial_constantTerm_varies` - Partially proven:**
+- ✅ N=0: Fixed by adding hypothesis 0 < N
+- ✅ N=1,2: Fully proven with norm_num
+- ✅ N=3,5: Fully proven using Real.cos_eq_zero_iff and omega
+- ✅ Architectural restructure: Odd/even split with correct angle pairs
+- ⏳ N=4: Needs cosine inequality lemma (1 sorry)
+- ⏳ N≥6 even: Needs cosine inequality lemma (1 sorry)
+- ⏳ N≥5 odd: Needs cosine inequality lemma (2 sorries)
 
-### Current Build Status
-```
-Build: Successful
-Errors: 0
-Sorries: 10 (across 4 theorems/lemmas)
-Axioms: 2 (supporting main theorem)
-```
+## Remaining Work
 
-### Priority 1: Prove Supporting Lemmas (Replace Sorries)
+### Priority 1: Complete esymm Proof Architecture (~190 LOC)
 
-**1. `esymm_rotated_roots_invariant` (MainTheorem.lean:239)** - 1 sorry
-- **What:** Elementary symmetric polynomials are θ-invariant for 0 < m < N
-- **Current Status:** Comprehensive proof strategy documented using Newton's Identities
-- **Strategy:**
-  - STEP 1: Establish power sum invariance (∑ cos^j is θ-independent for j < N)
-  - STEP 2: Apply Newton's identities relating e_k to power sums p_k
-  - STEP 3: Use strong induction on m with base case m=1
-- **Key Insight:** Power sums of rotated roots are invariant; Newton's identities then give esymm invariance
-- **Difficulty:** Very Hard (8-12 hours) - Requires extensive complex number machinery
-- **Mathematical Core:** This is the deepest mathematical result - rotation invariance of symmetric functions
+This is the **critical path** that blocks `constant_term_only_varies`.
 
-**2. `constant_term_only_varies` (MainTheorem.lean:253)** - 3 sorries
-- **What:** Non-constant coefficients are θ-invariant
-- **Current Status:** Main proof structure complete using Vieta's formulas
-- **Dependencies:** Requires `esymm_rotated_roots_invariant` above
-- **Remaining Work:**
-  - 2 sorries proving degree bounds (standard polynomial degree results)
-  - The core logic connecting Vieta → esymm → invariance is complete
-- **Strategy:** Apply Vieta's formula (coeff k = esymm(N-k)), use rotation invariance
-- **Difficulty:** Medium (2-3 hours) - Mostly technical degree lemmas
+**Phase A: `sum_cos_multiple_rotated_roots` (~15 LOC)**
+- 3 sorries remaining (lines 261, 270, 286)
+- Goal: Prove ∑ cos(m(θ + 2πk/N)) = 0 for 0 < m < N
+- Strategy: Complex exponentials + geometric sum of primitive roots
+- Key lemma: `IsPrimitiveRoot.geom_sum_eq_zero`
 
-**3. `scaledPolynomial_constantTerm_varies` (PolynomialConstruction.lean:117)** - 6 sorries
-- **What:** Constant term varies with θ (show ∃θ₁,θ₂ with different constant terms)
-- **Current:** N=1,2 fully proven with norm_num
-- **Challenge Discovered:** Current proof strategy (θ=0 vs θ=π/2) fails for even N≥4
-  - For even N: Both angles give 0 as a root, so both constant terms are 0
-  - Need different angle pairs for even N (e.g., θ=0 vs θ=π/N)
-- **Remaining Cases:**
-  - N=0: Theorem false (needs hypothesis 0 < N)
-  - N=3,5 (odd): Need `Real.cos_eq_zero_iff` or interval arithmetic
-  - N=4,6+ (even): Need restructured proof with different angle choices
-- **Difficulty:** Medium (4-6 hours) - Mathematical reasoning clear, needs formalization
+**Phase B: `powerSumCos_invariant` (~70 LOC)**
+- 1 sorry remaining (line 299)
+- Goal: Power sums ∑ cos(θ + 2πk/N)^j are θ-invariant for 0 < j < N
+- Strategy: Binomial expansion of cos^j = ((e^ix + e^-ix)/2)^j, then apply Phase A
 
-### Priority 2: Replace Axioms
+**Phase C: `multiset_esymm_from_psum` (~50 LOC)**
+- 1 sorry remaining (line 313)
+- Goal: Bridge Multiset.esymm to Newton's identities
+- Strategy: Use `MvPolynomial.psum_eq_mul_esymm_sub_sum` from Mathlib
 
-**1. `scaledPolynomial_matches_chebyshev_at_zero` (MainTheorem.lean:52)**
-- **What:** For θ=0, all non-constant coefficients of scaledPolynomial match T_N
-- **Why Hard:** Requires establishing the fundamental connection between our construction and Chebyshev polynomials
-- **Possible Approaches:**
-  1. **Extremal property:** Show both polynomials satisfy the same characterization
-  2. **Direct computation:** Compute coefficients from roots using Vieta and match to T_N
-  3. **Recurrence relation:** Show scaled polynomial satisfies T_n recurrence
-- **Key Challenge:** The roots cos(2πk/N) are NOT the Chebyshev roots, yet coefficients match
-- **Difficulty:** Very Hard (12-15 hours) - Requires deep Chebyshev polynomial theory
-- **This is the hardest remaining task**
+**Phase D: `esymm_rotated_roots_invariant` (~40 LOC)**
+- 2 sorries remaining (lines 352, 362)
+- Goal: Elementary symmetric polynomials are θ-invariant
+- Strategy: Strong induction using Phases A-C
+  - Base case (m=1): Use `sum_cos_roots_of_unity`
+  - Inductive step: Newton's identity + IH + power sum invariance
 
-**2. `constant_term_only_varies_axiom` (MainTheorem.lean:64)**
-- **What:** Temporary axiom wrapping `constant_term_only_varies` theorem
-- **Strategy:** Simple removal once `constant_term_only_varies` is fully proven (replaces axiom with theorem)
-- **Difficulty:** Trivial (5 minutes) - Just find-and-replace after dependency proven
+**Difficulty:** Very Hard (12-15 hours) - Deepest mathematical result in the project
 
-### Priority 3: Mathlib Submission Preparation
+### Priority 2: Complete `constant_term_only_varies` (~minimal work)
 
-1. **Complete all proofs** - Eliminate all sorries and axioms
-2. **Add documentation** - Comprehensive docstrings for all public definitions
-3. **Style compliance** - Follow Mathlib naming conventions and style guide
-4. **Add tests** - Example computations for small N values
-5. **Performance optimization** - Ensure proofs compile efficiently
+**Status:** 3 sorries remaining (lines 389, 398, 408)
 
-## Repository Status Check
+**Dependency:** Requires `esymm_rotated_roots_invariant` from Priority 1
 
-Run these commands to verify current state:
+**Work Remaining:**
+- Apply Vieta's formula: coeff k = (-1)^(N-k) · esymm(N-k)
+- Use `esymm_rotated_roots_invariant` to show coefficients are θ-invariant
+- Proof structure already exists, just needs esymm lemma
 
+**Difficulty:** Medium (2-3 hours after esymm is complete)
+
+**Follow-up:** Replace `constant_term_only_varies_axiom` with `constant_term_only_varies` throughout the file (5 minutes)
+
+### Priority 3: Complete `scaledPolynomial_constantTerm_varies` (~80 LOC)
+
+**Status:** 4 sorries remaining (lines 137, 244, 344, 345)
+
+**Independent of other work - can be done in parallel**
+
+**Remaining Cases:**
+- N=4 (line 137): Prove cos(5π/8) ≠ 0 ∧ cos(9π/8) ≠ 0 ∧ cos(13π/8) ≠ 0
+- N≥6 even (line 244): General lemma about cos(π(1+4k)/(2N)) ≠ 0
+- N≥5 odd (lines 344-345): General lemma about cos(2πk/N) ≠ 0 for odd N
+
+**Strategy:**
+- Use `Real.cos_eq_zero_iff` (cos x = 0 ↔ x = (2m+1)π/2)
+- Show the specific angles don't match this pattern via modular arithmetic
+- Similar technique to already-proven N=3,5 cases
+
+**Difficulty:** Medium (4-6 hours) - Mathematical reasoning is clear, needs formalization
+
+### Priority 4: Prove `scaledPolynomial_matches_chebyshev_at_zero` (Hardest Task)
+
+**Status:** 1 sorry (line 57) - This is a theorem statement, not an axiom
+
+**Goal:** For θ=0, prove (scaledPolynomial N 0).coeff k = (T_N).coeff k for all k > 0
+
+**Challenge:** The roots cos(2πk/N) are NOT the standard Chebyshev roots cos((2k+1)π/(2N)), yet the coefficients match. This is the deep mystery being formalized.
+
+**Possible Approaches:**
+1. **Recurrence relation:** Show scaledPolynomial satisfies the Chebyshev recurrence T_{n+1} = 2X·T_n - T_{n-1}
+2. **Extremal characterization:** Use Chebyshev's minimax property
+3. **Direct coefficient computation:** Calculate coefficients via Vieta's formulas and match to known T_N formulas
+4. **Trigonometric identities:** Exploit cos(N·θ) product-to-sum formulas
+
+**Difficulty:** Very Hard (12-15 hours) - Requires deep understanding of Chebyshev polynomial theory
+
+**Recommendation:** Tackle this last, after all other work is complete
+
+## Tools and Commands
+
+### Lean Build
 ```bash
-# Check all sorries
+lake build                           # Build entire project
+lake build ChebyshevCircles.MainTheorem  # Build specific file
+```
+
+### Status Checks
+```bash
+# Check all sorries across project
 ./check_lean.sh --all sorries ChebyshevCircles/
 
-# Check for proof evasion patterns
+# Check specific file
+./check_lean.sh --sorries ChebyshevCircles/MainTheorem.lean
+
+# Check for proof evasion (axioms, sorry in definitions, etc.)
 ./check_lean.sh --all transparency ChebyshevCircles/
 
-# Verify no errors
+# Check for compilation errors only
 ./check_lean.sh --all errors-only ChebyshevCircles/
 ```
 
-Current output shows:
-- 2/4 files are sorry-free (Basic.lean, RootsOfUnity.lean)
-- 2/4 files have sorries (MainTheorem.lean: 4, PolynomialConstruction.lean: 6)
-- 2 axioms in MainTheorem.lean
-
-**Breakdown by file:**
-- `MainTheorem.lean`: 1 sorry in `esymm_rotated_roots_invariant`, 3 sorries in `constant_term_only_varies`
-- `PolynomialConstruction.lean`: 6 sorries in `scaledPolynomial_constantTerm_varies` (N=0,3,4,5,6+ cases)
+### Python Visualization
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python3 main.py  # Creates chebyshev_animation.gif
+```
 
 ## Mathematical Significance
 
@@ -194,104 +229,66 @@ Current output shows:
 3. **Rotation invariance:** Non-constant structure is independent of rotation angle θ
 4. **Potential applications:** May provide new perspective on Chebyshev polynomial properties
 
-## Implementation Strategy for Remaining Work
+## Next Actions
 
-### For `esymm_rotated_roots_invariant` (Core Mathematical Challenge):
+### Immediate Work (Choose one)
 
-**Newton's Identities Approach:**
-```lean
--- STEP 1: Prove power_sum_cos_invariant
--- Show ∑_{k=0}^{N-1} cos(θ + 2πk/N)^j is independent of θ for 0 < j < N
--- Use: cos^j(x) = linear combination of cos(kx) via binomial theorem
--- Apply: vanishing sums ∑ cos(i(θ + 2πk/N)) = 0 for 0 < i < N
+**Option A: Complete esymm proof (Critical Path)**
+- Start with Phase A (`sum_cos_multiple_rotated_roots`) - smallest piece (~15 LOC)
+- This blocks `constant_term_only_varies` and ultimately the main theorems
+- Highest mathematical depth
 
--- STEP 2: Apply Newton's Identities
--- Newton's identities relate e_k (elementary symmetric) to p_k (power sums):
---   k·e_k = ∑_{i=1}^k (-1)^(i-1) e_{k-i} p_i
--- Use strong induction with power sum invariance
+**Option B: Complete PolynomialConstruction cases (Independent)**
+- Finish N=4,6+ cases with cosine inequality lemmas (~80 LOC)
+- Independent of other work, can proceed in parallel
+- Clearer path to completion
 
--- STEP 3: Base case and induction
--- Base: e_1 = ∑ roots = 0 (from sum_cos_roots_of_unity)
--- Inductive: Use Newton's identity with invariant power sums
+**Option C: Tackle Chebyshev connection (Hardest)**
+- Prove `scaledPolynomial_matches_chebyshev_at_zero`
+- Should probably wait until other work is complete
+- Requires extensive Chebyshev polynomial theory
+
+### Parallel Execution Strategy
+
+The work naturally splits into 2 independent streams:
+
+**Stream 1:** MainTheorem.lean
+- Complete esymm proof (~190 LOC)
+- Complete constant_term_only_varies (depends on esymm)
+- Replace axiom with theorem (5 min)
+- Tackle Chebyshev connection proof
+
+**Stream 2:** PolynomialConstruction.lean
+- Complete N=4,6+ cases (~80 LOC)
+- Independent of Stream 1
+
+### After All Sorries Are Resolved
+
+1. **Remove `constant_term_only_varies_axiom`** - Replace with `constant_term_only_varies`
+2. **Mathlib submission preparation:**
+   - Add comprehensive documentation
+   - Follow Mathlib style guide
+   - Add test cases for small N
+   - Performance optimization
+3. **Submit to Mathlib**
+
+## Project Structure
+
+```
+ChebyshevCircles/
+├── ChebyshevCircles/
+│   ├── Basic.lean                    # ✅ Complete
+│   ├── RootsOfUnity.lean            # ✅ Complete
+│   ├── PolynomialConstruction.lean   # ⏳ 4 sorries (N=4,6+ cases)
+│   └── MainTheorem.lean              # ⏳ 12 sorries (esymm + helpers)
+├── check_lean.sh                     # Repository analysis tool
+├── main.py                           # Python visualization
+├── requirements.txt                  # Python dependencies
+└── README.md                         # This file
 ```
 
-**Required Infrastructure:**
-- Complex exponential representation of cos^j
-- Binomial theorem for (e^(ix) + e^(-ix))^j
-- Geometric series for roots of unity
-- Newton's identities formalization
-
-### For `constant_term_only_varies` (Technical Completion):
-
-**Using Vieta's Formulas:**
-```lean
--- Structure already in place at MainTheorem.lean:253
--- Converts List.foldr → Multiset.prod (done via list_foldr_eq_multiset_prod)
--- Applies Vieta: coeff k = (-1)^(N-k) · esymm(N-k)
--- Uses esymm_rotated_roots_invariant for invariance
-
--- Remaining: 2 degree bound lemmas (standard results)
--- Prove: (Multiset.map (X - C r) M).prod.natDegree ≤ card M
-```
-
-### For `scaledPolynomial_constantTerm_varies` (Case-by-Case):
-
-**Odd N Strategy (N=3,5,7,...):**
-- Use θ=0 vs θ=π/2
-- Need: `Real.cos_eq_zero_iff` (cos x = 0 ↔ x = (2m+1)π/2)
-- Show: For odd N, 2πk/N ≠ (2m+1)π/2 for any integers k,m with 0<k<N
-
-**Even N Strategy (N=4,6,8,...):**
-- Current approach (θ=0 vs θ=π/2) fails
-- Use different angles: θ=0 vs θ=π/N or θ=π/(2N)
-- Show: One angle gives 0 as root, the other doesn't
-
-### For axiom replacement (Hardest Task):
-
-**Connecting Construction to Chebyshev:**
-- The fundamental challenge: roots are cos(2πk/N), NOT Chebyshev roots cos((2k+1)π/(2N))
-- Yet coefficients match - this is the deep mystery being formalized
-- Possible approaches:
-  1. Show both polynomials satisfy same recurrence + initial conditions
-  2. Use Chebyshev's extremal characterization
-  3. Direct calculation via coefficient formulas and trigonometric identities
-
-## Tools and Resources
+## Resources
 
 - **Lean:** 4.25.0-rc2 with Mathlib
 - **Python:** 3.13+ with numpy, Pillow
-- **Analysis:** check_lean.sh for efficient repository inspection
-
-## Next Action Items
-
-**Immediate Priorities (Can work in parallel):**
-
-1. **Tackle `esymm_rotated_roots_invariant`** (Critical path, blocks other work)
-   - Start with helper lemmas: `sum_cos_roots_of_unity_mul`, `power_sum_cos_invariant`
-   - Build Newton's identity infrastructure
-   - This is the mathematical core - most important proof
-
-2. **Complete N≥3 cases in `scaledPolynomial_constantTerm_varies`**
-   - Find or prove `Real.cos_eq_zero_iff`
-   - Split odd/even N cases with appropriate angle pairs
-   - Independent of other proofs, can proceed in parallel
-
-**After `esymm_rotated_roots_invariant` completes:**
-
-3. **Finish `constant_term_only_varies`**
-   - Proof structure already complete
-   - Just needs 2 degree bound lemmas
-   - Quick win once dependency proven
-
-4. **Remove `constant_term_only_varies_axiom`**
-   - Simple find-and-replace
-   - 5-minute task
-
-**Final Boss:**
-
-5. **Prove `scaledPolynomial_matches_chebyshev_at_zero`**
-   - This is the hardest and most important axiom
-   - Requires establishing fundamental Chebyshev connection
-   - Should be tackled last with full attention
-
-**Summary:** The project has strong foundations. Core infrastructure is proven (`list_foldr_eq_multiset_prod`, degree lemmas, evaluation lemmas). The remaining work centers on two deep mathematical results: (1) rotation invariance of symmetric polynomials, and (2) the connection between our construction and Chebyshev polynomials. Once these are proven, Mathlib submission readiness is within reach.
+- **Documentation:** See file headers and inline comments for detailed proof strategies
