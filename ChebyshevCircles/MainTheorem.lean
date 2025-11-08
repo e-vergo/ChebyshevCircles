@@ -258,7 +258,18 @@ lemma sum_cos_multiple_rotated_roots (N : ℕ) (m : ℕ) (θ : ℝ)
   have hζ : IsPrimitiveRoot ζ N := Complex.isPrimitiveRoot_exp N hN'
   -- Step 4: Show sum = Re(e^(imθ) · ∑ ζ^(mk)) = 0
   suffices h_sum_zero : ∑ k ∈ Finset.range N, cexp (↑m * (↑2 * ↑π * ↑k / ↑N) * I) = 0 by
-    sorry  -- Factor out e^(imθ) and use h_sum_zero
+    -- Factor: m*(θ + 2πk/N) = m*θ + m*2πk/N
+    simp only [mul_add, add_mul]
+    conv_lhs =>
+      arg 1
+      arg 2
+      ext x
+      rw [Complex.exp_add]
+    rw [← Finset.mul_sum]
+    -- Now the goal is (cexp(...θ...) * ∑_i cexp(...)) = 0
+    -- The sum matches h_sum_zero (just different variable name)
+    have : ∑ i ∈ Finset.range N, cexp (↑m * (↑2 * ↑π * ↑i / ↑N) * I) = 0 := h_sum_zero
+    simp [this]
   -- Step 5: Prove ∑ ζ^(mk) = 0 using geometric sum
   calc ∑ k ∈ Finset.range N, cexp (↑m * (↑2 * ↑π * ↑k / ↑N) * I)
       = ∑ k ∈ Finset.range N, ζ ^ (m * k) := by
@@ -267,7 +278,7 @@ lemma sum_cos_multiple_rotated_roots (N : ℕ) (m : ℕ) (θ : ℝ)
         rw [← Complex.exp_nat_mul]
         congr 1
         field_simp
-        sorry  -- ~3 LOC: norm_cast; ring
+        norm_cast
     _ = ∑ k ∈ Finset.range N, (ζ ^ m) ^ k := by
         congr 1 with k
         rw [← pow_mul]
@@ -281,22 +292,29 @@ lemma sum_cos_multiple_rotated_roots (N : ℕ) (m : ℕ) (θ : ℝ)
           -- N | m and m < N contradicts each other
           have : N ≤ m := Nat.le_of_dvd (by omega) h_div
           omega
-        -- The key fact: ζ^m is a primitive (N / gcd(N,m))-th root
-        -- Since m < N, we have N / gcd(N,m) ≥ 2, so can use geom_sum_eq_zero
-        sorry
+        -- Use the geometric sum formula: (x-1) * ∑x^k = x^N - 1
+        -- Since (ζ^m)^N = ζ^(mN) = (ζ^N)^m = 1^m = 1 and ζ^m ≠ 1, we get ∑(ζ^m)^k = 0
+        have h_pow_N : (ζ ^ m) ^ N = 1 := by
+          rw [← pow_mul, mul_comm m N, pow_mul]
+          simp [hζ.pow_eq_one]
+        -- Apply: (x-1) * ∑x^k = x^N - 1, so ∑x^k = 0 when x^N=1 and x≠1
+        have h_geom : (ζ ^ m - 1) * ∑ k ∈ Finset.range N, (ζ ^ m) ^ k = (ζ ^ m) ^ N - 1 :=
+          mul_geom_sum (ζ ^ m) N
+        rw [h_pow_N] at h_geom
+        have : (ζ ^ m - 1) * ∑ k ∈ Finset.range N, (ζ ^ m) ^ k = 0 := by
+          rw [h_geom]; ring
+        exact eq_zero_of_ne_zero_of_mul_left_eq_zero (sub_ne_zero_of_ne h_ne_one) this
 
 /-- **Phase B Helper**: Power sum of cosines is θ-invariant for 0 < j < N.
-    The j-th power sum ∑_{k=0}^{N-1} cos(θ + 2πk/N)^j is independent of θ. -/
+    The j-th power sum ∑_{k=0}^{N-1} cos(θ + 2πk/N)^j is independent of θ.
+
+    Strategy: Use binomial expansion cos^j = ((e^(iθ)+e^(-iθ))/2)^j,
+    interchange sums, apply sum_cos_multiple_rotated_roots to each frequency. -/
 lemma powerSumCos_invariant (N : ℕ) (j : ℕ) (θ₁ θ₂ : ℝ)
     (hN : 0 < N) (hj : 0 < j) (hj' : j < N) :
     ∑ k ∈ Finset.range N, (Real.cos (θ₁ + 2 * π * k / N)) ^ j =
     ∑ k ∈ Finset.range N, (Real.cos (θ₂ + 2 * π * k / N)) ^ j := by
-  -- Strategy: Expand cos^j using binomial theorem with cos = (e^(ix) + e^(-ix))/2
-  -- After expansion, each term becomes a multiple of e^(i·freq·x) for various frequencies
-  -- Apply linearity of sum and use sum_cos_multiple_rotated_roots for each frequency
-  -- The only surviving terms are when frequency = 0, which happens when j is even
-  -- But crucially, ALL terms are θ-independent!
-  sorry  -- PARTIAL: ~70 LOC needed for binomial expansion and freq analysis
+  sorry  -- ~70 LOC: binomial expansion, apply sum_cos_multiple_rotated_roots
 
 /-- **Phase C Helper**: Connection between Multiset.esymm and power sums.
     This adapts Newton's identity from MvPolynomial to the Multiset context.
