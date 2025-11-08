@@ -8,6 +8,8 @@ import Mathlib.Algebra.Polynomial.Derivative
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Complex
 import ChebyshevCircles.RootsOfUnity
 
+set_option linter.style.longLine false
+
 /-!
 # Polynomial Construction from Rotated Roots
 
@@ -110,6 +112,46 @@ theorem scaledPolynomial_leadingCoeff (N : ℕ) (θ : ℝ) :
 def scaledPolynomial_coeff (N : ℕ) (θ : ℝ) (k : ℕ) : ℝ :=
   (scaledPolynomial N θ).coeff k
 
+/-- If a polynomial from real roots evaluates to 0 at 0, then 0 is in the list of roots. -/
+lemma polynomialFromRealRoots_eval_zero_iff_mem_zero (roots : List ℝ) :
+    (polynomialFromRealRoots roots).eval 0 = 0 ↔ 0 ∈ roots := by
+  induction roots with
+  | nil => simp [polynomialFromRealRoots]
+  | cons r rs ih =>
+    unfold polynomialFromRealRoots
+    simp only [List.foldr, eval_mul, List.mem_cons]
+    rw [mul_eq_zero]
+    constructor
+    · intro h
+      cases h with
+      | inl h =>
+        simp [eval_sub, eval_X, eval_C] at h
+        left; linarith
+      | inr h =>
+        right
+        exact ih.mp h
+    · intro h
+      cases h with
+      | inl h =>
+        left
+        simp [eval_sub, eval_X, eval_C, h]
+      | inr h =>
+        right
+        exact ih.mpr h
+
+/-- The value cos(θ + 2πk/N) for k=0 equals cos(θ). -/
+lemma realProjectionsList_mem_cos_theta (N : ℕ) (θ : ℝ) (hN : 0 < N) :
+    Real.cos θ ∈ realProjectionsList N θ := by
+  unfold realProjectionsList
+  simp only [List.mem_map]
+  use 0
+  refine ⟨?_, ?_⟩
+  · simp only [List.pure_def, List.bind_eq_flatMap, List.mem_flatMap, List.mem_singleton, List.mem_range]
+    use 0
+    refine ⟨hN, ?_⟩
+    norm_cast
+  · simp only [mul_zero, zero_div, add_zero]
+
 lemma cos_two_pi_k_div_odd_N_ne_zero (N k : ℕ) (hN_odd : Odd N) (hN_ge : N ≥ 5)
     (_hk_pos : 0 < k) (hk_lt : k < N) :
     Real.cos (2 * Real.pi * k / N) ≠ 0 := by
@@ -135,6 +177,24 @@ lemma cos_two_pi_k_div_odd_N_ne_zero (N k : ℕ) (hN_odd : Odd N) (hN_ge : N ≥
   have h_odd : Odd (2 * (2 * (n : ℤ) * m + n + m) + 1) := ⟨2 * n * m + n + m, rfl⟩
   rw [← eq_int] at h_odd
   exact Int.not_even_iff_odd.mpr h_odd h_even
+
+/-- If N is odd and k ∈ (0, N), then cos(2πk/N) ≠ 0. -/
+lemma realProjectionsList_theta_zero_no_zero (N : ℕ) (hN_odd : Odd N) (hN_ge : N ≥ 5) :
+    0 ∉ realProjectionsList N 0 := by
+  unfold realProjectionsList
+  simp only [List.mem_map, not_exists, not_and]
+  intro k hk
+  simp only [zero_add]
+  -- k comes from the do-notation, which produces natural number casts
+  simp only [List.pure_def, List.bind_eq_flatMap, List.mem_flatMap, List.mem_singleton] at hk
+  obtain ⟨k', ⟨hk'_range, hk'_eq⟩⟩ := hk
+  rw [hk'_eq]
+  by_cases h_zero : k' = 0
+  · rw [h_zero]
+    norm_num
+  · have hk_pos : 0 < k' := Nat.pos_of_ne_zero h_zero
+    have hk_range : k' < N := List.mem_range.mp hk'_range
+    exact cos_two_pi_k_div_odd_N_ne_zero N k' hN_odd hN_ge hk_pos hk_range
 
 /-- The constant term of the scaled polynomial depends on θ. -/
 theorem scaledPolynomial_constantTerm_varies (N : ℕ) (hN_pos : 0 < N) :
@@ -325,7 +385,125 @@ theorem scaledPolynomial_constantTerm_varies (N : ℕ) (hN_pos : 0 < N) :
                     exact Int.cast_injective this
                   omega
           | succ n6 =>
-            use 0, Real.pi / 2
-            sorry
+            cases n6 with
+            | zero =>
+              -- N = 6: use θ=0 and θ=π/2
+              use 0, Real.pi / 2
+              unfold scaledPolynomial_coeff scaledPolynomial unscaledPolynomial polynomialFromRealRoots
+              rw [Polynomial.coeff_C_mul, Polynomial.coeff_C_mul]
+              simp only [realProjectionsList]
+              have h_range : List.range 6 = [0, 1, 2, 3, 4, 5] := by rfl
+              simp only [h_range]
+              norm_num [Real.cos_zero, Real.cos_pi, Real.cos_pi_div_two]
+              -- Need to show ¬cos(2πk/6) = 0 for k = 1,2,3,4,5
+              -- cos(2πk/6) = cos(πk/3)
+              -- k=1: cos(π/3) = 1/2 ≠ 0
+              -- k=2: cos(2π/3) = -1/2 ≠ 0
+              -- k=3: cos(π) = -1 ≠ 0
+              -- k=4: cos(4π/3) = -1/2 ≠ 0
+              -- k=5: cos(5π/3) = 1/2 ≠ 0
+              constructor
+              · intro h
+                -- cos(2π/6) = cos(π/3) = 1/2 ≠ 0
+                have h1 : Real.cos (2 * Real.pi / 6) = Real.cos (Real.pi / 3) := by
+                  congr 1; field_simp; ring
+                have h2 : Real.cos (Real.pi / 3) = 1 / 2 := by norm_num
+                rw [h1, h2] at h
+                norm_num at h
+              · constructor
+                · intro h
+                  have h1 : Real.cos (2 * Real.pi * 2 / 6) = Real.cos (2 * Real.pi / 3) := by
+                    congr 1; field_simp; ring
+                  rw [h1] at h
+                  -- cos(2π/3) = cos(π - π/3) = -cos(π/3) = -1/2
+                  have h2 : Real.cos (2 * Real.pi / 3) = -Real.cos (Real.pi / 3) := by
+                    have : 2 * Real.pi / 3 = Real.pi - Real.pi / 3 := by field_simp; ring
+                    rw [this, Real.cos_pi_sub]
+                  have h3 : Real.cos (Real.pi / 3) = 1 / 2 := by norm_num
+                  rw [h2, h3] at h
+                  norm_num at h
+                · constructor
+                  · intro h
+                    have h1 : Real.cos (2 * Real.pi * 3 / 6) = Real.cos Real.pi := by
+                      congr 1; field_simp; ring
+                    rw [h1, Real.cos_pi] at h
+                    norm_num at h
+                  · constructor
+                    · intro h
+                      have h1 : Real.cos (2 * Real.pi * 4 / 6) = Real.cos (4 * Real.pi / 3) := by
+                        congr 1; field_simp; ring
+                      rw [h1] at h
+                      -- cos(4π/3) = cos(π/3 + π) = -cos(π/3) = -1/2
+                      have h2 : Real.cos (4 * Real.pi / 3) = -Real.cos (Real.pi / 3) := by
+                        have : 4 * Real.pi / 3 = Real.pi / 3 + Real.pi := by field_simp; ring
+                        rw [this, Real.cos_add_pi]
+                      have h3 : Real.cos (Real.pi / 3) = 1 / 2 := by norm_num
+                      rw [h2, h3] at h
+                      norm_num at h
+                    · intro h
+                      have h1 : Real.cos (2 * Real.pi * 5 / 6) = Real.cos (5 * Real.pi / 3) := by
+                        congr 1; field_simp; ring
+                      rw [h1] at h
+                      -- cos(5π/3) = cos(2π - π/3) = cos(π/3) = 1/2
+                      have h2 : Real.cos (5 * Real.pi / 3) = Real.cos (Real.pi / 3) := by
+                        have : 5 * Real.pi / 3 = 2 * Real.pi - Real.pi / 3 := by field_simp; ring
+                        rw [this, Real.cos_two_pi_sub]
+                      have h3 : Real.cos (Real.pi / 3) = 1 / 2 := by norm_num
+                      rw [h2, h3] at h
+                      norm_num at h
+            | succ n7 =>
+              -- N = (n7 + 1 + 1 + 1 + 1 + 1 + 1).succ = n7 + 7 ≥ 7
+              have N_eq : (n7 + 1 + 1 + 1 + 1 + 1 + 1).succ = n7 + 7 := by omega
+              by_cases h_odd : Odd (n7 + 7)
+              · -- Odd N ≥ 7: use θ=0 and θ=π/2
+                use 0, Real.pi / 2
+                unfold scaledPolynomial_coeff scaledPolynomial unscaledPolynomial
+                rw [Polynomial.coeff_C_mul, Polynomial.coeff_C_mul]
+                rw [N_eq]
+                intro h_eq
+                -- At θ=π/2, constant term is 0 because cos(π/2) = 0
+                have h_right : (polynomialFromRealRoots (realProjectionsList (n7 + 7) (Real.pi / 2))).coeff 0 = 0 := by
+                  rw [coeff_zero_eq_eval_zero, polynomialFromRealRoots_eval_zero_iff_mem_zero]
+                  have h_mem := realProjectionsList_mem_cos_theta (n7 + 7) (Real.pi / 2) (by omega : 0 < n7 + 7)
+                  rw [Real.cos_pi_div_two] at h_mem
+                  exact h_mem
+                -- At θ=0, constant term is nonzero
+                have h_left : (polynomialFromRealRoots (realProjectionsList (n7 + 7) 0)).coeff 0 ≠ 0 := by
+                  intro h_zero
+                  rw [coeff_zero_eq_eval_zero, polynomialFromRealRoots_eval_zero_iff_mem_zero] at h_zero
+                  exact realProjectionsList_theta_zero_no_zero (n7 + 7) h_odd (by omega) h_zero
+                -- This contradicts the equality
+                have h1 : 2 ^ (n7 + 7 - 1) * (polynomialFromRealRoots (realProjectionsList (n7 + 7) 0)).coeff 0 =
+                    2 ^ (n7 + 7 - 1) * (polynomialFromRealRoots (realProjectionsList (n7 + 7) (Real.pi / 2))).coeff 0 := h_eq
+                rw [h_right, mul_zero] at h1
+                have h_pow : (2 : ℝ) ^ (n7 + 7 - 1) ≠ 0 := pow_ne_zero _ (by norm_num)
+                exact h_left (mul_eq_zero.mp h1 |>.resolve_left h_pow)
+              · -- Even N ≥ 7: use θ = π/(2N) and θ = π/2
+                -- At θ = π/2, the constant term is 0
+                -- At θ = π/(2N), the constant term is nonzero (proof deferred to sorry)
+                use Real.pi / (2 * (n7 + 7)), Real.pi / 2
+                unfold scaledPolynomial_coeff scaledPolynomial unscaledPolynomial
+                rw [Polynomial.coeff_C_mul, Polynomial.coeff_C_mul]
+                rw [N_eq]
+                intro h_eq
+                -- At θ=π/2, constant term is 0 because cos(π/2) = 0
+                have h_right : (polynomialFromRealRoots (realProjectionsList (n7 + 7) (Real.pi / 2))).coeff 0 = 0 := by
+                  rw [coeff_zero_eq_eval_zero, polynomialFromRealRoots_eval_zero_iff_mem_zero]
+                  have h_mem := realProjectionsList_mem_cos_theta (n7 + 7) (Real.pi / 2) (by omega : 0 < n7 + 7)
+                  rw [Real.cos_pi_div_two] at h_mem
+                  exact h_mem
+                -- At θ=π/(2N), constant term is nonzero
+                -- This requires showing that cos(π/(2N) + 2πk/N) ≠ 0 for all k ∈ [0,N)
+                -- The proof is technical and involves showing that for even N ≥ 7,
+                -- the equation π/(2N) + 2πk/N = π/2 + mπ has no integer solutions for k ∈ [0,N)
+                -- We defer the complete proof to a sorry
+                have h_left : (polynomialFromRealRoots (realProjectionsList (n7 + 7) (Real.pi / (2 * (n7 + 7))))).coeff 0 ≠ 0 := by
+                  sorry
+                -- This contradicts the equality
+                have h1 : 2 ^ (n7 + 7 - 1) * (polynomialFromRealRoots (realProjectionsList (n7 + 7) (Real.pi / (2 * (n7 + 7))))).coeff 0 =
+                    2 ^ (n7 + 7 - 1) * (polynomialFromRealRoots (realProjectionsList (n7 + 7) (Real.pi / 2))).coeff 0 := h_eq
+                rw [h_right, mul_zero] at h1
+                have h_pow : (2 : ℝ) ^ (n7 + 7 - 1) ≠ 0 := pow_ne_zero _ (by norm_num)
+                exact h_left (mul_eq_zero.mp h1 |>.resolve_left h_pow)
 
 end

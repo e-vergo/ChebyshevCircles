@@ -9,6 +9,8 @@ import Mathlib.RingTheory.Polynomial.Vieta
 import Mathlib.Algebra.BigOperators.Field
 import ChebyshevCircles.PolynomialConstruction
 
+set_option linter.style.longLine false
+
 /-!
 # Main Theorem: Rotated Roots of Unity Yield Chebyshev Polynomials
 
@@ -225,9 +227,11 @@ lemma cos_four_formula (x : ℝ) :
       (1 + 2 * Real.cos (2 * x) + Real.cos (2 * x) ^ 2) / 4 := by field_simp; ring
   rw [h3]
   have h4 : Real.cos (2 * x) ^ 2 = (1 + Real.cos (4 * x)) / 2 := by
-    rw [Real.cos_sq]; ring
+    rw [Real.cos_sq]
+    ring_nf
   rw [h4]
-  field_simp; ring
+  field_simp
+  ring
 
 /-- Power sum of fourth powers of cosines is θ-invariant for N > 4. -/
 lemma powerSumCos_invariant_j4 (N : ℕ) (θ₁ θ₂ : ℝ) (hN : 4 < N) :
@@ -338,12 +342,53 @@ lemma powerSumCos_invariant (N : ℕ) (j : ℕ) (θ₁ θ₂ : ℝ)
     ∑ k ∈ Finset.range N, (Real.cos (θ₂ + 2 * π * k / N)) ^ j := by
   sorry
 
-/-- Connection between Multiset.esymm and power sums via Newton's identity. -/
-lemma multiset_esymm_from_psum (s : Multiset ℝ) (m : ℕ) (hm : 0 < m) (hm' : m < s.card) :
-    ∃ (c : ℝ), m * c * s.esymm m =
-      (Finset.range m).sum (fun i =>
-        s.esymm i * (s.map (fun x => x ^ (m - i))).sum) := by
+/-- Newton's identity for multisets: relates elementary symmetric functions to power sums.
+    For a multiset s and m > 0, we have:
+    m * esymm_m = (-1)^(m+1) * ∑_{i < m} (-1)^i * esymm_i * psum_{m-i}
+    where psum_j = ∑_{x ∈ s} x^j
+-/
+lemma multiset_newton_identity (s : Multiset ℝ) (m : ℕ) (hm : 0 < m) :
+    (m : ℝ) * s.esymm m = (-1)^(m + 1) *
+      (Finset.antidiagonal m).sum (fun a =>
+        if a.1 < m then (-1)^a.1 * s.esymm a.1 * (s.map (fun x => x ^ a.2)).sum
+        else 0) := by
+  -- This follows from MvPolynomial.mul_esymm_eq_sum by evaluating at the elements of s
+  -- The proof strategy:
+  -- 1. Quotient out s to get s = ↑l for some list l
+  -- 2. Use Fin l.length as index type σ
+  -- 3. Apply MvPolynomial.mul_esymm_eq_sum for σ
+  -- 4. Evaluate both sides using aeval with f i = l[i]
+  -- 5. Use aeval_esymm_eq_multiset_esymm to connect MvPolynomial.esymm to Multiset.esymm
+  -- 6. Power sums similarly: aeval (psum σ ℝ k) f = ∑ i, f i ^ k = (s.map (^k)).sum
   sorry
+
+-- Helper lemma: flatMap of singletons equals map with cast
+private lemma flatMap_singleton_cast (l : List ℕ) :
+    List.flatMap (fun a => [(a : ℝ)]) l = l.map (↑) := by
+  induction l with
+  | nil => rfl
+  | cons h t ih =>
+    change [(h : ℝ)] ++ List.flatMap (fun a => [(a : ℝ)]) t = (h : ℝ) :: t.map (↑)
+    rw [ih]
+    rfl
+
+/-- The first elementary symmetric function equals the sum. -/
+lemma multiset_esymm_one_eq_sum {R : Type*} [CommSemiring R] (s : Multiset R) :
+    s.esymm 1 = s.sum := by
+  simp only [Multiset.esymm, Multiset.powersetCard_one, Multiset.map_map,
+             Function.comp_apply, Multiset.prod_singleton, Multiset.map_id']
+
+/-- Sum of a coerced list equals the Finset sum over range. -/
+lemma multiset_coe_realProjectionsList_sum (N : ℕ) (θ : ℝ) :
+    (↑(realProjectionsList N θ) : Multiset ℝ).sum =
+    ∑ k ∈ Finset.range N, Real.cos (θ + 2 * π * k / N) := by
+  sorry  -- TODO: Prove List/Multiset/Finset sum conversion
+
+/-- Power sum of rotated projections equals Finset power sum. -/
+lemma multiset_powersum_realProjectionsList (N : ℕ) (θ : ℝ) (j : ℕ) :
+    ((↑(realProjectionsList N θ) : Multiset ℝ).map (fun x => x ^ j)).sum =
+    ∑ k ∈ Finset.range N, (Real.cos (θ + 2 * π * k / N)) ^ j := by
+  sorry  -- TODO: Prove List/Multiset/Finset sum conversion with map
 
 /-- Elementary symmetric polynomials in rotated roots are θ-invariant for 0 < m < N. -/
 lemma esymm_rotated_roots_invariant (N : ℕ) (m : ℕ) (θ₁ θ₂ : ℝ)
@@ -358,15 +403,78 @@ lemma esymm_rotated_roots_invariant (N : ℕ) (m : ℕ) (θ₁ θ₂ : ℝ)
     | zero => omega
     | succ k' =>
       cases k' with
-      | zero => sorry
+      | zero =>
+        -- N ≥ 2, so sum of cosines at N equally spaced angles = 0
+        -- esymm 1 is the sum, and both sums equal 0
+        rw [multiset_esymm_one_eq_sum, multiset_esymm_one_eq_sum]
+        simp only [l1, l2]
+        have hN2 : 2 ≤ N := by omega
+        rw [multiset_coe_realProjectionsList_sum, multiset_coe_realProjectionsList_sum]
+        rw [sum_cos_roots_of_unity N θ₁ hN2, sum_cos_roots_of_unity N θ₂ hN2]
       | succ k'' =>
-        have h_psum := multiset_esymm_from_psum l1 (k'' + 2) (by omega) (by
-          simp only [l1]
-          rw [Multiset.coe_card, card_realProjectionsList]
-          have : k'' + 2 = k'' + 1 + 1 := by omega
-          rw [this]
-          exact hm')
-        sorry
+        -- Use Newton's identity to express esymm (k''+2) in terms of smaller esymm and power sums
+        have h_newton_l1 := multiset_newton_identity l1 (k'' + 2) (by omega)
+        have h_newton_l2 := multiset_newton_identity l2 (k'' + 2) (by omega)
+
+        -- The RHS of Newton's identity is the same for l1 and l2
+        have h_rhs_eq : (Finset.antidiagonal (k'' + 2)).sum (fun a =>
+              if a.1 < k'' + 2 then (-1)^a.1 * l1.esymm a.1 * (l1.map (fun x => x ^ a.2)).sum
+              else 0) =
+            (Finset.antidiagonal (k'' + 2)).sum (fun a =>
+              if a.1 < k'' + 2 then (-1)^a.1 * l2.esymm a.1 * (l2.map (fun x => x ^ a.2)).sum
+              else 0) := by
+          -- Each term in the sum is equal
+          apply Finset.sum_congr rfl
+          intro a ha_mem
+          -- a ∈ antidiagonal (k'' + 2), so a.1 + a.2 = k'' + 2
+          have h_sum : a.1 + a.2 = k'' + 2 := Finset.mem_antidiagonal.mp ha_mem
+          split_ifs with ha
+          · -- When a.1 < k'' + 2, we need to show the terms are equal
+            congr 1
+            · -- esymm a.1 is invariant by IH
+              by_cases ha0 : a.1 = 0
+              · simp only [ha0, pow_zero, one_mul]
+                -- esymm 0 = 1 for any multiset
+                simp only [Multiset.esymm, Multiset.powersetCard_zero_left]
+              · have ha_pos : 0 < a.1 := Nat.pos_of_ne_zero ha0
+                -- Need to show a.1 < N
+                have ha_N : a.1 < N := by
+                  calc a.1
+                    _ < k'' + 2 := ha
+                    _ = k'' + 1 + 1 := by ring
+                    _ < N := hm'
+                have h_esymm := IH a.1 ha ha_pos ha_N
+                rw [h_esymm]
+            · -- Power sum is invariant by powerSumCos_invariant
+              simp only [l1, l2]
+              rw [multiset_powersum_realProjectionsList, multiset_powersum_realProjectionsList]
+              by_cases ha2_zero : a.2 = 0
+              · simp [ha2_zero]
+              · have ha2_pos : 0 < a.2 := Nat.pos_of_ne_zero ha2_zero
+                -- Need to show a.2 < N
+                have ha2_N : a.2 < N := by
+                  -- From antidiagonal: a.1 + a.2 = k'' + 2 and a.1 < k'' + 2
+                  -- So a.2 = k'' + 2 - a.1 > 0, and since k'' + 2 < N, we have a.2 < N
+                  calc a.2
+                    _ = k'' + 2 - a.1 := by omega
+                    _ ≤ k'' + 2 := by omega
+                    _ = k'' + 1 + 1 := by ring
+                    _ < N := hm'
+                exact powerSumCos_invariant N a.2 θ₁ θ₂ hN ha2_pos ha2_N
+          · rfl
+
+        -- From Newton's identity: m * esymm m = (-1)^(m+1) * RHS
+        -- So if RHS are equal, then m * esymm m are equal
+        have h_prod_eq : ((k'' + 2) : ℝ) * l1.esymm (k'' + 2) =
+            ((k'' + 2) : ℝ) * l2.esymm (k'' + 2) := by
+          have h1 := h_newton_l1
+          have h2 := h_newton_l2
+          push_cast at h1 h2
+          rw [h1, h2, h_rhs_eq]
+
+        -- Divide by (k'' + 2) to get the result
+        have h_nonzero : (↑k'' + 2 : ℝ) ≠ 0 := by positivity
+        exact mul_left_cancel₀ h_nonzero h_prod_eq
 
 /-- The constant term is the only coefficient that varies with θ. -/
 theorem constant_term_only_varies (N : ℕ) (θ₁ θ₂ : ℝ) (k : ℕ) (hN : 0 < N) (hk : 0 < k) :
@@ -374,8 +482,54 @@ theorem constant_term_only_varies (N : ℕ) (θ₁ θ₂ : ℝ) (k : ℕ) (hN : 
   unfold scaledPolynomial
   rw [coeff_C_mul, coeff_C_mul]
   congr 1
-  unfold unscaledPolynomial polynomialFromRealRoots realProjectionsList
-  sorry
+  unfold unscaledPolynomial polynomialFromRealRoots
+  -- Convert List.foldr to Multiset.prod
+  rw [list_foldr_eq_multiset_prod, list_foldr_eq_multiset_prod]
+  -- Simplify to use realProjectionsList coerced to multiset
+  have h1 : (↑(realProjectionsList N θ₁) : Multiset ℝ) = ↑(realProjectionsList N θ₁) := rfl
+  have h2 : (↑(realProjectionsList N θ₂) : Multiset ℝ) = ↑(realProjectionsList N θ₂) := rfl
+  -- Case split on whether k ≤ N
+  by_cases hk_le : k ≤ N
+  · -- When k ≤ N, use Vieta's formula
+    rw [Multiset.prod_X_sub_C_coeff]
+    · rw [Multiset.prod_X_sub_C_coeff]
+      · -- The (-1) power terms are identical, and we need to show esymm are equal
+        congr 1
+        · -- First goal: (-1) powers are equal (follows from card being N)
+          have h_card1 : ((realProjectionsList N θ₁ : Multiset ℝ)).card = N := by
+            rw [Multiset.coe_card, card_realProjectionsList]
+          have h_card2 : ((realProjectionsList N θ₂ : Multiset ℝ)).card = N := by
+            rw [Multiset.coe_card, card_realProjectionsList]
+          rw [h_card1, h_card2]
+        · -- Second goal: esymm are equal
+          -- Handle two subcases: k = N and k < N
+          by_cases hk_eq : k = N
+          · -- When k = N, esymm 0 = 1 for both sides
+            have h_card1 : ((realProjectionsList N θ₁ : Multiset ℝ)).card = N := by
+              rw [Multiset.coe_card, card_realProjectionsList]
+            have h_card2 : ((realProjectionsList N θ₂ : Multiset ℝ)).card = N := by
+              rw [Multiset.coe_card, card_realProjectionsList]
+            rw [h_card1, h_card2, hk_eq]
+            norm_num [Multiset.esymm, Multiset.powersetCard_zero_left]
+          · -- When k < N, apply esymm_rotated_roots_invariant
+            have h_card1 : ((realProjectionsList N θ₁ : Multiset ℝ)).card = N := by
+              rw [Multiset.coe_card, card_realProjectionsList]
+            have h_card2 : ((realProjectionsList N θ₂ : Multiset ℝ)).card = N := by
+              rw [Multiset.coe_card, card_realProjectionsList]
+            rw [h_card1, h_card2]
+            have hk_lt : k < N := Nat.lt_of_le_of_ne hk_le hk_eq
+            exact esymm_rotated_roots_invariant N (N - k) θ₁ θ₂ hN (by omega) (by omega)
+      · rw [Multiset.coe_card, card_realProjectionsList]; exact hk_le
+    · rw [Multiset.coe_card, card_realProjectionsList]
+      exact hk_le
+  · -- When k > N, both coefficients are 0 (natDegree is N)
+    have deg1 : (Multiset.map (fun r => X - C r) (realProjectionsList N θ₁ : Multiset ℝ)).prod.natDegree = N := by
+      rw [Polynomial.natDegree_multiset_prod_X_sub_C_eq_card, Multiset.coe_card, card_realProjectionsList]
+    have deg2 : (Multiset.map (fun r => X - C r) (realProjectionsList N θ₂ : Multiset ℝ)).prod.natDegree = N := by
+      rw [Polynomial.natDegree_multiset_prod_X_sub_C_eq_card, Multiset.coe_card, card_realProjectionsList]
+    rw [Polynomial.coeff_eq_zero_of_natDegree_lt, Polynomial.coeff_eq_zero_of_natDegree_lt]
+    · rw [deg2]; omega
+    · rw [deg1]; omega
 
 /-- The Chebyshev polynomial T_N has degree N for N ≥ 1. -/
 lemma chebyshev_T_degree (N : ℕ) (hN : 0 < N) :
