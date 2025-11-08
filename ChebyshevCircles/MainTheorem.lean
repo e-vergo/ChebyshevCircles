@@ -28,45 +28,6 @@ noncomputable section
 open Polynomial Real Complex
 open scoped Polynomial
 
-/-- For θ=0, the scaled polynomial coefficients match Chebyshev for k > 0. -/
-theorem scaledPolynomial_matches_chebyshev_at_zero (N : ℕ) (k : ℕ) (hN : 0 < N) (hk : 0 < k) :
-    (scaledPolynomial N 0).coeff k = (Polynomial.Chebyshev.T ℝ N).coeff k := by
-  sorry
-
-/-- Coefficients for k > 0 don't vary with θ. Depends on `esymm_rotated_roots_invariant`. -/
-theorem constant_term_only_varies_axiom (N : ℕ) (θ₁ θ₂ : ℝ) (k : ℕ) (hN : 0 < N) (hk : 0 < k) :
-    (scaledPolynomial N θ₁).coeff k = (scaledPolynomial N θ₂).coeff k := by
-  sorry
-
-/-- The scaled polynomial equals the N-th Chebyshev polynomial plus a θ-dependent constant. -/
-theorem rotated_roots_yield_chebyshev (N : ℕ) (θ : ℝ) (hN : 0 < N) :
-    ∃ (c : ℝ), scaledPolynomial N θ = Polynomial.Chebyshev.T ℝ N + C c := by
-  use (scaledPolynomial N θ).coeff 0 - (Chebyshev.T ℝ N).coeff 0
-  ext n
-  simp only [coeff_add, coeff_C]
-  by_cases hn : n = 0
-  · simp [hn]
-  · simp [hn]
-    have h_pos : 0 < n := Nat.pos_of_ne_zero hn
-    calc (scaledPolynomial N θ).coeff n
-        = (scaledPolynomial N 0).coeff n := constant_term_only_varies_axiom N θ 0 n hN h_pos
-      _ = (Chebyshev.T ℝ N).coeff n := scaledPolynomial_matches_chebyshev_at_zero N n hN h_pos
-
-/-- All polynomial coefficients of degree k > 0 match the Chebyshev polynomial. -/
-theorem rotated_roots_coeffs_match_chebyshev (N : ℕ) (θ : ℝ) (k : ℕ)
-    (hN : 0 < N) (hk : 0 < k) :
-    (scaledPolynomial N θ).coeff k = (Polynomial.Chebyshev.T ℝ N).coeff k := by
-  obtain ⟨c, h_eq⟩ := rotated_roots_yield_chebyshev N θ hN
-  calc (scaledPolynomial N θ).coeff k
-      = (Chebyshev.T ℝ N + C c).coeff k := by rw [h_eq]
-    _ = (Chebyshev.T ℝ N).coeff k + (C c).coeff k := by rw [coeff_add]
-    _ = (Chebyshev.T ℝ N).coeff k + 0 := by
-        simp only [coeff_C]
-        have : k ≠ 0 := Nat.pos_iff_ne_zero.mp hk
-        simp [this]
-    _ = (Chebyshev.T ℝ N).coeff k := by ring
-
-
 /-- Sum of cosines at N equally spaced angles equals zero for N ≥ 2. -/
 lemma sum_cos_roots_of_unity (N : ℕ) (θ : ℝ) (hN : 2 ≤ N) :
     ∑ k ∈ Finset.range N, Real.cos (θ + 2 * π * k / N) = 0 := by
@@ -590,5 +551,40 @@ lemma scaledPolynomial_eval_at_projection (N : ℕ) (θ : ℝ) (k : ℕ) (hk : k
 lemma chebyshev_eval_cos (N : ℕ) (φ : ℝ) :
     (Polynomial.Chebyshev.T ℝ N).eval (Real.cos φ) = Real.cos (N * φ) := by
   exact Polynomial.Chebyshev.T_real_cos φ N
+
+/-! ## Main Theorems -/
+
+/-- For θ=0, the scaled polynomial coefficients match Chebyshev for k > 0. -/
+theorem scaledPolynomial_matches_chebyshev_at_zero (N : ℕ) (k : ℕ) (hN : 0 < N) (hk : 0 < k) :
+    (scaledPolynomial N 0).coeff k = (Polynomial.Chebyshev.T ℝ N).coeff k := by
+  sorry
+
+/-- The scaled polynomial equals the N-th Chebyshev polynomial plus a θ-dependent constant. -/
+theorem rotated_roots_yield_chebyshev (N : ℕ) (θ : ℝ) (hN : 0 < N) :
+    ∃ (c : ℝ), scaledPolynomial N θ = Polynomial.Chebyshev.T ℝ N + C c := by
+  use (scaledPolynomial N θ).coeff 0 - (Chebyshev.T ℝ N).coeff 0
+  ext n
+  simp only [coeff_add, coeff_C]
+  by_cases hn : n = 0
+  · simp [hn]
+  · simp [hn]
+    have h_pos : 0 < n := Nat.pos_of_ne_zero hn
+    calc (scaledPolynomial N θ).coeff n
+        = (scaledPolynomial N 0).coeff n := constant_term_only_varies N θ 0 n hN h_pos
+      _ = (Chebyshev.T ℝ N).coeff n := scaledPolynomial_matches_chebyshev_at_zero N n hN h_pos
+
+/-- All polynomial coefficients of degree k > 0 match the Chebyshev polynomial. -/
+theorem rotated_roots_coeffs_match_chebyshev (N : ℕ) (θ : ℝ) (k : ℕ)
+    (hN : 0 < N) (hk : 0 < k) :
+    (scaledPolynomial N θ).coeff k = (Polynomial.Chebyshev.T ℝ N).coeff k := by
+  obtain ⟨c, h_eq⟩ := rotated_roots_yield_chebyshev N θ hN
+  calc (scaledPolynomial N θ).coeff k
+      = (Chebyshev.T ℝ N + C c).coeff k := by rw [h_eq]
+    _ = (Chebyshev.T ℝ N).coeff k + (C c).coeff k := by rw [coeff_add]
+    _ = (Chebyshev.T ℝ N).coeff k + 0 := by
+        simp only [coeff_C]
+        have : k ≠ 0 := Nat.pos_iff_ne_zero.mp hk
+        simp [this]
+    _ = (Chebyshev.T ℝ N).coeff k := by ring
 
 end

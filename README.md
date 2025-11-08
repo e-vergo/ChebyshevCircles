@@ -1,233 +1,217 @@
 # Chebyshev Circles
 
-A formal Lean 4 proof connecting rotated roots of unity to Chebyshev polynomials, with Python visualization.
+Formal Lean 4 proof connecting rotated roots of unity to Chebyshev polynomials.
 
-## The Main Result
+## Main Theorem
 
 When N-th roots of unity are rotated by angle θ and projected onto the real axis, the polynomial formed from these projections, scaled by 2^(N-1), equals the N-th Chebyshev polynomial of the first kind plus a θ-dependent constant.
 
-**Formal Statement:**
 ```lean
 theorem rotated_roots_yield_chebyshev (N : ℕ) (θ : ℝ) (hN : 0 < N) :
     ∃ (c : ℝ), scaledPolynomial N θ = Polynomial.Chebyshev.T ℝ N + C c
 ```
 
-Where:
-- Projected roots: `cos(θ + 2πk/N)` for `k = 0, ..., N-1`
+**Construction:**
+- Projected roots: `cos(θ + 2πk/N)` for k = 0, ..., N-1
 - Unscaled polynomial: `P(x) = ∏(x - cos(θ + 2πk/N))`
 - Scaled polynomial: `S(x) = 2^(N-1) · P(x)`
-- Result: `S(x) = T_N(x) + c(θ)` where `T_N` is the N-th Chebyshev polynomial
+- Result: `S(x) = T_N(x) + c(θ)`
 
 ## Project Structure
 
 ```
 ChebyshevCircles/
 ├── ChebyshevCircles/
-│   ├── Basic.lean                    # Placeholder imports
-│   ├── RootsOfUnity.lean            # ✅ Complete - Root definitions
-│   ├── PolynomialConstruction.lean   # ⏳ 1 sorry - Polynomial building
-│   └── MainTheorem.lean              # ⏳ 7 sorries - Main theorems
-├── check_lean.sh                     # Analysis tool
-├── main.py                           # Visualization
-└── requirements.txt                  # Python dependencies
+│   ├── Basic.lean                   # Placeholder imports
+│   ├── RootsOfUnity.lean            # ✅ Root definitions and properties
+│   ├── PolynomialConstruction.lean  # ✅ Polynomial construction and properties
+│   └── MainTheorem.lean             # ⏳ Main theorem (6 helper lemmas remain)
+├── check_lean.sh                    # Analysis tool
+├── main.py                          # Visualization
+└── requirements.txt                 # Python dependencies
 ```
 
 ## Build Status
 
 ```
-✅ Build: Clean (0 compilation errors, 0 non-sorry warnings)
-✅ Transparency: Clean (no axioms or proof evasion)
-⏳ Remaining work: 8 sorries (7 in MainTheorem, 1 in PolynomialConstruction)
+✅ Build: Clean compilation (6 sorry warnings only)
+✅ Main theorem structure: Proven (depends on helper lemmas)
+⏳ Remaining work: 6 helper lemmas in MainTheorem.lean
 ```
 
 ## What We Have
 
-### Complete Foundation (RootsOfUnity.lean)
+### Complete Modules
 
-All definitions and basic properties of rotated roots:
-- `realProjection_eq_cos` - Real parts equal cosine values
-- `realProjection_mem_Icc` - Projections lie in [-1, 1]
-- `realProjection_mem_list` - Membership in projection list
-- `card_realProjectionsList` - List length equals N
+**RootsOfUnity.lean** - Rotated root definitions and basic properties
+- Definitions: `rotatedRootsList`, `realProjectionsList`
+- Properties: bounds, membership, cardinality
+- All proofs complete
 
-### Complete Polynomial Infrastructure (PolynomialConstruction.lean)
+**PolynomialConstruction.lean** - Polynomial construction from roots
+- Construction: `polynomialFromRealRoots`, `unscaledPolynomial`, `scaledPolynomial`
+- Properties: degree, monic property, leading coefficient
+- Constant term variation: Proven for all N ≥ 1
+- All proofs complete
 
-Core polynomial construction and properties:
-- `polynomialFromRealRoots_eval_mem` - Polynomials vanish at their roots
-- `polynomialFromRealRoots_degree` - Degree equals number of roots
-- `unscaledPolynomial_degree` - Unscaled polynomial has degree N
-- `scaledPolynomial_degree` - Scaled polynomial has degree N
-- `unscaledPolynomial_monic` - Leading coefficient is 1
-- `scaledPolynomial_leadingCoeff` - Leading coefficient is 2^(N-1)
-- `scaledPolynomial_constantTerm_varies` - Constant term varies with θ for N=1,2,3,4,5
+### Proven Main Results (MainTheorem.lean)
 
-**Remaining:** Complete the N≥6 case (1 sorry at line 329)
+The main theorems are **structurally complete** (depend on 6 helper lemmas):
 
-### Proven Main Theorems (MainTheorem.lean)
+```lean
+theorem rotated_roots_yield_chebyshev (N : ℕ) (θ : ℝ) (hN : 0 < N) :
+    ∃ (c : ℝ), scaledPolynomial N θ = Polynomial.Chebyshev.T ℝ N + C c
 
-The two main theorems are **proven**, dependent on helper lemmas:
-- `rotated_roots_yield_chebyshev` - Polynomial equality form
-- `rotated_roots_coeffs_match_chebyshev` - Coefficient matching form
+theorem rotated_roots_coeffs_match_chebyshev (N : ℕ) (k : ℕ) (θ : ℝ) (hN : 0 < N) (hk : 0 < k) :
+    (scaledPolynomial N θ).coeff k = (Polynomial.Chebyshev.T ℝ N).coeff k
+```
 
-### Complete Helper Lemmas (MainTheorem.lean)
+### Supporting Infrastructure (MainTheorem.lean)
 
-**Roots of unity properties:**
-- `sum_cos_roots_of_unity` - Sum of cosines at N equally spaced angles equals zero
-- `sum_cos_multiple_rotated_roots` - Generalized sum formula for multiples
-- `list_foldr_eq_multiset_prod` - List/Multiset correspondence
+**Trigonometric identities:**
+- Sum of cosines at N equally-spaced angles: `sum_cos_roots_of_unity`
+- Generalized sum for multiples: `sum_cos_multiple_rotated_roots`
+- Power-reduction formulas: cos² through cos⁵
+- Multiple angle formulas
 
-**Trigonometric formulas:**
-- `cos_cube_formula` - cos³(x) power reduction
-- `cos_four_formula` - cos⁴(x) power reduction
-- `cos_five_mul` - Quintuple angle formula
-- `cos_five_formula` - cos⁵(x) power reduction
+**Power sum invariance (specific cases proven):**
+- j = 2, 3, 4, 5: Power sums ∑cos(θ + 2πk/N)^j are θ-independent
 
-**Power sum invariance (specific cases):**
-- `powerSumCos_invariant_j2` - j=2 case proven
-- `powerSumCos_invariant_j3` - j=3 case proven
-- `powerSumCos_invariant_j4` - j=4 case proven
-- `powerSumCos_invariant_j5` - j=5 case proven
-
-**Chebyshev properties:**
-- `chebyshev_T_degree` - T_N has degree N (proven by strong induction)
-- `chebyshev_eval_cos` - T_N(cos φ) = cos(Nφ)
-- `scaledPolynomial_eval_at_projection` - Polynomial vanishes at projected roots
+**Polynomial properties:**
+- Degree calculations
+- Chebyshev recursion and evaluation
+- Root evaluation
 
 ## What We Need
 
-### Critical Path (MainTheorem.lean)
+Six helper lemmas in [MainTheorem.lean](ChebyshevCircles/MainTheorem.lean) remain. They form a dependency chain:
 
-**1. General power sum invariance** (Line 335)
+### Dependency Structure
+
+```
+[EASY] List/Finset conversions (lines 382, 388)
+   ↓
+[MEDIUM] Newton's identity (line 350)
+   ↓
+[MEDIUM] General power sum invariance (line 339)
+   ↓
+[TRIVIAL] Remove temporary axiom (line 37)
+   ↓
+[HARD] Chebyshev coefficient matching (line 32)
+```
+
+### The 6 Remaining Lemmas
+
+#### 1. multiset_coe_realProjectionsList_sum (line 382)
+**Difficulty:** Easy
+**What:** Convert `(↑(realProjectionsList N θ) : Multiset ℝ).sum` to `∑ k ∈ Finset.range N, Real.cos(...)`
+**Strategy:** Unfold definitions, use List.sum equals Finset.sum conversion
+
+#### 2. multiset_powersum_realProjectionsList (line 388)
+**Difficulty:** Easy
+**What:** Same as #1 but with `.map (fun x => x ^ j)` applied
+**Strategy:** Identical to #1 with additional map composition
+
+#### 3. multiset_newton_identity (line 350)
+**Difficulty:** Medium
+**What:** Newton's identities relating `Multiset.esymm` to power sums
 ```lean
-lemma powerSumCos_invariant (N : ℕ) (j : ℕ) (θ₁ θ₂ : ℝ)
-    (hN : 0 < N) (hj : 0 < j) (hj' : j < N)
+m * s.esymm m = (-1)^(m+1) * ∑_{i<m} (-1)^i * s.esymm i * psum_{m-i}
 ```
-Extend the proven j=2,3,4,5 cases to general j. Strategy: Use power-reduction formulas or binomial expansion.
+**Strategy:** (Detailed in code comments)
+- Quotient multiset to list representation
+- Apply `MvPolynomial.mul_esymm_eq_sum`
+- Evaluate using `aeval`
+- Use `MvPolynomial.aeval_esymm_eq_multiset_esymm` bridge
 
-**2. Newton's identity bridge** (Line 342)
+#### 4. powerSumCos_invariant (line 339)
+**Difficulty:** Medium
+**What:** Generalize proven j=2,3,4,5 cases to arbitrary j < N
 ```lean
-lemma multiset_esymm_from_psum (s : Multiset ℝ) (m : ℕ)
+∑ k, cos(θ₁ + 2πk/N)^j = ∑ k, cos(θ₂ + 2πk/N)^j
 ```
-Connect Multiset.esymm to power sums via Newton's identities. Use `MvPolynomial.psum_eq_mul_esymm_sub_sum` from Mathlib.
+**Strategy:**
+- Use power-reduction: cos^j(x) = linear combination of cos(kx) for k ≤ j
+- Apply `sum_cos_multiple_rotated_roots` (already proven)
+- All cos(k·(2πi/N)) terms sum to zero when k < N
 
-**3. Elementary symmetric polynomial invariance** (Lines 349, 361, 369)
-```lean
-lemma esymm_rotated_roots_invariant (N : ℕ) (m : ℕ) (θ₁ θ₂ : ℝ)
-```
-Prove using strong induction:
-- Base case (m=1): Apply `sum_cos_roots_of_unity`
-- Inductive step: Combine Newton's identity with power sum invariance
+**Alternative:** Complex exponential method via Re(exp(ijθ)) and geometric sums
 
-**4. Coefficient invariance theorem** (Line 372)
-```lean
-theorem constant_term_only_varies (N : ℕ) (θ₁ θ₂ : ℝ) (k : ℕ)
-```
-Apply Vieta's formulas and esymm invariance. This depends on completing step 3.
+#### 5. constant_term_only_varies_axiom (line 37)
+**Difficulty:** Trivial (already proven!)
+**What:** Remove axiom, replace with call to `constant_term_only_varies` (proven in PolynomialConstruction.lean)
+**Strategy:** One-line fix once dependencies (#3, #4) complete
 
-**5. Chebyshev coefficient matching** (Line 30)
-```lean
-theorem scaledPolynomial_matches_chebyshev_at_zero (N : ℕ) (k : ℕ)
-```
-**Hardest remaining task.** For θ=0, prove coefficients match Chebyshev. The challenge: roots cos(2πk/N) differ from standard Chebyshev roots cos((2k+1)π/(2N)), yet coefficients align.
+#### 6. scaledPolynomial_matches_chebyshev_at_zero (line 32)
+**Difficulty:** Hard (research problem)
+**What:** At θ=0, prove `(scaledPolynomial N 0).coeff k = (T_N).coeff k` for k > 0
 
-Possible approaches:
-- Show scaledPolynomial satisfies Chebyshev recurrence
-- Use Chebyshev's extremal characterization
-- Direct coefficient computation via Vieta's formulas
-- Trigonometric product-to-sum identities
+**Challenge:** Roots cos(2πk/N) differ from Chebyshev roots cos((2k+1)π/(2N))
 
-**6. Temporary axiom removal** (Line 35)
-```lean
-theorem constant_term_only_varies_axiom
-```
-Replace with `constant_term_only_varies` once step 4 is complete.
-
-### Independent Work (PolynomialConstruction.lean)
-
-**Complete constant term variation for N≥6** (Line 329)
-
-Prove the constant term varies with θ for all N≥6 using the same technique as N=3,4,5:
-- Use `Real.cos_eq_zero_iff` (cos x = 0 ↔ x = (2m+1)π/2)
-- Show specific angles don't satisfy this via modular arithmetic
-- Helper lemma `cos_two_pi_k_div_odd_N_ne_zero` already available
-
-## Development Tools
-
-### Build Commands
-```bash
-lake build                                    # Build entire project
-lake build ChebyshevCircles.MainTheorem       # Build specific module
-```
-
-### Status Checks
-```bash
-./check_lean.sh --all sorries ChebyshevCircles/           # All sorries
-./check_lean.sh --sorries ChebyshevCircles/MainTheorem.lean  # Specific file
-./check_lean.sh --all transparency ChebyshevCircles/      # Check for axioms
-./check_lean.sh --all errors-only ChebyshevCircles/       # Compilation errors
-```
-
-### Python Visualization
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python3 main.py  # Creates chebyshev_animation.gif
-```
+**Possible approaches:**
+- Prove scaledPolynomial satisfies Chebyshev recurrence relation
+- Use Chebyshev extremal property
+- Trigonometric product identities
+- Evaluation-based proof (both polynomials agree at sufficiently many points)
 
 ## Next Steps
 
-### Recommended Priority
+### Recommended Approach
 
-**Priority 1: Complete the invariance chain** (MainTheorem.lean, steps 1-4)
-- Most mathematical content already in place
-- Clear dependency chain
-- Unblocks the main theorems completely
+**Phase 1: List/Finset conversions** (Quick win - 30 min)
+1. Complete `multiset_coe_realProjectionsList_sum` (line 382)
+2. Complete `multiset_powersum_realProjectionsList` (line 388)
+- These are routine conversions, unblock everything else
 
-**Priority 2: Finish N≥6 case** (PolynomialConstruction.lean)
-- Independent of other work
-- Straightforward extension of existing technique
-- Quick win
+**Phase 2: Algebraic infrastructure** (Parallel - 4-6 hours)
+Launch 2 agents in parallel:
+- Agent A: `multiset_newton_identity` (line 350) - MvPolynomial machinery
+- Agent B: `powerSumCos_invariant` (line 339) - Complex exponential method
 
-**Priority 3: Chebyshev coefficient matching** (MainTheorem.lean, step 5)
-- Most challenging remaining task
-- May require research into Chebyshev polynomial theory
-- Consider after other work is complete
+**Phase 3: Integration** (Trivial - 5 min)
+- Replace `constant_term_only_varies_axiom` with proven theorem
 
-### Execution Strategy
+**Phase 4: Research** (Hard - TBD)
+- `scaledPolynomial_matches_chebyshev_at_zero` (line 32)
+- May require new insights into Chebyshev theory
+- Consider multiple approaches before committing
 
-The work naturally splits into two independent streams:
+### Execution Principles
 
-**Stream A (Critical):** MainTheorem.lean invariance proofs
-1. Generalize power sum invariance
-2. Prove Newton's identity bridge
-3. Complete esymm invariance
-4. Apply to coefficient theorem
+**Context engineering:**
+- Read ALL transitively imported files before writing proofs
+- Use lean-lsp MCP tools extensively: `lean_local_search`, `lean_hover_info`, `lean_goal`
+- Check proof state frequently with `lean_diagnostic_messages`
 
-**Stream B (Independent):** PolynomialConstruction.lean
-1. Extend constant term variation to N≥6
+**Iterative development:**
+- Create scratch files for experimentation (copy file, work there, copy back)
+- Test each proof step immediately
+- Keep partial progress - never replace working tactics with sorry
 
-### Future: Mathlib Submission
+**Parallel execution:**
+- Launch sonnet 4.5 agents for independent proofs
+- Scratch files prevent interference between agents
 
-After all sorries are resolved:
-1. Remove temporary axiom `constant_term_only_varies_axiom`
-2. Add comprehensive module documentation
-3. Ensure full Mathlib style compliance
-4. Add test cases for small N
-5. Performance review and optimization
-6. Submit to Mathlib
+**Avoid:**
+- Writing markdown summaries (wastes tokens)
+- Batching changes before testing
+- Deleting partial proofs when stuck
 
-## Mathematical Significance
+## Development Commands
 
-This formalization captures a surprising connection:
-- **Unexpected roots:** The polynomial roots cos(2πk/N) differ from Chebyshev's standard roots
-- **Precise scaling:** Factor 2^(N-1) discovered numerically
-- **Rotation invariance:** Non-constant coefficients independent of θ
-- **New perspective:** May illuminate Chebyshev polynomial properties through symmetry
+```bash
+# Build
+lake build
+
+# Check sorries
+./check_lean.sh --sorries ChebyshevCircles/MainTheorem.lean
+
+# Visualization
+python3 main.py  # Creates chebyshev_animation.gif
+```
 
 ## Technical Details
 
-- **Lean version:** 4.25.0-rc2
-- **Dependencies:** Mathlib (RingTheory.Polynomial.Chebyshev, Analysis.SpecialFunctions.Trigonometric)
-- **Python:** 3.13+ with numpy, Pillow
-- **Target:** Mathlib submission quality
+- Lean 4.25.0-rc2
+- Mathlib: RingTheory.Polynomial.Chebyshev, Analysis.SpecialFunctions.Trigonometric
+- Target: Mathlib submission quality
