@@ -1,5 +1,6 @@
 import numpy as np
 from PIL import Image, ImageDraw
+import os
 
 # function that takes in a integer and returns a list of the N roots of unity
 def roots_of_unity(N):
@@ -32,7 +33,7 @@ def rotate_complex_numbers(complex_list, angle):
 # function that takes in a list of complex polynomial coefficients, scales them by 2^(n-1), where n is the degree of the polynomial, and returns a list containing the real components of the scaled coefficients
 def scale_polynomial_coefficients(complex_coeffs):
     n = len(complex_coeffs)
-    scale_factor = 2 ** (n - 1)
+    scale_factor = 2 ** (n - 2)
     scaled_real_parts = [z.real * scale_factor for z in complex_coeffs]
     return scaled_real_parts
 
@@ -147,27 +148,35 @@ def create_frame(rotation_angle, N=5):
 
 # Generate animation
 def generate_animation():
-    print("Generating animation frames...")
-    frames = []
-    num_frames = 300
-    N = 5
+    # Create output folder
+    output_folder = 'chebyshev_gifs'
+    os.makedirs(output_folder, exist_ok=True)
 
-    for i in range(num_frames):
-        rotation_angle = 2 * np.pi * i / num_frames
-        frame = create_frame(rotation_angle, N)
-        frames.append(frame)
-        if (i + 1) % 10 == 0:
-            print(f"  Generated frame {i + 1}/{num_frames}")
+    # List of N values to generate
+    N_values = [3, 4, 5, 6, 12, 13]
 
-    print("Saving animated GIF...")
-    frames[0].save(
-        'chebyshev_animation.gif',
-        save_all=True,
-        append_images=frames[1:],
-        duration=30,  # 30ms per frame
-        loop=0
-    )
-    print("Animation saved as 'chebyshev_animation.gif'")
+    for N in N_values:
+        print(f"\nGenerating animation for N={N}...")
+        frames = []
+        num_frames = 300
+
+        for i in range(num_frames):
+            rotation_angle = 2 * np.pi * i / num_frames
+            frame = create_frame(rotation_angle, N)
+            frames.append(frame)
+            if (i + 1) % 10 == 0:
+                print(f"  Generated frame {i + 1}/{num_frames}")
+
+        output_path = os.path.join(output_folder, f'chebyshev_animation_N{N}.gif')
+        print(f"Saving animated GIF to {output_path}...")
+        frames[0].save(
+            output_path,
+            save_all=True,
+            append_images=frames[1:],
+            duration=30,  # 30ms per frame
+            loop=0
+        )
+        print(f"Animation saved as '{output_path}'")
 
 
 if __name__ == "__main__":

@@ -6,6 +6,7 @@ Authors: Eric
 import Mathlib.RingTheory.Polynomial.Chebyshev
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Chebyshev
 import Mathlib.RingTheory.Polynomial.Vieta
+import Mathlib.Algebra.BigOperators.Field
 import ChebyshevCircles.PolynomialConstruction
 
 /-!
@@ -305,16 +306,221 @@ lemma sum_cos_multiple_rotated_roots (N : ℕ) (m : ℕ) (θ : ℝ)
           rw [h_geom]; ring
         exact eq_zero_of_ne_zero_of_mul_left_eq_zero (sub_ne_zero_of_ne h_ne_one) this
 
+/-- Helper lemma: cos³(x) in terms of cos(3x) and cos(x).
+    Derived from cos_three_mul: cos(3x) = 4cos³(x) - 3cos(x) -/
+lemma cos_cube_formula (x : ℝ) :
+    Real.cos x ^ 3 = (Real.cos (3 * x) + 3 * Real.cos x) / 4 := by
+  -- Start from cos_three_mul: cos(3x) = 4cos³(x) - 3cos(x)
+  have h := Real.cos_three_mul x
+  -- Rearrange: 4cos³(x) = cos(3x) + 3cos(x)
+  have h1 : 4 * Real.cos x ^ 3 = Real.cos (3 * x) + 3 * Real.cos x := by
+    linarith
+  -- Divide by 4
+  have h2 : Real.cos x ^ 3 = (Real.cos (3 * x) + 3 * Real.cos x) / 4 := by
+    linarith
+  exact h2
+
+/-- **Phase B Helper (j=2 case)**: Proven using real trig identities! -/
+lemma powerSumCos_invariant_j2 (N : ℕ) (θ₁ θ₂ : ℝ) (hN : 2 < N) :
+    ∑ k ∈ Finset.range N, (Real.cos (θ₁ + 2 * π * k / N)) ^ 2 =
+    ∑ k ∈ Finset.range N, (Real.cos (θ₂ + 2 * π * k / N)) ^ 2 := by
+  -- Use cos²(x) = (1 + cos(2x))/2
+  have cos_sq_formula : ∀ x, Real.cos x ^ 2 = (1 + Real.cos (2 * x)) / 2 := by
+    intro x
+    have h1 : Real.cos (2 * x) = 2 * Real.cos x ^ 2 - 1 := by
+      rw [Real.cos_two_mul]
+    linarith [h1]
+  simp_rw [cos_sq_formula, add_div, Finset.sum_add_distrib]
+  -- Both cosine sums equal 0 by sum_cos_multiple_rotated_roots with m=2
+  have h1_raw := sum_cos_multiple_rotated_roots N 2 θ₁ (by omega) (by omega) (by omega)
+  have h2_raw := sum_cos_multiple_rotated_roots N 2 θ₂ (by omega) (by omega) (by omega)
+  -- Normalize to use real literals
+  have h1 : ∑ x ∈ Finset.range N, Real.cos (2 * (θ₁ + 2 * π * ↑x / ↑N)) = 0 := by
+    convert h1_raw using 2
+  have h2 : ∑ x ∈ Finset.range N, Real.cos (2 * (θ₂ + 2 * π * ↑x / ↑N)) = 0 := by
+    convert h2_raw using 2
+  -- Show both cosine sums equal 0
+  congr 1
+  rw [← Finset.sum_div, ← Finset.sum_div, h1, h2]
+
+/-- **Phase B Helper (j=3 case)**: Proven using real trig identities!
+    Uses the triple-angle formula: cos(3x) = 4cos³(x) - 3cos(x) -/
+lemma powerSumCos_invariant_j3 (N : ℕ) (θ₁ θ₂ : ℝ) (hN : 3 < N) :
+    ∑ k ∈ Finset.range N, (Real.cos (θ₁ + 2 * π * k / N)) ^ 3 =
+    ∑ k ∈ Finset.range N, (Real.cos (θ₂ + 2 * π * k / N)) ^ 3 := by
+  -- Step 1: Apply cos³(x) = (cos(3x) + 3cos(x))/4
+  simp_rw [cos_cube_formula]
+  -- Step 2: Distribute the division and addition over the sum
+  simp_rw [add_div, Finset.sum_add_distrib]
+  -- Now we have: (∑ cos(3(θ + 2πk/N))/4 + ∑ 3cos(θ + 2πk/N)/4) for both θ₁ and θ₂
+  -- Step 3: Show both sums equal 0, making the entire sum 0/4 + 0/4 = 0
+  -- Part 1: ∑ cos(3(θ + 2πk/N))/4 = 0
+  have h1a : ∑ k ∈ Finset.range N, Real.cos (3 * (θ₁ + 2 * π * k / N)) / 4 = 0 := by
+    rw [← Finset.sum_div]
+    have : ∑ k ∈ Finset.range N, Real.cos (3 * (θ₁ + 2 * π * k / N)) = 0 :=
+      sum_cos_multiple_rotated_roots N 3 θ₁ (by omega) (by omega) (by omega)
+    rw [this]
+    norm_num
+  have h1b : ∑ k ∈ Finset.range N, Real.cos (3 * (θ₂ + 2 * π * k / N)) / 4 = 0 := by
+    rw [← Finset.sum_div]
+    have : ∑ k ∈ Finset.range N, Real.cos (3 * (θ₂ + 2 * π * k / N)) = 0 :=
+      sum_cos_multiple_rotated_roots N 3 θ₂ (by omega) (by omega) (by omega)
+    rw [this]
+    norm_num
+  -- Part 2: ∑ 3cos(θ + 2πk/N)/4 = 0
+  have h2a : ∑ k ∈ Finset.range N, 3 * Real.cos (θ₁ + 2 * π * k / N) / 4 = 0 := by
+    rw [← Finset.sum_div, ← Finset.mul_sum]
+    have : ∑ k ∈ Finset.range N, Real.cos (θ₁ + 2 * π * k / N) = 0 :=
+      sum_cos_roots_of_unity N θ₁ (by omega)
+    rw [this]
+    norm_num
+  have h2b : ∑ k ∈ Finset.range N, 3 * Real.cos (θ₂ + 2 * π * k / N) / 4 = 0 := by
+    rw [← Finset.sum_div, ← Finset.mul_sum]
+    have : ∑ k ∈ Finset.range N, Real.cos (θ₂ + 2 * π * k / N) = 0 :=
+      sum_cos_roots_of_unity N θ₂ (by omega)
+    rw [this]
+    norm_num
+  -- Combine: 0 + 0 = 0 + 0
+  rw [h1a, h1b, h2a, h2b]
+
+/-- Helper lemma: cos⁴(x) power-reduction formula.
+    Derived by applying cos²(x) = (1 + cos(2x))/2 twice -/
+lemma cos_four_formula (x : ℝ) :
+    Real.cos x ^ 4 = (3 + 4 * Real.cos (2 * x) + Real.cos (4 * x)) / 8 := by
+  have h1 : Real.cos x ^ 4 = (Real.cos x ^ 2) ^ 2 := by ring
+  rw [h1]
+  have h2 : Real.cos x ^ 2 = (1 + Real.cos (2 * x)) / 2 := by rw [Real.cos_sq]; ring
+  rw [h2]
+  have h3 : ((1 + Real.cos (2 * x)) / 2) ^ 2 =
+      (1 + 2 * Real.cos (2 * x) + Real.cos (2 * x) ^ 2) / 4 := by field_simp; ring
+  rw [h3]
+  have h4 : Real.cos (2 * x) ^ 2 = (1 + Real.cos (4 * x)) / 2 := by
+    rw [Real.cos_sq]; ring
+  rw [h4]
+  field_simp; ring
+
+/-- **Phase B Helper (j=4 case)**: Proven using real trig identities!
+    Uses the power-reduction formula: cos⁴(x) = (3 + 4·cos(2x) + cos(4x))/8 -/
+lemma powerSumCos_invariant_j4 (N : ℕ) (θ₁ θ₂ : ℝ) (hN : 4 < N) :
+    ∑ k ∈ Finset.range N, (Real.cos (θ₁ + 2 * π * k / N)) ^ 4 =
+    ∑ k ∈ Finset.range N, (Real.cos (θ₂ + 2 * π * k / N)) ^ 4 := by
+  simp_rw [cos_four_formula, add_div, Finset.sum_add_distrib]
+  -- Three parts: constant 3/8, 4·cos(2·)/8, and cos(4·)/8
+  -- The cos(2·) and cos(4·) parts both equal 0
+  have h1_raw := sum_cos_multiple_rotated_roots N 2 θ₁ (by omega) (by omega) (by omega)
+  have h2_raw := sum_cos_multiple_rotated_roots N 2 θ₂ (by omega) (by omega) (by omega)
+  have h3_raw := sum_cos_multiple_rotated_roots N 4 θ₁ (by omega) (by omega) (by omega)
+  have h4_raw := sum_cos_multiple_rotated_roots N 4 θ₂ (by omega) (by omega) (by omega)
+  -- Normalize to use real literals
+  have h1 : ∑ k ∈ Finset.range N, Real.cos (2 * (θ₁ + 2 * π * ↑k / ↑N)) = 0 := by convert h1_raw using 2
+  have h2 : ∑ k ∈ Finset.range N, Real.cos (2 * (θ₂ + 2 * π * ↑k / ↑N)) = 0 := by convert h2_raw using 2
+  have h3 : ∑ k ∈ Finset.range N, Real.cos (4 * (θ₁ + 2 * π * ↑k / ↑N)) = 0 := by convert h3_raw using 2
+  have h4 : ∑ k ∈ Finset.range N, Real.cos (4 * (θ₂ + 2 * π * ↑k / ↑N)) = 0 := by convert h4_raw using 2
+  -- Now show all parts equal 0
+  have eq1 : ∑ k ∈ Finset.range N, (4 * Real.cos (2 * (θ₁ + 2 * π * k / N))) / 8 = 0 := by
+    rw [← Finset.sum_div, ← Finset.mul_sum, h1]; norm_num
+  have eq2 : ∑ k ∈ Finset.range N, (4 * Real.cos (2 * (θ₂ + 2 * π * k / N))) / 8 = 0 := by
+    rw [← Finset.sum_div, ← Finset.mul_sum, h2]; norm_num
+  have eq3 : ∑ k ∈ Finset.range N, Real.cos (4 * (θ₁ + 2 * π * k / N)) / 8 = 0 := by
+    rw [← Finset.sum_div, h3]; norm_num
+  have eq4 : ∑ k ∈ Finset.range N, Real.cos (4 * (θ₂ + 2 * π * k / N)) / 8 = 0 := by
+    rw [← Finset.sum_div, h4]; norm_num
+  rw [eq1, eq2, eq3, eq4]
+
+/-- Helper lemma: quintuple-angle formula for cosine.
+    Proves cos(5x) = 16cos⁵(x) - 20cos³(x) + 5cos(x) -/
+lemma cos_five_mul (x : ℝ) :
+    Real.cos (5 * x) = 16 * Real.cos x ^ 5 - 20 * Real.cos x ^ 3 + 5 * Real.cos x := by
+  have h1 : (5 : ℝ) * x = 2 * x + 3 * x := by ring
+  rw [h1, Real.cos_add, Real.cos_two_mul, Real.sin_two_mul, Real.cos_three_mul,
+      Real.sin_three_mul]
+  have h_sin2 : Real.sin x ^ 2 = 1 - Real.cos x ^ 2 := by
+    have := Real.sin_sq_add_cos_sq x; linarith
+  have h_sin3 : Real.sin x ^ 3 = Real.sin x * (1 - Real.cos x ^ 2) := by
+    rw [pow_succ, h_sin2]; ring
+  rw [h_sin3]
+  calc (2 * Real.cos x ^ 2 - 1) * (4 * Real.cos x ^ 3 - 3 * Real.cos x) -
+        2 * Real.sin x * Real.cos x * (3 * Real.sin x -
+        4 * (Real.sin x * (1 - Real.cos x ^ 2)))
+      = (2 * Real.cos x ^ 2 - 1) * (4 * Real.cos x ^ 3 - 3 * Real.cos x) -
+        2 * Real.sin x ^ 2 * Real.cos x * (4 * Real.cos x ^ 2 - 1) := by ring
+    _ = (2 * Real.cos x ^ 2 - 1) * (4 * Real.cos x ^ 3 - 3 * Real.cos x) -
+        2 * (1 - Real.cos x ^ 2) * Real.cos x * (4 * Real.cos x ^ 2 - 1) := by rw [h_sin2]
+    _ = 16 * Real.cos x ^ 5 - 20 * Real.cos x ^ 3 + 5 * Real.cos x := by ring
+
+/-- Helper lemma: cos⁵(x) power-reduction formula.
+    Derived by solving the quintuple-angle formula for cos⁵(x) -/
+lemma cos_five_formula (x : ℝ) :
+    Real.cos x ^ 5 = (Real.cos (5 * x) + 5 * Real.cos (3 * x) + 10 * Real.cos x) / 16 := by
+  have h_five : Real.cos (5 * x) =
+      16 * Real.cos x ^ 5 - 20 * Real.cos x ^ 3 + 5 * Real.cos x := cos_five_mul x
+  have h_cube : Real.cos x ^ 3 = (Real.cos (3 * x) + 3 * Real.cos x) / 4 :=
+      cos_cube_formula x
+  rw [h_cube] at h_five
+  have h_simplified :
+      Real.cos (5 * x) = 16 * Real.cos x ^ 5 - 5 * Real.cos (3 * x) - 10 * Real.cos x := by
+    calc Real.cos (5 * x)
+        = 16 * Real.cos x ^ 5 - 20 * ((Real.cos (3 * x) + 3 * Real.cos x) / 4) +
+          5 * Real.cos x := h_five
+      _ = 16 * Real.cos x ^ 5 - 5 * (Real.cos (3 * x) + 3 * Real.cos x) +
+          5 * Real.cos x := by ring
+      _ = 16 * Real.cos x ^ 5 - 5 * Real.cos (3 * x) - 10 * Real.cos x := by ring
+  linarith [h_simplified]
+
+/-- **Phase B Helper (j=5 case)**: Proven using real trig identities!
+    Uses the power-reduction formula: cos⁵(x) = (cos(5x) + 5·cos(3x) + 10·cos(x))/16 -/
+lemma powerSumCos_invariant_j5 (N : ℕ) (θ₁ θ₂ : ℝ) (hN : 5 < N) :
+    ∑ k ∈ Finset.range N, (Real.cos (θ₁ + 2 * π * k / N)) ^ 5 =
+    ∑ k ∈ Finset.range N, (Real.cos (θ₂ + 2 * π * k / N)) ^ 5 := by
+  simp_rw [cos_five_formula, add_div, Finset.sum_add_distrib]
+  -- Three frequency components: cos(5·), 5·cos(3·), 10·cos(1·), all vanish
+  have h1_5_raw := sum_cos_multiple_rotated_roots N 5 θ₁ (by omega) (by omega) (by omega)
+  have h2_5_raw := sum_cos_multiple_rotated_roots N 5 θ₂ (by omega) (by omega) (by omega)
+  have h1_3_raw := sum_cos_multiple_rotated_roots N 3 θ₁ (by omega) (by omega) (by omega)
+  have h2_3_raw := sum_cos_multiple_rotated_roots N 3 θ₂ (by omega) (by omega) (by omega)
+  have h1_1_raw := sum_cos_roots_of_unity N θ₁ (by omega)
+  have h2_1_raw := sum_cos_roots_of_unity N θ₂ (by omega)
+  -- Normalize to use real literals
+  have h1_5 : ∑ k ∈ Finset.range N, Real.cos (5 * (θ₁ + 2 * π * ↑k / ↑N)) = 0 := by
+    convert h1_5_raw using 2
+  have h2_5 : ∑ k ∈ Finset.range N, Real.cos (5 * (θ₂ + 2 * π * ↑k / ↑N)) = 0 := by
+    convert h2_5_raw using 2
+  have h1_3 : ∑ k ∈ Finset.range N, Real.cos (3 * (θ₁ + 2 * π * ↑k / ↑N)) = 0 := by
+    convert h1_3_raw using 2
+  have h2_3 : ∑ k ∈ Finset.range N, Real.cos (3 * (θ₂ + 2 * π * ↑k / ↑N)) = 0 := by
+    convert h2_3_raw using 2
+  have h1_1 : ∑ k ∈ Finset.range N, Real.cos (θ₁ + 2 * π * ↑k / ↑N) = 0 := by
+    convert h1_1_raw using 2
+  have h2_1 : ∑ k ∈ Finset.range N, Real.cos (θ₂ + 2 * π * ↑k / ↑N) = 0 := by
+    convert h2_1_raw using 2
+  -- Show all frequency components vanish
+  have eq1 : ∑ k ∈ Finset.range N, Real.cos (5 * (θ₁ + 2 * π * k / N)) / 16 = 0 := by
+    rw [← Finset.sum_div, h1_5]; norm_num
+  have eq2 : ∑ k ∈ Finset.range N, Real.cos (5 * (θ₂ + 2 * π * k / N)) / 16 = 0 := by
+    rw [← Finset.sum_div, h2_5]; norm_num
+  have eq3 : ∑ k ∈ Finset.range N, (5 * Real.cos (3 * (θ₁ + 2 * π * k / N))) / 16 = 0 := by
+    rw [← Finset.sum_div, ← Finset.mul_sum, h1_3]; norm_num
+  have eq4 : ∑ k ∈ Finset.range N, (5 * Real.cos (3 * (θ₂ + 2 * π * k / N))) / 16 = 0 := by
+    rw [← Finset.sum_div, ← Finset.mul_sum, h2_3]; norm_num
+  have eq5 : ∑ k ∈ Finset.range N, (10 * Real.cos (θ₁ + 2 * π * k / N)) / 16 = 0 := by
+    rw [← Finset.sum_div, ← Finset.mul_sum, h1_1]; norm_num
+  have eq6 : ∑ k ∈ Finset.range N, (10 * Real.cos (θ₂ + 2 * π * k / N)) / 16 = 0 := by
+    rw [← Finset.sum_div, ← Finset.mul_sum, h2_1]; norm_num
+  rw [eq1, eq2, eq3, eq4, eq5, eq6]
+
 /-- **Phase B Helper**: Power sum of cosines is θ-invariant for 0 < j < N.
     The j-th power sum ∑_{k=0}^{N-1} cos(θ + 2πk/N)^j is independent of θ.
 
-    Strategy: Use binomial expansion cos^j = ((e^(iθ)+e^(-iθ))/2)^j,
-    interchange sums, apply sum_cos_multiple_rotated_roots to each frequency. -/
+    Strategy: Use real trig power-reduction formulas (j=2,3,4,5 proven above!),
+    extend to general j using pattern or induction.
+
+    **PROGRESS**: ✅ j=2 ✅ j=3 ✅ j=4 ✅ j=5 complete! -/
 lemma powerSumCos_invariant (N : ℕ) (j : ℕ) (θ₁ θ₂ : ℝ)
     (hN : 0 < N) (hj : 0 < j) (hj' : j < N) :
     ∑ k ∈ Finset.range N, (Real.cos (θ₁ + 2 * π * k / N)) ^ j =
     ∑ k ∈ Finset.range N, (Real.cos (θ₂ + 2 * π * k / N)) ^ j := by
-  sorry  -- ~70 LOC: binomial expansion, apply sum_cos_multiple_rotated_roots
+  -- j=2, j=3, and j=4 cases are proven above!
+  sorry  -- TODO: Use induction or prove remaining cases j=5,...,N-1
 
 /-- **Phase C Helper**: Connection between Multiset.esymm and power sums.
     This adapts Newton's identity from MvPolynomial to the Multiset context.
