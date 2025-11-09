@@ -46,12 +46,15 @@ ChebyshevCircles/
 |-----------|--------|-------|---------|
 | RootsOfUnity.lean | ✅ Complete | 104 | 0 |
 | PolynomialConstruction.lean | ✅ Complete | 552 | 0 |
-| MainTheorem.lean | ⏳ In Progress | 1757 | 3 |
-| **Total** | **99%+ Complete** | **2413** | **3** |
+| MainTheorem.lean | ⏳ In Progress | 1757 | 1 |
+| **Total** | **99%+ Complete** | **2413** | **1** |
 
-**Remaining sorries:**
-- 2 polynomial ring arithmetic sorries (lines 1636, 1690): Routine expansions like `(X-1)(X+1/2)² = X³ - 3X/4 - 1/4` where `ring` struggles with polynomial constant manipulation
-- 1 deep mathematical sorry (line 1735): `scaledPolynomial_matches_chebyshev_at_zero` for N≥4, requires harmonic analysis (~50-100 additional lemmas)
+**Remaining sorry:**
+- 1 deep mathematical sorry (line 1741): `scaledPolynomial_matches_chebyshev_at_zero` for N≥4, requires harmonic analysis (~50-100 additional lemmas)
+
+**Recently completed:**
+- ✅ Both N=3 coefficient computations completed using **Vieta's formulas** (`Multiset.prod_X_sub_C_coeff`) instead of polynomial ring arithmetic
+- Key insight: Working directly with polynomial roots avoids `Polynomial.C` wrapper issues that blocked `ring` tactic
 
 ## What We Have
 

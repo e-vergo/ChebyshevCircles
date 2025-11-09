@@ -1625,19 +1625,20 @@ theorem scaledPolynomial_matches_chebyshev_at_zero (N : ℕ) (k : ℕ) (hN : 0 <
               unfold polynomialFromRealRoots
               simp only [List.foldr, mul_one]
               -- Now have: (C 4 * ((X - C 1) * ((X - C (-1/2)) * (X - C (-1/2))))).coeff 1 = -3
-              norm_num
-              -- After norm_num: 4 * ((X - 1) * ((X + C (1/2)) * (X + C (1/2)))).coeff 1 = -3
-              -- Polynomial equality: (X - 1) * (X + 1/2)^2 = X^3 - 3/4*X - 1/4
-              -- Polynomial algebra: (X - 1)(X + 1/2)² = X³ - 3X/4 - 1/4
-              -- This should be provable by expanding and collecting terms, but ring tactic
-              -- struggles with the C constants. The expansion is:
-              --   (X + 1/2)² = X² + X + 1/4
-              --   (X - 1)(X² + X + 1/4) = X³ + X² + X/4 - X² - X - 1/4 = X³ - 3X/4 - 1/4
-              have eq1 : ((X - (1:ℝ[X])) * ((X + C (1/2)) * (X + C (1/2)))) =
-                         X^3 - C (3/4) * X - C (1/4) := by sorry
-              rw [eq1]
-              simp [Polynomial.coeff_sub, Polynomial.coeff_X_pow, Polynomial.coeff_C]
-              norm_num
+              -- Use Vieta's formula: coeff k = (-1)^(n-k) * esymm(n-k)
+              conv_lhs => arg 1; arg 2; rw [show ((X : ℝ[X]) - C 1) * ((X - C (-1/2)) * (X - C (-1/2))) =
+                                                 ([(1 : ℝ), -1/2, -1/2].map (fun r => X - C r)).prod from by
+                                                   simp only [List.map, List.prod_cons, List.prod_nil, mul_one]]
+              rw [Polynomial.coeff_C_mul]
+              -- Convert List.prod to Multiset.prod for Vieta's formula
+              rw [show ([(1 : ℝ), -1/2, -1/2].map (fun r => X - C r)).prod =
+                       (([(1 : ℝ), -1/2, -1/2] : Multiset ℝ).map (fun r => X - C r)).prod by
+                         rw [Multiset.map_coe]; rfl]
+              rw [Multiset.prod_X_sub_C_coeff]
+              · -- Now compute: 4 * ((-1)^2 * esymm 2 of [1, -1/2, -1/2]) = -3
+                simp only [Multiset.coe_card, List.length_cons, List.length_nil]
+                norm_num [Multiset.esymm, Multiset.powersetCard]
+              · simp only [Multiset.coe_card, List.length_cons, List.length_nil]; omega
             rw [h_scaled, h_cheb]
           · by_cases hk_eq2 : k = 2
             · -- k = 2: coeff of X²
@@ -1681,17 +1682,21 @@ theorem scaledPolynomial_matches_chebyshev_at_zero (N : ℕ) (k : ℕ) (hN : 0 <
                 unfold polynomialFromRealRoots
                 simp only [List.foldr, mul_one]
                 -- Direct computation: scaledPolynomial 3 0 = 4X^3 - 3X - 1 has coeff_2 = 0
-                -- After norm_num, goal becomes: ((X - 1) * ((X + C (1/2)) * (X + C (1/2)))).coeff 2 = 0
-                norm_num
-                -- Convert to standard form and expand
-                rw [show (X - (1:ℝ[X])) = X - C 1 by simp [Polynomial.C_1]]
-                -- Expand (X - C 1) * (X + C (1/2))^2
-                have expand : (X - C (1:ℝ)) * ((X + C (1 / 2)) * (X + C (1 / 2))) =
-                              X ^ 3 + C (-3/4) * X + C (-1/4) := by
-                  sorry  -- Polynomial expansion: (X-1)(X+1/2)^2 = X^3 - 3X/4 - 1/4
-                rw [expand]
-                norm_num [Polynomial.coeff_add, Polynomial.coeff_X_pow, Polynomial.coeff_C_mul,
-                          Polynomial.coeff_X, Polynomial.coeff_C]
+                -- Use Vieta's formula: coeff 2 = (-1)^(3-2) * esymm(3-2) = -esymm 1
+                -- esymm 1 = sum of roots = 1 + (-1/2) + (-1/2) = 0
+                conv_lhs => arg 1; arg 2; rw [show ((X : ℝ[X]) - C 1) * ((X - C (-1/2)) * (X - C (-1/2))) =
+                                                   ([(1 : ℝ), -1/2, -1/2].map (fun r => X - C r)).prod from by
+                                                     simp only [List.map, List.prod_cons, List.prod_nil, mul_one]]
+                rw [Polynomial.coeff_C_mul]
+                -- Convert List.prod to Multiset.prod for Vieta's formula
+                rw [show ([(1 : ℝ), -1/2, -1/2].map (fun r => X - C r)).prod =
+                         (([(1 : ℝ), -1/2, -1/2] : Multiset ℝ).map (fun r => X - C r)).prod by
+                           rw [Multiset.map_coe]; rfl]
+                rw [Multiset.prod_X_sub_C_coeff]
+                · -- Now compute: ((-1)^1 * esymm 1 of [1, -1/2, -1/2]) = 0
+                  simp only [Multiset.coe_card, List.length_cons, List.length_nil]
+                  norm_num [Multiset.esymm, Multiset.powersetCard]
+                · simp only [Multiset.coe_card, List.length_cons, List.length_nil]; omega
               rw [h_scaled, h_cheb]
             · by_cases hk_eq3 : k = 3
               · -- k = 3: coeff of X³ (leading coefficient)
