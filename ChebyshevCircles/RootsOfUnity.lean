@@ -51,7 +51,7 @@ def rotatedRootsOfUnityList (N : ℕ) (θ : ℝ) : List ℂ :=
 
 /-- A list of real projections of the N-th rotated roots of unity. -/
 def realProjectionsList (N : ℕ) (θ : ℝ) : List ℝ :=
-  List.range N |>.map (fun k => Real.cos (θ + 2 * π * k / N))
+  (List.range N).map (fun (k : ℕ) => Real.cos (θ + 2 * π * k / N))
 
 /-- The k-th rotated root of unity has a specific exponential form. -/
 theorem rotatedRoot_eq_exp (N : ℕ) (θ : ℝ) (k : ℕ) (hk : k < N) :
@@ -80,5 +80,26 @@ theorem realProjection_mem_list (N : ℕ) (θ : ℝ) (k : ℕ) (hk : k < N) :
     Real.cos (θ + 2 * π * k / N) ∈ realProjectionsList N θ := by
   simp [realProjectionsList, List.mem_map, List.mem_range]
   exact ⟨k, hk, rfl⟩
+
+/-- Helper: sum of mapped list range equals Finset sum over range -/
+private lemma list_range_map_sum_eq_finset_sum {α : Type*} [AddCommMonoid α] (n : ℕ) (f : ℕ → α) :
+    ((List.range n).map f).sum = ∑ k ∈ Finset.range n, f k := by
+  rw [← List.map_coe_finRange, List.map_map, ← List.ofFn_eq_map, List.sum_ofFn]
+  -- Now we have: ∑ i : Fin n, (f ∘ Fin.val) i
+  simp only [Function.comp_apply]
+  rw [Finset.sum_range]
+
+/-- The sum of realProjectionsList equals the Finset sum over range. -/
+theorem realProjectionsList_sum (N : ℕ) (θ : ℝ) :
+    (realProjectionsList N θ).sum = ∑ k ∈ Finset.range N, Real.cos (θ + 2 * π * k / N) := by
+  rw [realProjectionsList]
+  convert list_range_map_sum_eq_finset_sum N (fun k => Real.cos (θ + 2 * π * ↑k / ↑N)) using 2
+
+/-- The power sum of realProjectionsList equals the Finset power sum. -/
+theorem realProjectionsList_powersum (N : ℕ) (θ : ℝ) (j : ℕ) :
+    ((realProjectionsList N θ).map (· ^ j)).sum =
+    ∑ k ∈ Finset.range N, (Real.cos (θ + 2 * π * k / N)) ^ j := by
+  rw [realProjectionsList, List.map_map]
+  convert list_range_map_sum_eq_finset_sum N (fun k => (Real.cos (θ + 2 * π * ↑k / ↑N)) ^ j) using 2
 
 end

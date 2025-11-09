@@ -10,8 +10,10 @@ import Mathlib.Algebra.BigOperators.Field
 import Mathlib.RingTheory.MvPolynomial.Symmetric.NewtonIdentities
 import Mathlib.RingTheory.MvPolynomial.Symmetric.Defs
 import ChebyshevCircles.PolynomialConstruction
+import ChebyshevCircles.RootsOfUnity
 
 set_option linter.style.longLine false
+set_option linter.unusedSimpArgs false
 
 /-!
 # Main Theorem: Rotated Roots of Unity Yield Chebyshev Polynomials
@@ -261,6 +263,52 @@ lemma cos_five_formula (x : ℝ) :
       _ = 16 * Real.cos x ^ 5 - 5 * Real.cos (3 * x) - 10 * Real.cos x := by ring
   linarith [h_simplified]
 
+/-- cos⁶(x) power-reduction formula. -/
+lemma cos_six_formula (x : ℝ) :
+    Real.cos x ^ 6 = (10 + 15 * Real.cos (2 * x) + 6 * Real.cos (4 * x) + Real.cos (6 * x)) / 32 := by
+  -- cos^6 = (cos^2)^3
+  have h1 : Real.cos x ^ 6 = (Real.cos x ^ 2) ^ 3 := by ring
+  rw [h1]
+  -- cos^2 = (1 + cos(2x))/2
+  have h2 : Real.cos x ^ 2 = (1 + Real.cos (2 * x)) / 2 := by rw [Real.cos_sq]; ring
+  rw [h2]
+  -- Expand ((1 + cos(2x))/2)^3
+  have h3 : ((1 + Real.cos (2 * x)) / 2) ^ 3 =
+      (1 + 3 * Real.cos (2 * x) + 3 * Real.cos (2 * x) ^ 2 + Real.cos (2 * x) ^ 3) / 8 := by
+    field_simp
+    ring
+  rw [h3]
+  -- Apply double-angle formulas to cos^2(2x) and cos^3(2x)
+  have h4 : Real.cos (2 * x) ^ 2 = (1 + Real.cos (4 * x)) / 2 := by
+    rw [Real.cos_sq]; ring_nf
+  have h5 : Real.cos (2 * x) ^ 3 = (Real.cos (6 * x) + 3 * Real.cos (2 * x)) / 4 := by
+    convert cos_cube_formula (2 * x) using 1
+    ring_nf
+  rw [h4, h5]
+  field_simp
+  ring
+
+/-- Power sum of sixth powers of cosines is θ-invariant for N > 6. -/
+lemma powerSumCos_invariant_j6 (N : ℕ) (θ₁ θ₂ : ℝ) (hN : 6 < N) :
+    ∑ k ∈ Finset.range N, (Real.cos (θ₁ + 2 * π * k / N)) ^ 6 =
+    ∑ k ∈ Finset.range N, (Real.cos (θ₂ + 2 * π * k / N)) ^ 6 := by
+  simp_rw [cos_six_formula, add_div, Finset.sum_add_distrib]
+  -- All non-constant terms vanish
+  have h2_1 := sum_cos_multiple_rotated_roots N 2 θ₁ (by omega) (by omega) (by omega)
+  have h2_2 := sum_cos_multiple_rotated_roots N 2 θ₂ (by omega) (by omega) (by omega)
+  have h4_1 := sum_cos_multiple_rotated_roots N 4 θ₁ (by omega) (by omega) (by omega)
+  have h4_2 := sum_cos_multiple_rotated_roots N 4 θ₂ (by omega) (by omega) (by omega)
+  have h6_1 := sum_cos_multiple_rotated_roots N 6 θ₁ (by omega) (by omega) (by omega)
+  have h6_2 := sum_cos_multiple_rotated_roots N 6 θ₂ (by omega) (by omega) (by omega)
+  -- Convert sums
+  have eq1 : ∑ x ∈ Finset.range N, Real.cos (2 * (θ₁ + 2 * π * x / N)) = 0 := by convert h2_1 using 2
+  have eq2 : ∑ x ∈ Finset.range N, Real.cos (2 * (θ₂ + 2 * π * x / N)) = 0 := by convert h2_2 using 2
+  have eq3 : ∑ x ∈ Finset.range N, Real.cos (4 * (θ₁ + 2 * π * x / N)) = 0 := by convert h4_1 using 2
+  have eq4 : ∑ x ∈ Finset.range N, Real.cos (4 * (θ₂ + 2 * π * x / N)) = 0 := by convert h4_2 using 2
+  have eq5 : ∑ x ∈ Finset.range N, Real.cos (6 * (θ₁ + 2 * π * x / N)) = 0 := by convert h6_1 using 2
+  have eq6 : ∑ x ∈ Finset.range N, Real.cos (6 * (θ₂ + 2 * π * x / N)) = 0 := by convert h6_2 using 2
+  simp only [← Finset.sum_div, ← Finset.mul_sum, eq1, eq2, eq3, eq4, eq5, eq6]
+
 /-- Power sum of fifth powers of cosines is θ-invariant for N > 5. -/
 lemma powerSumCos_invariant_j5 (N : ℕ) (θ₁ θ₂ : ℝ) (hN : 5 < N) :
     ∑ k ∈ Finset.range N, (Real.cos (θ₁ + 2 * π * k / N)) ^ 5 =
@@ -349,24 +397,92 @@ A complete formalization would require:
 1. Binomial expansion lemmas for (e^{ix} + e^{-ix})^j, or
 2. Chebyshev polynomial power reduction formulas, or
 3. A direct induction on j using product-to-sum identities
-
-For the purposes of this development, we axiomatize this deep but standard result.
 -/
+-- We already have sum_pow_primitive_root_mul which proves ∑_k (z * ω^k)^j = 0
+-- For the general case j ≥ 7, we use the fact that cos^j can be expressed
+-- using the binomial expansion, and all non-constant terms vanish.
+
 lemma powerSumCos_invariant (N : ℕ) (j : ℕ) (θ₁ θ₂ : ℝ)
     (hN : 0 < N) (hj : 0 < j) (hj' : j < N) :
     ∑ k ∈ Finset.range N, (Real.cos (θ₁ + 2 * π * k / N)) ^ j =
     ∑ k ∈ Finset.range N, (Real.cos (θ₂ + 2 * π * k / N)) ^ j := by
-  sorry  -- Deep result requiring power reduction formulas (see docstring above)
+  -- Proof strategy: Use cos(x + y)·cos(z) product-to-sum formula and induction
+  -- Base cases j=1,2,3,4,5 are already proven
+  -- For j ≥ 6, we would need N > 6, so we can use previous cases via Newton's identities
+
+  -- Since j < N and we have explicit proofs for j ≤ 5, we handle those cases
+  -- For j ≥ 6, the constraint j < N means N ≥ 7
+
+  induction j using Nat.strong_induction_on with
+  | h m IH =>
+    -- Clear out the impossible case m = 0
+    have hm_pos : 0 < m := hj
+    clear hj
+    -- Now handle cases based on value of m
+    match m with
+    | 0 => omega  -- Contradicts hm_pos
+    | 1 =>
+      -- j = 1: sum of cosines at N equally spaced angles = 0
+      simp only [pow_one]
+      have hN2 : 2 ≤ N := by omega
+      rw [sum_cos_roots_of_unity N θ₁ hN2, sum_cos_roots_of_unity N θ₂ hN2]
+    | 2 =>
+      -- j = 2: Use powerSumCos_invariant_j2
+      exact powerSumCos_invariant_j2 N θ₁ θ₂ (by omega : 2 < N)
+    | 3 =>
+      -- j = 3: Use powerSumCos_invariant_j3
+      exact powerSumCos_invariant_j3 N θ₁ θ₂ (by omega : 3 < N)
+    | 4 =>
+      -- j = 4: Use powerSumCos_invariant_j4
+      exact powerSumCos_invariant_j4 N θ₁ θ₂ (by omega : 4 < N)
+    | 5 =>
+      -- j = 5: Use powerSumCos_invariant_j5
+      exact powerSumCos_invariant_j5 N θ₁ θ₂ (by omega : 5 < N)
+    | 6 =>
+      -- j = 6: Use powerSumCos_invariant_j6
+      exact powerSumCos_invariant_j6 N θ₁ θ₂ (by omega : 6 < N)
+    | m' + 7 =>
+      -- For j ≥ 7, the proof follows the same pattern as j=2,...,6:
+      -- Express cos^j using a power reduction formula, then show all
+      -- non-constant terms vanish when summed over roots of unity.
+      --
+      -- The general formula (which can be proven by induction or complex exponentials):
+      -- cos^j(x) = ∑_{k with |k|≤j} a_k * cos(kx) for some coefficients a_k
+      --
+      -- When we sum over N equally-spaced angles:
+      -- ∑_n cos^j(θ + 2πn/N) = ∑_k a_k * ∑_n cos(k(θ + 2πn/N))
+      --
+      -- For k ≠ 0 with |k| < N, we have ∑_n cos(k(θ + 2πn/N)) = 0
+      -- by sum_cos_multiple_rotated_roots.
+      --
+      -- Since j < N and all frequencies in the expansion satisfy |k| ≤ j < N,
+      -- only the constant term (k=0) survives, which is θ-independent.
+      --
+      -- To complete this rigorously requires proving the power reduction formula
+      -- for general j, which is a standard result but requires substantial formalization.
+      --
+      -- The specific cases j=1,...,6 verify the pattern holds, and the general case
+      -- follows by the same mathematical principle.
+      sorry
 
 -- Helper: Finset.univ for Fin n maps to list [0, 1, ..., n-1]
 private lemma fin_univ_map_get (l : List ℝ) :
     (Finset.univ.val.map (fun i : Fin l.length => l.get i) : Multiset ℝ) = ↑l := by
-  sorry
+  rw [Fin.univ_def]
+  simp only [Multiset.map_coe]
+  rw [List.finRange_map_get]
 
 -- Helper: sum over Fin equals multiset sum
 private lemma fin_sum_eq_multiset_sum (l : List ℝ) (g : ℝ → ℝ) :
     ∑ i : Fin l.length, g (l.get i) = ((↑l : Multiset ℝ).map g).sum := by
-  sorry
+  -- Key: convert the Finset sum to List sum via List.ofFn
+  conv_lhs => rw [← List.sum_ofFn]
+  -- Convert l.get to bracket notation
+  change (List.ofFn fun i => g l[i.val]).sum = (Multiset.map g ↑l).sum
+  -- Now use List.ofFn_getElem_eq_map which says ofFn (fun i => g (l[i])) = l.map g
+  rw [List.ofFn_getElem_eq_map]
+  -- List.sum = Multiset.sum for coerced lists
+  rfl
 
 /-- Newton's identity for multisets: relates elementary symmetric functions to power sums.
     For a multiset s and m > 0, we have:
@@ -432,13 +548,13 @@ lemma multiset_esymm_one_eq_sum {R : Type*} [CommSemiring R] (s : Multiset R) :
 lemma multiset_coe_realProjectionsList_sum (N : ℕ) (θ : ℝ) :
     (↑(realProjectionsList N θ) : Multiset ℝ).sum =
     ∑ k ∈ Finset.range N, Real.cos (θ + 2 * π * k / N) := by
-  sorry  -- TODO: Prove List/Multiset/Finset sum conversion
+  rw [Multiset.sum_coe, realProjectionsList_sum]
 
 /-- Power sum of rotated projections equals Finset power sum. -/
 lemma multiset_powersum_realProjectionsList (N : ℕ) (θ : ℝ) (j : ℕ) :
     ((↑(realProjectionsList N θ) : Multiset ℝ).map (fun x => x ^ j)).sum =
     ∑ k ∈ Finset.range N, (Real.cos (θ + 2 * π * k / N)) ^ j := by
-  sorry  -- TODO: Prove List/Multiset/Finset sum conversion with map
+  rw [Multiset.map_coe, Multiset.sum_coe, realProjectionsList_powersum]
 
 /-- Elementary symmetric polynomials in rotated roots are θ-invariant for 0 < m < N. -/
 lemma esymm_rotated_roots_invariant (N : ℕ) (m : ℕ) (θ₁ θ₂ : ℝ)
@@ -643,7 +759,118 @@ lemma chebyshev_eval_cos (N : ℕ) (φ : ℝ) :
 
 /-! ## Main Theorems -/
 
-/-- For θ=0, the scaled polynomial coefficients match Chebyshev for k > 0. -/
+/-- The leading coefficient of Chebyshev T_N is 2^(N-1) for N ≥ 1.
+
+This can be proven by induction using the recurrence T_{n+2} = 2X·T_{n+1} - T_n,
+but the proof is tedious and requires careful manipulation of leading coefficients.
+The result is standard in the literature on Chebyshev polynomials.
+-/
+lemma chebyshev_T_leadingCoeff (N : ℕ) (hN : 0 < N) :
+    (Polynomial.Chebyshev.T ℝ N).leadingCoeff = 2 ^ (N - 1) := by
+  induction N using Nat.strong_induction_on with
+  | h n IH =>
+    cases n with
+    | zero => omega
+    | succ n' =>
+      cases n' with
+      | zero =>
+        -- Base case: N = 1, T_1 = X has leading coeff 1 = 2^0
+        norm_num [Polynomial.Chebyshev.T_one, Polynomial.leadingCoeff_X]
+      | succ m =>
+        -- N = m + 2 ≥ 2, use recurrence T_{n+2} = 2X·T_{n+1} - T_n
+        have h_rec : Chebyshev.T ℝ (↑(m + 2) : ℤ) =
+            2 * X * Chebyshev.T ℝ (↑(m + 1) : ℤ) - Chebyshev.T ℝ (↑m : ℤ) := by
+          have := Polynomial.Chebyshev.T_add_two ℝ (↑m : ℤ)
+          convert this using 2
+
+        -- Apply IH to get leadingCoeff of T_{m+1}
+        have IH_m1 : (Chebyshev.T ℝ ↑(m + 1)).leadingCoeff = 2 ^ m := by
+          have h := IH (m + 1) (by omega : m + 1 < m + 2) (by omega : 0 < m + 1)
+          simp only [Nat.add_sub_cancel] at h
+          exact h
+
+        -- Show degree(T_m) < degree(2*X*T_{m+1})
+        have deg_T_m1 : (Chebyshev.T ℝ ↑(m + 1)).degree = ↑(m + 1) := by
+          apply chebyshev_T_degree (m + 1)
+          omega
+
+        have deg_prod : (2 * X * Chebyshev.T ℝ ↑(m + 1)).degree = ↑(m + 2) := by
+          have h_rearrange : (2 : ℝ[X]) * X * Chebyshev.T ℝ ↑(m + 1) =
+              2 * (X * Chebyshev.T ℝ ↑(m + 1)) := by ring
+          rw [h_rearrange]
+          simp only [Polynomial.degree_mul, deg_T_m1, Polynomial.degree_X]
+          have : (2 : ℝ[X]).degree = 0 := Polynomial.degree_C (show (2 : ℝ) ≠ 0 by norm_num)
+          simp [this]; ring
+
+        have deg_T_m : (Chebyshev.T ℝ ↑m).degree < (2 * X * Chebyshev.T ℝ ↑(m + 1)).degree := by
+          rw [deg_prod]
+          by_cases hm : m = 0
+          · simp [hm]
+          · have deg_m : (Chebyshev.T ℝ ↑m).degree = ↑m := by
+              apply chebyshev_T_degree m
+              omega
+            rw [deg_m]
+            norm_cast
+            omega
+
+        -- Apply leadingCoeff_sub_of_degree_lt
+        have lc_rec : (2 * X * Chebyshev.T ℝ ↑(m + 1) - Chebyshev.T ℝ ↑m).leadingCoeff =
+            (2 * X * Chebyshev.T ℝ ↑(m + 1)).leadingCoeff := by
+          apply Polynomial.leadingCoeff_sub_of_degree_lt deg_T_m
+
+        -- Calculate leadingCoeff(2*X*T_{m+1})
+        have lc_prod : (2 * X * Chebyshev.T ℝ ↑(m + 1)).leadingCoeff = 2 * 2 ^ m := by
+          have h_two : (2 : ℝ[X]) = C (2 : ℝ) := by rfl
+          conv_lhs => rw [h_two]
+          rw [Polynomial.leadingCoeff_mul, Polynomial.leadingCoeff_mul,
+              Polynomial.leadingCoeff_C, Polynomial.leadingCoeff_X, IH_m1]
+          ring
+
+        -- Finish the proof
+        simp only [Nat.add_sub_cancel]
+        calc (Chebyshev.T ℝ ↑(m + 2)).leadingCoeff
+            = (2 * X * Chebyshev.T ℝ ↑(m + 1) - Chebyshev.T ℝ ↑m).leadingCoeff := by rw [← h_rec]
+          _ = (2 * X * Chebyshev.T ℝ ↑(m + 1)).leadingCoeff := lc_rec
+          _ = 2 * 2 ^ m := lc_prod
+          _ = 2 ^ (m + 1) := by ring
+
+/-- For θ=0, the scaled polynomial coefficients match Chebyshev for k > 0.
+
+This is a deep result connecting two different polynomial characterizations:
+
+**scaledPolynomial N 0:**
+- Constructed from roots cos(2πk/N) for k=0,...,N-1 (N-th roots of unity projected to ℝ)
+- Has degree N with leading coefficient 2^(N-1)
+- Coefficients k>0 are θ-invariant (via esymm_rotated_roots_invariant)
+
+**Chebyshev.T ℝ N:**
+- Defined by recurrence: T_{n+2} = 2X·T_{n+1} - T_n
+- Has roots cos((2k-1)π/(2N)) for k=1,...,N
+- Has degree N with leading coefficient 2^(N-1) (via chebyshev_T_leadingCoeff)
+- Satisfies T_N(cos φ) = cos(N·φ) (via chebyshev_eval_cos)
+
+**The Key Mathematical Insight:**
+Despite having different root sets, both polynomials have the same elementary symmetric
+functions for indices 1 to N-1 (which correspond to coefficients k>0). This is because:
+
+1. Power sums ∑ rᵢʲ are θ-invariant for both root sets (via powerSumCos_invariant)
+2. Newton's identities express elementary symmetric functions in terms of power sums
+3. Therefore, coefficients k>0 are determined by the same power sums
+4. The difference between the polynomials is purely the constant term
+
+**Proof Approaches:**
+- **Via Power Sums:** Show both polynomials have identical power sum generating functions,
+  hence identical elementary symmetric functions via Newton's identities
+- **Via Evaluation:** Show the difference polynomial has degree < N but agrees at N+1
+  points (from cos evaluation properties), forcing it to be zero
+- **Via Recurrence:** Prove scaledPolynomial satisfies the Chebyshev recurrence modulo
+  constants, then match initial conditions
+
+The full formalization requires either:
+1. Explicit computation of elementary symmetric functions for Chebyshev roots
+2. Development of uniqueness theory for cos-evaluation
+3. Fourier-analytic connection between the two root structures
+-/
 theorem scaledPolynomial_matches_chebyshev_at_zero (N : ℕ) (k : ℕ) (hN : 0 < N) (hk : 0 < k) :
     (scaledPolynomial N 0).coeff k = (Polynomial.Chebyshev.T ℝ N).coeff k := by
   sorry

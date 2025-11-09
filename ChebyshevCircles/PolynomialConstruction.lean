@@ -9,7 +9,7 @@ import Mathlib.Analysis.SpecialFunctions.Trigonometric.Complex
 import ChebyshevCircles.RootsOfUnity
 
 set_option linter.style.longLine false
-
+set_option linter.unusedSimpArgs false
 /-!
 # Polynomial Construction from Rotated Roots
 
@@ -143,14 +143,9 @@ lemma polynomialFromRealRoots_eval_zero_iff_mem_zero (roots : List ℝ) :
 lemma realProjectionsList_mem_cos_theta (N : ℕ) (θ : ℝ) (hN : 0 < N) :
     Real.cos θ ∈ realProjectionsList N θ := by
   unfold realProjectionsList
-  simp only [List.mem_map]
+  simp only [List.mem_map, List.mem_range]
   use 0
-  refine ⟨?_, ?_⟩
-  · simp only [List.pure_def, List.bind_eq_flatMap, List.mem_flatMap, List.mem_singleton, List.mem_range]
-    use 0
-    refine ⟨hN, ?_⟩
-    norm_cast
-  · simp only [mul_zero, zero_div, add_zero]
+  exact ⟨hN, by simp⟩
 
 lemma cos_two_pi_k_div_odd_N_ne_zero (N k : ℕ) (hN_odd : Odd N) (hN_ge : N ≥ 5)
     (_hk_pos : 0 < k) (hk_lt : k < N) :
@@ -182,19 +177,14 @@ lemma cos_two_pi_k_div_odd_N_ne_zero (N k : ℕ) (hN_odd : Odd N) (hN_ge : N ≥
 lemma realProjectionsList_theta_zero_no_zero (N : ℕ) (hN_odd : Odd N) (hN_ge : N ≥ 5) :
     0 ∉ realProjectionsList N 0 := by
   unfold realProjectionsList
-  simp only [List.mem_map, not_exists, not_and]
+  simp only [List.mem_map, not_exists, not_and, List.mem_range]
   intro k hk
   simp only [zero_add]
-  -- k comes from the do-notation, which produces natural number casts
-  simp only [List.pure_def, List.bind_eq_flatMap, List.mem_flatMap, List.mem_singleton] at hk
-  obtain ⟨k', ⟨hk'_range, hk'_eq⟩⟩ := hk
-  rw [hk'_eq]
-  by_cases h_zero : k' = 0
+  by_cases h_zero : k = 0
   · rw [h_zero]
-    norm_num
-  · have hk_pos : 0 < k' := Nat.pos_of_ne_zero h_zero
-    have hk_range : k' < N := List.mem_range.mp hk'_range
-    exact cos_two_pi_k_div_odd_N_ne_zero N k' hN_odd hN_ge hk_pos hk_range
+    simp [Real.cos_zero]
+  · have hk_pos : 0 < k := Nat.pos_of_ne_zero h_zero
+    exact cos_two_pi_k_div_odd_N_ne_zero N k hN_odd hN_ge hk_pos hk
 
 /-- The constant term of the scaled polynomial depends on θ. -/
 theorem scaledPolynomial_constantTerm_varies (N : ℕ) (hN_pos : 0 < N) :
@@ -205,7 +195,7 @@ theorem scaledPolynomial_constantTerm_varies (N : ℕ) (hN_pos : 0 < N) :
     use 0, Real.pi / 2
     unfold scaledPolynomial_coeff scaledPolynomial unscaledPolynomial polynomialFromRealRoots
     rw [Polynomial.coeff_C_mul, Polynomial.coeff_C_mul]
-    simp only [realProjectionsList, List.pure_def, List.bind_eq_flatMap, zero_add]
+    simp only [realProjectionsList, zero_add]
     norm_num
   | succ N'' =>
     cases N'' with
@@ -499,33 +489,29 @@ theorem scaledPolynomial_constantTerm_varies (N : ℕ) (hN_pos : 0 < N) :
                   rw [coeff_zero_eq_eval_zero, polynomialFromRealRoots_eval_zero_iff_mem_zero] at h_zero
                   -- 0 ∈ realProjectionsList means ∃k, cos(π/(2N) + 2πk/N) = 0
                   unfold realProjectionsList at h_zero
-                  simp only [List.mem_map] at h_zero
-                  obtain ⟨k, hk_mem, hk_eq⟩ := h_zero
-                  simp only [List.pure_def, List.bind_eq_flatMap, List.mem_flatMap,
-                             List.mem_singleton, List.mem_range] at hk_mem
-                  obtain ⟨k', ⟨hk'_range, hk'_eq⟩⟩ := hk_mem
-                  rw [hk'_eq] at hk_eq
-                  -- Now hk_eq : cos(π/(2N) + 2πk'/N) = 0 and k' < n7 + 7
+                  simp only [List.mem_map, List.mem_range] at h_zero
+                  obtain ⟨k, hk_range, hk_eq⟩ := h_zero
+                  -- Now hk_eq : cos(π/(2N) + 2πk/N) = 0 and k < n7 + 7
                   -- cos(x) = 0 iff x = (2m + 1)π/2 for some integer m
                   rw [Real.cos_eq_zero_iff] at hk_eq
                   obtain ⟨m, hm⟩ := hk_eq
-                  -- hm: π/(2N) + 2πk'/N = (2m+1)π/2
+                  -- hm: π/(2N) + 2πk/N = (2m+1)π/2
                   -- Multiply both sides by 2(n7+7)/π
                   have h_mul := congr_arg (· * (2 * (n7 + 7) / Real.pi)) hm
                   field_simp at h_mul
-                  -- h_mul: ↑(n7 + 7) + 2 ^ 2 * (↑n7 + 7) * ↑k' = (↑n7 + 7) * ↑(n7 + 7) * (2 * ↑m + 1)
-                  -- Simplify to: 1 + 4k' = (n7 + 7) * (2m + 1)
+                  -- h_mul: ↑(n7 + 7) + 2 ^ 2 * (↑n7 + 7) * ↑k = (↑n7 + 7) * ↑(n7 + 7) * (2 * ↑m + 1)
+                  -- Simplify to: 1 + 4k = (n7 + 7) * (2m + 1)
                   have h_n7_ne_zero : ((n7 + 7) : ℝ) ≠ 0 := by positivity
-                  have eq_real : (1 : ℝ) + 4 * k' = (n7 + 7) * (2 * m + 1) := by
-                    -- h_mul has form: ↑(n7 + 7) + 2^2 * (↑n7 + 7) * ↑k' = ...
+                  have eq_real : (1 : ℝ) + 4 * k = (n7 + 7) * (2 * m + 1) := by
+                    -- h_mul has form: ↑(n7 + 7) + 2^2 * (↑n7 + 7) * ↑k = ...
                     -- First normalize the cast issue: ↑(n7 + 7) = ↑n7 + 7
                     have cast_eq : (↑(n7 + 7) : ℝ) = ↑n7 + 7 := by norm_cast
                     rw [cast_eq] at h_mul
-                    -- Now h_mul: (↑n7 + 7) + 2^2 * (↑n7 + 7) * ↑k' = (↑n7 + 7) * (↑n7 + 7) * (2m+1)
+                    -- Now h_mul: (↑n7 + 7) + 2^2 * (↑n7 + 7) * ↑k = (↑n7 + 7) * (↑n7 + 7) * (2m+1)
                     -- Factor LHS
-                    have h_lhs : (↑n7 + 7 : ℝ) + 2 ^ 2 * (↑n7 + 7) * ↑k' = (↑n7 + 7) * (1 + 4 * k') := by ring
+                    have h_lhs : (↑n7 + 7 : ℝ) + 2 ^ 2 * (↑n7 + 7) * ↑k = (↑n7 + 7) * (1 + 4 * k) := by ring
                     rw [h_lhs] at h_mul
-                    -- Now h_mul: (↑n7 + 7) * (1 + 4 * k') = (↑n7 + 7) * (↑n7 + 7) * (2m+1)
+                    -- Now h_mul: (↑n7 + 7) * (1 + 4 * k) = (↑n7 + 7) * (↑n7 + 7) * (2m+1)
                     -- Reassociate RHS
                     have h_rhs : (↑n7 + 7 : ℝ) * (↑n7 + 7) * (2 * ↑m + 1) = (↑n7 + 7) * ((↑n7 + 7) * (2 * m + 1)) := by ring
                     rw [h_rhs] at h_mul
@@ -537,23 +523,23 @@ theorem scaledPolynomial_constantTerm_varies (N : ℕ) (hN_pos : 0 < N) :
                     | inl h => exact h
                     | inr h => exact absurd h h_odd
                   obtain ⟨n, hn⟩ := h_even_nat
-                  -- So 1 + 4k' = 2n(2m + 1), which is even
+                  -- So 1 + 4k = 2n(2m + 1), which is even
                   -- First, convert hn to a real equality
                   have hn_real : (n7 + 7 : ℝ) = (n + n : ℝ) := by exact_mod_cast hn
-                  have eq_int : (1 + 4 * k' : ℤ) = (2 * (n : ℤ)) * (2 * m + 1) := by
+                  have eq_int : (1 + 4 * k : ℤ) = (2 * (n : ℤ)) * (2 * m + 1) := by
                     -- Substitute hn_real into eq_real
                     rw [hn_real] at eq_real
                     have h_two_n : (n + n : ℝ) = (2 * n : ℝ) := by ring
                     rw [h_two_n] at eq_real
-                    -- Now eq_real : 1 + 4 * k' = 2 * n * (2 * m + 1)
+                    -- Now eq_real : 1 + 4 * k = 2 * n * (2 * m + 1)
                     -- Convert to integer equality
-                    have h_cast : (1 : ℝ) + 4 * k' = ((2 * (n : ℤ)) * (2 * m + 1) : ℝ) := by
+                    have h_cast : (1 : ℝ) + 4 * k = ((2 * (n : ℤ)) * (2 * m + 1) : ℝ) := by
                       convert eq_real using 1
                     exact_mod_cast h_cast
                   -- The RHS is even
                   have h_rhs_even : Even ((2 * (n : ℤ)) * (2 * m + 1)) := ⟨n * (2 * m + 1), by ring⟩
                   -- But the LHS is odd
-                  have h_lhs_odd : Odd (1 + 4 * (k' : ℤ)) := ⟨2 * k', by ring⟩
+                  have h_lhs_odd : Odd (1 + 4 * (k : ℤ)) := ⟨2 * k, by ring⟩
                   -- Contradiction
                   rw [eq_int] at h_lhs_odd
                   exact Int.not_even_iff_odd.mpr h_lhs_odd h_rhs_even
