@@ -9,6 +9,7 @@ import Mathlib.Analysis.SpecialFunctions.Trigonometric.Complex
 import Mathlib.Algebra.Polynomial.Roots
 import Mathlib.Data.Real.Basic
 import Mathlib.Data.Finset.Basic
+import ChebyshevCircles.PolynomialProperties
 
 set_option linter.style.longLine false
 
@@ -175,9 +176,11 @@ lemma chebyshev_T_eval_eq_zero_forward (N : ℕ) (hN : 0 < N) (x : ℝ)
     obtain ⟨k, hk, rfl⟩ := hy
     exact chebyshev_T_eval_chebyshevRoot N k hN hk
 
-  -- T_N has degree N (we'll use this from the lemma defined later in the file)
+  -- T_N has degree N (from PolynomialProperties)
   have h_deg : (Polynomial.Chebyshev.T ℝ N).natDegree = N := by
-    sorry  -- This will be proven once we finish the forward direction and can use chebyshev_T_degree
+    have deg : (Polynomial.Chebyshev.T ℝ N).degree = N := chebyshev_T_degree N hN
+    rw [← Polynomial.degree_eq_iff_natDegree_eq_of_pos (by omega : 0 < N)]
+    exact deg
 
   -- If x is not in roots, we'd have N+1 distinct roots, contradicting degree = N
   by_contra h_not_exists
@@ -216,7 +219,7 @@ lemma chebyshev_T_eval_eq_zero_forward (N : ℕ) (hN : 0 < N) (x : ℝ)
     constructor
     · -- T_N ≠ 0 for N > 0
       intro h_zero
-      have : (Polynomial.Chebyshev.T ℝ N).degree = N := by sorry
+      have : (Polynomial.Chebyshev.T ℝ N).degree = N := chebyshev_T_degree N hN
       rw [h_zero] at this
       simp at this
     · -- T_N.IsRoot y
