@@ -12,8 +12,6 @@ import Mathlib.RingTheory.MvPolynomial.Symmetric.Defs
 import ChebyshevCircles.PolynomialConstruction
 import ChebyshevCircles.RootsOfUnity
 
-set_option linter.style.longLine false
-set_option linter.unusedSimpArgs false
 
 /-!
 # Main Theorem: Rotated Roots of Unity Yield Chebyshev Polynomials
@@ -288,6 +286,7 @@ lemma cos_six_formula (x : ℝ) :
   field_simp
   ring
 
+
 /-- Power sum of sixth powers of cosines is θ-invariant for N > 6. -/
 lemma powerSumCos_invariant_j6 (N : ℕ) (θ₁ θ₂ : ℝ) (hN : 6 < N) :
     ∑ k ∈ Finset.range N, (Real.cos (θ₁ + 2 * π * k / N)) ^ 6 =
@@ -348,7 +347,7 @@ lemma powerSumCos_invariant_j5 (N : ℕ) (θ₁ θ₂ : ℝ) (hN : 5 < N) :
 
 /-- Helper: The sum ∑_k (z * ω^k)^j over a full set of N-th roots of unity ω
 equals 0 when 0 < j < N (since ω^j is a non-trivial N-th root of unity). -/
-private lemma sum_pow_primitive_root_mul (N j : ℕ) (z : ℂ) (hN : 0 < N) (hj : 0 < j) (hj' : j < N) :
+lemma sum_pow_primitive_root_mul (N j : ℕ) (z : ℂ) (hN : 0 < N) (hj : 0 < j) (hj' : j < N) :
     let ω := Complex.exp (2 * π * Complex.I / N)
     ∑ k ∈ Finset.range N, (z * ω ^ k) ^ j = 0 := by
   intro ω
@@ -380,6 +379,263 @@ private lemma sum_pow_primitive_root_mul (N j : ℕ) (z : ℂ) (hN : 0 < N) (hj 
         rw [h_geom]; ring
       exact eq_zero_of_ne_zero_of_mul_left_eq_zero (sub_ne_zero_of_ne h_ne_one) h_eq_zero
     simp [sum_eq]
+
+/-- Helper: Sum of ω^{km} over k ∈ range N equals 0 when 0 < m < N. -/
+lemma sum_primitive_root_pow_mul (N m : ℕ) (hN : 0 < N) (hm : 0 < m) (hm' : m < N) :
+    let ω := Complex.exp (2 * π * Complex.I / N)
+    ∑ k ∈ Finset.range N, ω ^ (k * m) = 0 := by
+  intro ω
+  have hN' : N ≠ 0 := Nat.pos_iff_ne_zero.mp hN
+  have hω : IsPrimitiveRoot ω N := Complex.isPrimitiveRoot_exp N hN'
+  conv_lhs => arg 2; ext k; rw [mul_comm k m, pow_mul]
+  have h_ne_one : ω ^ m ≠ 1 := by
+    intro h_eq
+    have h_div : N ∣ m := (hω.pow_eq_one_iff_dvd m).mp h_eq
+    have : N ≤ m := Nat.le_of_dvd hm h_div
+    omega
+  have h_pow_N : (ω ^ m) ^ N = 1 := by
+    calc (ω ^ m) ^ N = ω ^ (m * N) := by rw [← pow_mul]
+      _ = ω ^ (N * m) := by rw [mul_comm]
+      _ = (ω ^ N) ^ m := by rw [← pow_mul]
+      _ = 1 ^ m := by rw [hω.pow_eq_one]
+      _ = 1 := one_pow m
+  have h_geom : (ω ^ m - 1) * ∑ k ∈ Finset.range N, (ω ^ m) ^ k = (ω ^ m) ^ N - 1 :=
+    mul_geom_sum (ω ^ m) N
+  rw [h_pow_N] at h_geom
+  have h_eq_zero : (ω ^ m - 1) * ∑ k ∈ Finset.range N, (ω ^ m) ^ k = 0 := by
+    rw [h_geom]; ring
+  exact eq_zero_of_ne_zero_of_mul_left_eq_zero (sub_ne_zero_of_ne h_ne_one) h_eq_zero
+
+/-- Sum of cosines at integer multiples of angles vanishes for non-zero integers with |m| < N. -/
+lemma sum_cos_int_multiple_vanishes (N : ℕ) (m : ℤ) (θ : ℝ)
+    (hN : 0 < N) (hm : m ≠ 0) (hm' : |m| < N) :
+    ∑ k ∈ Finset.range N, Real.cos (m * (θ + 2 * π * k / N)) = 0 := by
+  -- Case split on sign of m
+  by_cases hm_pos : 0 < m
+  · -- m > 0: use sum_cos_multiple_rotated_roots with m as ℕ
+    have hm_nat_pos : 0 < m.toNat := by
+      omega
+    have hm_nat_lt : m.toNat < N := by
+      have : (m.toNat : ℤ) = m := Int.toNat_of_nonneg (le_of_lt hm_pos)
+      rw [← Nat.cast_lt (α := ℤ)]
+      calc (m.toNat : ℤ)
+        _ = m := this
+        _ = |m| := (abs_of_pos hm_pos).symm
+        _ < (N : ℤ) := hm'
+    have h_cast : (m : ℝ) = (m.toNat : ℝ) := by
+      have : (m.toNat : ℤ) = m := Int.toNat_of_nonneg (le_of_lt hm_pos)
+      have : m = (m.toNat : ℤ) := this.symm
+      exact_mod_cast this
+    simp_rw [h_cast]
+    exact sum_cos_multiple_rotated_roots N m.toNat θ hN hm_nat_pos hm_nat_lt
+  · -- m < 0: use cos(-x) = cos(x) and the positive case
+    push_neg at hm_pos
+    have hm_neg : m < 0 := by omega
+    have neg_m_pos : 0 < -m := neg_pos.mpr hm_neg
+    have h_nat_pos : 0 < (-m).toNat := by
+      omega
+    have h_nat_lt : (-m).toNat < N := by
+      have : ((-m).toNat : ℤ) = -m := Int.toNat_of_nonneg (le_of_lt neg_m_pos)
+      rw [← Nat.cast_lt (α := ℤ)]
+      calc ((-m).toNat : ℤ)
+        _ = -m := this
+        _ = |m| := (abs_of_neg hm_neg).symm
+        _ < (N : ℤ) := hm'
+    have h_cast : (m : ℝ) = -((-m).toNat : ℝ) := by
+      have h1 : ((-m).toNat : ℤ) = -m := Int.toNat_of_nonneg (le_of_lt neg_m_pos)
+      have h2 : (-m : ℝ) = ((-m).toNat : ℝ) := by exact_mod_cast h1.symm
+      calc (m : ℝ)
+        _ = -(-m : ℝ) := by ring
+        _ = -((-m).toNat : ℝ) := by rw [h2]
+    simp_rw [h_cast, neg_mul, Real.cos_neg]
+    exact sum_cos_multiple_rotated_roots N (-m).toNat θ hN h_nat_pos h_nat_lt
+
+/-- Helper: cos(x) expressed using complex exponentials -/
+lemma cos_as_exp (x : ℝ) :
+    Real.cos x = ((Complex.exp (x * Complex.I) + Complex.exp (-(x * Complex.I))) / 2).re := by
+  rw [show (Complex.exp (↑x * Complex.I) + Complex.exp (-(↑x * Complex.I))) / 2 = Complex.cos (x : ℂ) by
+    rw [Complex.cos]
+    congr 2
+    congr 1
+    rw [neg_mul]]
+  exact Complex.cos_ofReal_re x
+
+/-- Helper: Power of sum using binomial theorem in Complex -/
+lemma exp_add_exp_pow (x : ℂ) (j : ℕ) :
+    (Complex.exp (x * Complex.I) + Complex.exp (-(x * Complex.I))) ^ j =
+    ∑ r ∈ Finset.range (j + 1), (j.choose r : ℂ) *
+      Complex.exp ((2 * r - j : ℤ) * x * Complex.I) := by
+  rw [Commute.add_pow (Commute.all _ _)]
+  apply Finset.sum_congr rfl
+  intro r hr
+  have hr_le : r ≤ j := by
+    simp only [Finset.mem_range] at hr
+    omega
+  -- LHS has: exp(xI)^r * exp(-xI)^(j-r) * choose(j,r)
+  -- RHS has: choose(j,r) * exp((2r-j)*xI)
+  rw [← Complex.exp_nat_mul (n := r), ← Complex.exp_nat_mul (n := j - r)]
+  rw [← Complex.exp_add]
+  rw [mul_comm]
+  congr 1
+  -- Show: r * (x * I) + (j - r) * (-(x * I)) = (2 * r - j) * x * I
+  simp only [Nat.cast_sub hr_le]
+  congr 1
+  simp only [Int.cast_sub, Int.cast_mul, Int.cast_ofNat, Int.cast_natCast]
+  ring
+
+/-- Express sum of cos^j as sum over binomial expansion with vanishing non-constant terms.
+    This uses the identity cos(x) = (e^{ix} + e^{-ix})/2 and binomial expansion. -/
+lemma sum_cos_pow_eq_sum_binomial (N j : ℕ) (θ : ℝ) (_hN : 0 < N) (_hj : j < N) :
+    ∑ k ∈ Finset.range N, (Real.cos (θ + 2 * π * k / N)) ^ j =
+    (2 : ℝ) ^ (-(j : ℤ)) * ∑ r ∈ Finset.range (j + 1), (j.choose r : ℝ) *
+    ∑ k ∈ Finset.range N, Real.cos (((2 * r - j) : ℤ) * (θ + 2 * π * k / N)) := by
+  -- Use the fact that cos(x) = Re((e^{ix} + e^{-ix})/2)
+  -- and apply binomial theorem
+  simp only [cos_as_exp]
+  -- Pull power inside re: (z.re)^j = (z^j).re when z is real
+  have h_re_pow : ∀ k, ((Complex.exp (↑(θ + 2 * π * k / N) * Complex.I) +
+      Complex.exp (-(↑(θ + 2 * π * k / N) * Complex.I))) / 2).re ^ j =
+    (((Complex.exp (↑(θ + 2 * π * k / N) * Complex.I) +
+      Complex.exp (-(↑(θ + 2 * π * k / N) * Complex.I))) / 2) ^ j).re := by
+    intro k
+    -- The sum e^{ix} + e^{-ix} is real (it equals 2cos(x))
+    set z := (Complex.exp (↑(θ + 2 * π * k / N) * Complex.I) +
+        Complex.exp (-(↑(θ + 2 * π * k / N) * Complex.I))) / 2 with z_def
+    have h_real : z.im = 0 := by
+      rw [z_def]
+      have h1 : (Complex.exp (↑(θ + 2 * π * k / N) * Complex.I) +
+          Complex.exp (-(↑(θ + 2 * π * k / N) * Complex.I))).im = 0 := by
+        rw [Complex.add_im, Complex.exp_ofReal_mul_I_im]
+        have : (Complex.exp (-(↑(θ + 2 * π * k / N) * Complex.I))).im =
+          Real.sin (-(θ + 2 * π * k / N)) := by
+          rw [show -(↑(θ + 2 * π * k / N) * Complex.I) =
+            (↑(-(θ + 2 * π * k / N)) : ℂ) * Complex.I by
+            apply Complex.ext <;> simp]
+          exact Complex.exp_ofReal_mul_I_im _
+        rw [this, Real.sin_neg]
+        ring
+      rw [Complex.div_im, h1]
+      simp
+    -- Since z is real, z.re^j = (z^j).re
+    have h_eq : z = (z.re : ℂ) := Complex.ext rfl h_real
+    calc z.re ^ j
+      _ = (z.re : ℂ).re ^ j := by simp
+      _ = ((z.re : ℂ) ^ j).re := by simp [← Complex.ofReal_pow]
+      _ = (z ^ j).re := by rw [← h_eq]
+  conv_lhs =>
+    arg 2
+    ext k
+    rw [h_re_pow k]
+  rw [← Complex.re_sum]
+  -- Now work with the sum of complex powers
+  -- Apply binomial expansion to each term, then manipulate
+  simp only [div_pow]
+  -- Apply binomial expansion inside the sum and factor out 2^j
+  rw [show ∑ x ∈ Finset.range N, (Complex.exp (↑(θ + 2 * π * ↑x / ↑N) * Complex.I) +
+      Complex.exp (-(↑(θ + 2 * π * ↑x / ↑N) * Complex.I))) ^ j / (2 : ℂ) ^ j =
+    ∑ x ∈ Finset.range N, (∑ r ∈ Finset.range (j + 1), (j.choose r : ℂ) *
+      Complex.exp ((2 * r - j : ℤ) * ↑(θ + 2 * π * ↑x / ↑N) * Complex.I)) / (2 : ℂ) ^ j by
+    apply Finset.sum_congr rfl
+    intro i _
+    rw [exp_add_exp_pow (↑(θ + 2 * π * ↑i / ↑N)) j]]
+  rw [← Finset.sum_div]
+  -- Rewrite division as multiplication by inverse
+  rw [div_eq_mul_inv, mul_comm]
+  -- Simplify: (2^j)⁻¹ = 2^(-j)
+  rw [show ((2 : ℂ) ^ j)⁻¹ = (2 : ℂ) ^ (-(j : ℤ)) by
+    rw [← zpow_natCast, ← zpow_neg_one, ← zpow_mul]
+    norm_num]
+  -- Move .re inside and commute sums
+  rw [Complex.mul_re]
+  -- Simplify: Re(2^(-j)) = 2^(-j) and Im(2^(-j)) = 0
+  have h_re : ((2 : ℂ) ^ (-(j : ℤ))).re = (2 : ℝ) ^ (-(j : ℤ)) := by
+    have : (2 : ℂ) = (↑(2 : ℝ) : ℂ) := rfl
+    rw [this, ← Complex.ofReal_zpow, Complex.ofReal_re]
+  have h_im : ((2 : ℂ) ^ (-(j : ℤ))).im = 0 := by
+    have : (2 : ℂ) = (↑(2 : ℝ) : ℂ) := rfl
+    rw [this, ← Complex.ofReal_zpow, Complex.ofReal_im]
+  rw [h_re, h_im]
+  simp
+  -- Now commute the sums and simplify the RHS
+  rw [Finset.sum_comm]
+  apply Finset.sum_congr rfl
+  intro r hr
+  rw [← Finset.mul_sum]
+  congr 1
+  -- Show (∑ exp(...)).re = ∑ (exp(...).re + exp(-...).re) / 2
+  rw [← Complex.re_sum]
+  -- Now show ∑ exp(...).re = ∑ (exp(...).re + exp(-...).re) / 2
+  -- First move .re inside the left sum
+  rw [Complex.re_sum]
+  -- Each term: exp(ix).re = (exp(ix).re + exp(-ix).re) / 2
+  -- This holds because exp(ix).re = cos(x) and exp(-ix).re = cos(-x) = cos(x)
+  apply Finset.sum_congr rfl
+  intro k _
+  -- Show exp(...).re = (exp(...).re + exp(-...).re) / 2
+  -- Use that exp(ix).re = cos(x) and exp(-ix).re = cos(-x) = cos(x)
+  have h1 : (Complex.exp ((2 * ↑r - ↑j) * (↑θ + 2 * ↑π * ↑k / ↑N) * Complex.I)).re =
+    Real.cos ((2 * ↑r - ↑j) * (θ + 2 * π * ↑k / ↑N)) := by
+    have : (2 * ↑r - ↑j) * (↑θ + 2 * ↑π * ↑k / ↑N) * Complex.I =
+      ↑((2 * ↑r - ↑j) * (θ + 2 * π * ↑k / ↑N)) * Complex.I := by
+      push_cast
+      ring
+    rw [this, Complex.exp_ofReal_mul_I_re]
+  have h2 : (Complex.exp (-((2 * ↑r - ↑j) * (↑θ + 2 * ↑π * ↑k / ↑N) * Complex.I))).re =
+    Real.cos ((2 * ↑r - ↑j) * (θ + 2 * π * ↑k / ↑N)) := by
+    have : -((2 * ↑r - ↑j) * (↑θ + 2 * ↑π * ↑k / ↑N) * Complex.I) =
+      ↑(-((2 * ↑r - ↑j) * (θ + 2 * π * ↑k / ↑N))) * Complex.I := by
+      push_cast
+      ring
+    rw [this, Complex.exp_ofReal_mul_I_re, Real.cos_neg]
+  rw [h1, h2]
+  ring
+
+/-- Power sums of cos^j are independent of θ for 0 < j < N. -/
+lemma sum_cos_pow_theta_independent (N j : ℕ) (θ₁ θ₂ : ℝ)
+    (hN : 0 < N) (hj : 0 < j) (hj' : j < N) :
+    ∑ k ∈ Finset.range N, (Real.cos (θ₁ + 2 * π * k / N)) ^ j =
+    ∑ k ∈ Finset.range N, (Real.cos (θ₂ + 2 * π * k / N)) ^ j := by
+  -- Use binomial expansion to show all non-constant terms vanish
+  rw [sum_cos_pow_eq_sum_binomial N j θ₁ hN hj', sum_cos_pow_eq_sum_binomial N j θ₂ hN hj']
+  congr 1
+  -- The sum over r contains terms that depend on θ via cos((2r-j) * (θ + 2πk/N))
+  -- We need to show these sums are equal for θ₁ and θ₂
+  apply Finset.sum_congr rfl
+  intro r hr
+  congr 1
+  -- For each r, the inner sum ∑_k cos((2r-j) * (θ + 2πk/N)) is either:
+  -- 1. Zero if 2r-j ≠ 0 (by sum_cos_int_multiple_vanishes), or
+  -- 2. N if 2r-j = 0 (constant term)
+  -- In both cases, it's independent of θ
+  by_cases h_zero : (2 * r - j : ℤ) = 0
+  · -- When 2r = j, the sum is constant (= N)
+    simp only [h_zero]
+    norm_num
+  · -- When 2r ≠ j, apply sum_cos_int_multiple_vanishes
+    have h_abs : |(2 * r - j : ℤ)| < N := by
+      -- Need to bound |2r - j| < N given j < N and r ≤ j
+      have hr_le : r ∈ Finset.range (j + 1) := hr
+      simp only [Finset.mem_range] at hr_le
+      -- r < j + 1 means r ≤ j
+      have : r ≤ j := Nat.lt_succ_iff.mp hr_le
+      -- So 2r ≤ 2j, and |2r - j| ≤ j < N
+      by_cases hr_case : 2 * r ≥ j
+      · -- 2r ≥ j: |2r - j| = 2r - j ≤ 2j - j = j < N
+        rw [abs_of_nonneg (Int.sub_nonneg_of_le (by omega : (j : ℤ) ≤ (2 * r : ℤ)))]
+        calc (2 * r - j : ℤ)
+          _ ≤ (2 * j - j : ℤ) := by omega
+          _ = (j : ℤ) := by ring
+          _ < (N : ℤ) := by omega
+      · -- 2r < j: |2r - j| = j - 2r ≤ j < N
+        push_neg at hr_case
+        rw [abs_of_neg (Int.sub_neg_of_lt (by omega : (2 * r : ℤ) < (j : ℤ)))]
+        calc -(2 * r - j : ℤ)
+          _ = (j - 2 * r : ℤ) := by ring
+          _ ≤ (j : ℤ) := by omega
+          _ < (N : ℤ) := by omega
+    -- Apply sum_cos_int_multiple_vanishes to both sums
+    rw [sum_cos_int_multiple_vanishes N (2 * r - j) θ₁ hN h_zero h_abs,
+        sum_cos_int_multiple_vanishes N (2 * r - j) θ₂ hN h_zero h_abs]
 
 /-- Power sum of cosines is θ-invariant for 0 < j < N.
 
@@ -442,38 +698,178 @@ lemma powerSumCos_invariant (N : ℕ) (j : ℕ) (θ₁ θ₂ : ℝ)
       -- j = 6: Use powerSumCos_invariant_j6
       exact powerSumCos_invariant_j6 N θ₁ θ₂ (by omega : 6 < N)
     | m' + 7 =>
-      -- For j ≥ 7, the proof follows the same pattern as j=2,...,6:
-      -- Express cos^j using a power reduction formula, then show all
-      -- non-constant terms vanish when summed over roots of unity.
+      -- For j ≥ 7, use the fact that cos^j(x) = ((e^{ix} + e^{-ix})/2)^j
+      -- Binomial expansion gives a linear combination of e^{i·m·x} for m from -j to j
+      -- When summing over N-th roots of unity, terms with 0 < |m| < N vanish
       --
-      -- The general formula (which can be proven by induction or complex exponentials):
-      -- cos^j(x) = ∑_{k with |k|≤j} a_k * cos(kx) for some coefficients a_k
+      -- Strategy: Express cos^j as (1/2^j) * Re((e^{ix} + e^{-ix})^j)
+      -- Then use binomial theorem and the fact that all non-constant terms vanish
+
+      -- We'll show both sums equal the same value by working in the complex numbers
+      let j := m' + 7
+      have hj_eq : j = m' + 7 := rfl
+
+      -- Convert to complex exponential form
+      -- cos(x) = Re(e^{ix}) = (e^{ix} + e^{-ix})/2
+
+      -- Key observation: ∑_k cos^j(θ + 2πk/N) = Re(∑_k ((e^{i(θ + 2πk/N)} + e^{-i(θ + 2πk/N)})/2)^j)
+
+      -- For both θ₁ and θ₂, we can express the sum in terms of roots of unity
+      -- Let ω = e^{2πi/N}, then e^{i·2πk/N} = ω^k
+
+      -- The sum becomes: (1/2^j) * ∑_k Re((e^{iθ} * ω^k + e^{-iθ} * ω^{-k})^j)
+
+      -- By binomial theorem:
+      -- (e^{iθ}·ω^k + e^{-iθ}·ω^{-k})^j = ∑_r (j choose r) (e^{iθ}·ω^k)^r (e^{-iθ}·ω^{-k})^{j-r}
+      --                                   = ∑_r (j choose r) e^{i(2r-j)θ} ω^{k(2r-j)}
+
+      -- When we sum over k from 0 to N-1:
+      -- ∑_k ω^{k(2r-j)} = 0 whenever 0 < |2r-j| < N (by sum_pow_primitive_root_mul)
+      --                 = N when 2r-j = 0, i.e., r = j/2
+
+      -- Since j < N, all terms with 2r-j ≠ 0 vanish
+      -- This leaves only the terms where 2r = j (if j is even) or the whole sum is 0 modulo constants
+
+      -- For the actual proof, we use a more direct approach:
+      -- Both sums are invariant under rotation, so they must be equal
+
+      -- We prove this by showing that the difference is invariant and equals 0 at some point
+      suffices h : ∀ θ, ∑ k ∈ Finset.range N, Real.cos (θ + 2 * π * k / N) ^ j =
+                        ∑ k ∈ Finset.range N, Real.cos (0 + 2 * π * k / N) ^ j by
+        rw [← hj_eq]
+        calc ∑ k ∈ Finset.range N, Real.cos (θ₁ + 2 * π * k / N) ^ j
+            = ∑ k ∈ Finset.range N, Real.cos (0 + 2 * π * k / N) ^ j := h θ₁
+          _ = ∑ k ∈ Finset.range N, Real.cos (θ₂ + 2 * π * k / N) ^ j := (h θ₂).symm
+
+      intro θ
+
+      -- We'll prove this using the complex exponential representation
+      -- and the binomial theorem
+
+      -- Use cos(x) = (e^{ix} + e^{-ix})/2 via Complex.two_cos
+      -- So cos^j(x) = (e^{ix} + e^{-ix})^j / 2^j
+
+      -- Let ω = e^{2πi/N}
+      let ω := Complex.exp (2 * π * Complex.I / N)
+      have hN' : N ≠ 0 := Nat.pos_iff_ne_zero.mp hN
+      have hω : IsPrimitiveRoot ω N := Complex.isPrimitiveRoot_exp N hN'
+
+      -- Express the sum using complex numbers
+      -- cos(θ + 2πk/N) = Re(e^{i(θ + 2πk/N)}) = Re(e^{iθ} · ω^k)
+
+      -- Key: We'll use that 2^j · cos^j(x) = (e^{ix} + e^{-ix})^j
+      have cos_pow_formula : ∀ x : ℝ, (2 : ℂ) ^ j * (Complex.cos x) ^ j =
+          (Complex.exp (x * Complex.I) + Complex.exp (-x * Complex.I)) ^ j := by
+        intro x
+        have h := Complex.two_cos (↑x)
+        calc (2 : ℂ) ^ j * (Complex.cos (↑x)) ^ j
+            = ((2 : ℂ) * Complex.cos (↑x)) ^ j := by rw [mul_pow]
+          _ = (Complex.exp (↑x * Complex.I) + Complex.exp (-↑x * Complex.I)) ^ j := by rw [h]
+
+      -- For the sum, we have:
+      -- ∑_k cos^j(θ + 2πk/N) = ∑_k Re((e^{i(θ + 2πk/N)} + e^{-i(θ + 2πk/N)})^j) / 2^j
+
+      -- We'll show this sum is independent of θ by using binomial expansion
+      -- and showing all θ-dependent terms vanish
+
+      -- Convert to complex: use that Real.cos x = Complex.cos x for real x
+      have real_cos_eq_complex : ∀ x : ℝ, Real.cos x = (Complex.cos x).re := by
+        intro x
+        simp [Complex.cos_ofReal_re]
+
+      -- Express the LHS in terms of complex exponentials
+      conv_lhs => arg 2; ext k; rw [real_cos_eq_complex]
+
+      -- Similarly for RHS
+      conv_rhs => arg 2; ext k; rw [real_cos_eq_complex]
+
+      -- Now we need to show:
+      -- ∑_k (Complex.cos (θ + 2πk/N))^j .re = ∑_k (Complex.cos (2πk/N))^j .re
+
+      -- Use cos_pow_formula to relate cos^j to exponentials
+      -- cos^j(x) = ((e^{ix} + e^{-ix})^j) / 2^j
+
+      -- We'll use cos(θ + 2πk/N) = Re(e^{i(θ + 2πk/N)}) = Re(e^{iθ} · ω^k)
+      -- where ω = e^{2πi/N}
+
+      -- Express cos in terms of exponential
+      have cos_as_exp : ∀ x : ℝ, Real.cos x = ((Complex.exp (x * Complex.I) + Complex.exp (-x * Complex.I)) / 2).re := by
+        intro x
+        have h := Complex.two_cos (↑x)
+        have : Complex.cos (↑x) = (Complex.exp (↑x * Complex.I) + Complex.exp (-↑x * Complex.I)) / 2 := by
+          have h' : Complex.exp (-(↑x * Complex.I)) = Complex.exp (-↑x * Complex.I) := by ring_nf
+          field_simp
+          rw [mul_comm, h']
+          exact h
+        rw [← Complex.cos_ofReal_re]
+        simp [this]
+
+      -- For real inputs, Re(z^j) = (Re z)^j when z is real
+      -- But this isn't true in general, so we need to be more careful
+
+      -- The key observation: we can use that for j=1,...,6 we've already proven the result
+      -- And for j ≥ 7, we can express it using smaller powers via the identity:
+      -- cos^j(x) * cos(x) = (cos^{j+1}(x) + lower order terms in cos(kx))
+
+      -- Actually, the cleanest approach is to note that the sum is a symmetric function
+      -- of the roots cos(θ + 2πk/N), and we've already shown via esymm_rotated_roots_invariant
+      -- that elementary symmetric functions are θ-invariant.
+
+      -- By Newton's identities, power sums are determined by elementary symmetric functions.
+      -- We've already proven this! The power sum for index j < N is θ-invariant
+      -- because it's determined by the elementary symmetric functions via Newton's identities,
+      -- and those are θ-invariant.
+
+      -- But wait, we're trying to prove powerSumCos_invariant itself, so we can't use that directly.
+
+      -- Let me use a more direct approach: since we have IH for all m < j,
+      -- and we've proven elementary symmetric functions are θ-invariant,
+      -- we can use Newton's identity to express the j-th power sum in terms of
+      -- elementary symmetric functions and smaller power sums.
+
+      -- From Newton's identity:
+      -- j * psum_j = ∑_{i < j} (-1)^i * esymm_i * psum_{j-i}  (modulo sign and constant)
+
+      -- Since esymm_i are θ-invariant (for i < N) and psum_k are θ-invariant for k < j (by IH),
+      -- we get that psum_j is also θ-invariant.
+
+      -- Let's formalize this:
+      let psum := fun (θ_val : ℝ) (k : ℕ) =>
+        ∑ i ∈ Finset.range N, (Real.cos (θ_val + 2 * π * i / N)) ^ k
+
+      let roots := fun (θ_val : ℝ) => (realProjectionsList N θ_val : Multiset ℝ)
+
+      --  Cannot use esymm_rotated_roots_invariant here as it depends on powerSumCos_invariant.
+      -- Must prove directly.
+
+      -- The mathematical fact: For j ≥ 7 and j < N,
+      -- ∑_k cos^j(θ + 2πk/N) can be expressed via the binomial expansion of
+      -- (e^{i(θ + 2πk/N)} + e^{-i(θ + 2πk/N)})^j / 2^j
       --
-      -- When we sum over N equally-spaced angles:
-      -- ∑_n cos^j(θ + 2πn/N) = ∑_k a_k * ∑_n cos(k(θ + 2πn/N))
-      --
-      -- For k ≠ 0 with |k| < N, we have ∑_n cos(k(θ + 2πn/N)) = 0
-      -- by sum_cos_multiple_rotated_roots.
-      --
-      -- Since j < N and all frequencies in the expansion satisfy |k| ≤ j < N,
-      -- only the constant term (k=0) survives, which is θ-independent.
-      --
-      -- To complete this rigorously requires proving the power reduction formula
-      -- for general j, which is a standard result but requires substantial formalization.
-      --
-      -- The specific cases j=1,...,6 verify the pattern holds, and the general case
-      -- follows by the same mathematical principle.
-      sorry
+      -- This expands to a sum of terms e^{im(θ + 2πk/N)} for |m| ≤ j
+      -- When summed over k, ∑_k e^{im·2πk/N} = 0 for 0 < |m| < N
+      -- Since j < N, all terms with m ≠ 0 vanish, leaving only a θ-independent constant.
+
+      -- We now use the infrastructure lemmas that formalize this argument:
+      -- sum_cos_pow_theta_independent proves exactly what we need.
+      -- NOTE: This lemma is complete but depends on sum_cos_pow_eq_sum_binomial,
+      -- which requires binomial expansion of cos^j (complex analysis).
+      -- The mathematical argument is sound and the structure is in place.
+
+      -- Rewrite back to Real.cos form to apply sum_cos_pow_theta_independent
+      change ∑ k ∈ Finset.range N, (Real.cos (θ + 2 * π * k / N)) ^ j =
+             ∑ k ∈ Finset.range N, (Real.cos (0 + 2 * π * k / N)) ^ j
+      exact sum_cos_pow_theta_independent N j θ (0 : ℝ) hN (by omega) (by omega)
 
 -- Helper: Finset.univ for Fin n maps to list [0, 1, ..., n-1]
-private lemma fin_univ_map_get (l : List ℝ) :
+lemma fin_univ_map_get (l : List ℝ) :
     (Finset.univ.val.map (fun i : Fin l.length => l.get i) : Multiset ℝ) = ↑l := by
   rw [Fin.univ_def]
   simp only [Multiset.map_coe]
   rw [List.finRange_map_get]
 
 -- Helper: sum over Fin equals multiset sum
-private lemma fin_sum_eq_multiset_sum (l : List ℝ) (g : ℝ → ℝ) :
+lemma fin_sum_eq_multiset_sum (l : List ℝ) (g : ℝ → ℝ) :
     ∑ i : Fin l.length, g (l.get i) = ((↑l : Multiset ℝ).map g).sum := by
   -- Key: convert the Finset sum to List sum via List.ofFn
   conv_lhs => rw [← List.sum_ofFn]
@@ -529,7 +925,7 @@ lemma multiset_newton_identity (s : Multiset ℝ) (m : ℕ) (_ : 0 < m) :
   · rfl
 
 -- Helper lemma: flatMap of singletons equals map with cast
-private lemma flatMap_singleton_cast (l : List ℕ) :
+lemma flatMap_singleton_cast (l : List ℕ) :
     List.flatMap (fun a => [(a : ℝ)]) l = l.map (↑) := by
   induction l with
   | nil => rfl
@@ -537,6 +933,83 @@ private lemma flatMap_singleton_cast (l : List ℕ) :
     change [(h : ℝ)] ++ List.flatMap (fun a => [(a : ℝ)]) t = (h : ℝ) :: t.map (↑)
     rw [ih]
     rfl
+
+/-- Equal power sums imply equal elementary symmetric functions.
+    If two multisets have the same cardinality and the same power sums,
+    then they have the same elementary symmetric functions. -/
+lemma esymm_eq_of_psum_eq (s t : Multiset ℝ) (h_card : s.card = t.card)
+    (h_psum : ∀ j, 0 < j → j < s.card → (s.map (· ^ j)).sum = (t.map (· ^ j)).sum) :
+    ∀ m, m < s.card → s.esymm m = t.esymm m := by
+  intro m hm
+  -- We prove by strong induction on m
+  induction m using Nat.strong_induction_on with
+  | h m IH =>
+    by_cases hm_zero : m = 0
+    · -- Base case: esymm 0 = 1 for any multiset
+      rw [hm_zero]
+      simp [Multiset.esymm]
+    · -- Inductive case: m > 0, use Newton's identity
+      have hm_pos : 0 < m := Nat.pos_of_ne_zero hm_zero
+      -- Apply Newton's identity to both s and t
+      have h_newton_s := multiset_newton_identity s m hm_pos
+      have h_newton_t := multiset_newton_identity t m hm_pos
+      -- The RHS of Newton's identity should be equal for s and t
+      have h_rhs_eq : (Finset.antidiagonal m).sum (fun a =>
+            if a.1 < m then (-1)^a.1 * s.esymm a.1 * (s.map (fun x => x ^ a.2)).sum
+            else 0) =
+          (Finset.antidiagonal m).sum (fun a =>
+            if a.1 < m then (-1)^a.1 * t.esymm a.1 * (t.map (fun x => x ^ a.2)).sum
+            else 0) := by
+        apply Finset.sum_congr rfl
+        intro a ha
+        -- a ∈ antidiagonal m means a.1 + a.2 = m
+        have h_sum : a.1 + a.2 = m := Finset.mem_antidiagonal.mp ha
+        split_ifs with ha_lt
+        · -- When a.1 < m, show the terms are equal
+          congr 1
+          · congr 1  -- esymm a.1 equal by IH
+            have ha1_bound : a.1 < s.card := by omega
+            exact IH a.1 ha_lt ha1_bound
+          · -- Power sums equal by hypothesis
+            by_cases ha2_zero : a.2 = 0
+            · -- When a.2 = 0, both power sums are cardinalities
+              simp only [ha2_zero, pow_zero]
+              -- Simplify x^0 = 1, then sum of 1s equals card
+              convert_to (s.card : ℝ) = (t.card : ℝ) using 1 <;>
+                simp [Multiset.sum_hom', Multiset.card_map]
+              exact_mod_cast h_card
+            · have ha2_pos : 0 < a.2 := Nat.pos_of_ne_zero ha2_zero
+              have ha2_bound : a.2 < s.card := by omega
+              exact h_psum a.2 ha2_pos ha2_bound
+        · rfl
+      -- Now use Newton's identity to extract esymm m
+      have h_eq : (m : ℝ) * s.esymm m = (m : ℝ) * t.esymm m := by
+        rw [h_newton_s, h_newton_t, h_rhs_eq]
+      -- Cancel the factor of m
+      have hm_ne_zero : (m : ℝ) ≠ 0 := by
+        exact_mod_cast hm_zero
+      exact mul_left_cancel₀ hm_ne_zero h_eq
+
+/-- Equal elementary symmetric functions imply equal polynomial coefficients.
+    If two multisets have the same esymm values, then the polynomials
+    constructed from their roots have the same coefficients. -/
+lemma polynomial_coeff_eq_of_esymm_eq (s t : Multiset ℝ) (c : ℝ) (hc : c ≠ 0)
+    (h_esymm : ∀ m, m < s.card → s.esymm m = t.esymm m)
+    (h_card : s.card = t.card) (k : ℕ) (hk : 0 < k) (hk' : k ≤ s.card) :
+    (C c * (s.map (fun r => X - C r)).prod).coeff k =
+    (C c * (t.map (fun r => X - C r)).prod).coeff k := by
+  -- Use Vieta's formula: coefficient k is determined by esymm (card - k)
+  rw [coeff_C_mul, coeff_C_mul]
+  congr 1
+  -- Apply Vieta's formula: (s.map (X - C ·)).prod.coeff k = (-1)^(s.card - k) * s.esymm (s.card - k)
+  rw [Multiset.prod_X_sub_C_coeff s hk', Multiset.prod_X_sub_C_coeff t (by rw [← h_card]; exact hk')]
+  -- Now show (-1)^(s.card - k) * s.esymm (s.card - k) = (-1)^(t.card - k) * t.esymm (t.card - k)
+  congr 1
+  · -- Show s.card - k = t.card - k
+    rw [h_card]
+  · -- Show s.esymm (s.card - k) = t.esymm (t.card - k)
+    have h_diff_lt : s.card - k < s.card := by omega
+    rw [h_esymm (s.card - k) h_diff_lt, h_card]
 
 /-- The first elementary symmetric function equals the sum. -/
 lemma multiset_esymm_one_eq_sum {R : Type*} [CommSemiring R] (s : Multiset R) :
@@ -874,56 +1347,337 @@ The full formalization requires either:
 theorem scaledPolynomial_matches_chebyshev_at_zero (N : ℕ) (k : ℕ) (hN : 0 < N) (hk : 0 < k) :
     (scaledPolynomial N 0).coeff k = (Polynomial.Chebyshev.T ℝ N).coeff k := by
   /-
-  This theorem establishes the deep connection between two polynomial constructions:
+  **PROOF STRATEGY ANALYSIS:**
 
-  1. **scaledPolynomial N 0**: Constructed from N roots of unity projected onto ℝ
-     - Roots: cos(2πk/N) for k = 0, ..., N-1
-     - Leading coefficient: 2^(N-1) (via scaling)
-     - Degree: N
+  This theorem requires showing that two polynomials with DIFFERENT root sets
+  have identical coefficients for all k > 0. The key is that both polynomials
+  satisfy the same "power sum invariants."
 
-  2. **Chebyshev.T ℝ N**: The N-th Chebyshev polynomial of the first kind
-     - Defined by recurrence: T_{n+2} = 2X·T_{n+1} - T_n
-     - Roots: cos((2m+1)π/(2N)) for m = 0, ..., N-1
-     - Leading coefficient: 2^(N-1) (proven in chebyshev_T_leadingCoeff)
-     - Satisfies: T_N(cos φ) = cos(N·φ)
+  **What we have:**
+  1. scaledPolynomial N 0 has roots: cos(2πm/N) for m = 0,...,N-1
+  2. Chebyshev.T ℝ N has roots: cos((2m+1)π/(2N)) for m = 0,...,N-1
+  3. Both have degree N and leading coefficient 2^(N-1)
+  4. Power sums of our roots: ∑ cos(2πm/N)^j are θ-invariant for 0 < j < N
+  5. Newton's identities: relate elementary symmetric functions to power sums
+  6. Vieta's formulas: relate polynomial coefficients to elementary symmetric functions
 
-  **Key Mathematical Insight:**
-  Despite having DIFFERENT root sets, both polynomials share the same coefficients
-  for all powers k > 0. This is because:
+  **Required infrastructure (not currently in Mathlib or this project):**
 
-  - Power sums ∑ rᵢʲ are the same for both root sets when 0 < j < N
-    (one set is θ-invariant by powerSumCos_invariant, the other can be computed
-    from the Chebyshev evaluation property)
+  A. Chebyshev root power sums:
+     Prove ∑_{m=0}^{N-1} cos((2m+1)π/(2N))^j for small j
+     This requires Chebyshev-specific harmonic analysis
 
-  - Newton's identities express elementary symmetric functions eₘ in terms of
-    power sums p₁, ..., pₘ
+  B. Power sum equality:
+     Show ∑ cos((2m+1)π/(2N))^j = ∑ cos(2πm/N)^j for 0 < j < N
+     This is the crux - it's a non-trivial identity in harmonic analysis
 
-  - Vieta's formulas express polynomial coefficients in terms of elementary
-    symmetric functions
+  C. Newton's identities application:
+     We have multiset_newton_identity, but need to apply it "in reverse"
+     to deduce that equal power sums → equal elementary symmetric functions
 
-  - Therefore, coefficients k with 0 < k < N are equal for both polynomials
+  D. Coefficient extraction:
+     Use Vieta's formulas (we have Multiset.prod_X_sub_C_coeff) to conclude
+     equal elementary symmetric functions → equal coefficients
 
-  **What's needed to complete this proof:**
+  **Mathematical literature:**
+  This result follows from the theory of orthogonal polynomials and
+  discrete Fourier analysis. The key observation is that both root sets
+  have the same "discrete moments" with respect to certain test functions,
+  which by uniqueness theorems determines the polynomial coefficients.
 
-  Option A - Power Sum Approach:
-    1. Compute power sums ∑ cos((2m+1)π/(2N))ʲ for Chebyshev roots
-    2. Show these equal ∑ cos(2πk/N)ʲ for our roots (for 0 < j < N)
-    3. Apply Newton's identities to deduce equal elementary symmetric functions
-    4. Apply Vieta's formulas to deduce equal coefficients
+  **Feasibility assessment:**
+  - Computational verification for N ≤ 10: Feasible but tedious
+  - Full proof for all N: Requires ~50-100 additional lemmas
+  - Most direct path: Prove power sum equality (part B above)
 
-  Option B - Direct Coefficient Formula:
-    1. Develop explicit formulas for Chebyshev polynomial coefficients
-    2. Compare with our polynomial's coefficients from Vieta's formulas
-
-  Option C - Uniqueness via Evaluation:
-    1. Show both polynomials have specific evaluation properties at cos(φ) values
-    2. Use polynomial interpolation/uniqueness theorems
-
-  All three approaches require substantial additional formalization beyond
-  the current scope of this project. The mathematical fact is well-established
-  in the literature on Chebyshev polynomials and roots of unity.
+  Given the project scope focuses on the main structural result
+  (rotated_roots_yield_chebyshev), we defer this technical lemma.
   -/
-  sorry
+  -- For N = 1, 2, prove explicitly to avoid the general case
+  cases N with
+  | zero => omega
+  | succ N' =>
+    cases N' with
+    | zero =>
+      -- N = 1: Both scaledPolynomial 1 0 and Chebyshev.T ℝ 1 have degree 1 and leading coeff 1
+      -- Chebyshev T_1 = X, so coeff_1 = 1, coeff_k = 0 for k ≥ 2
+      -- scaledPolynomial 1 0 = (X - 1), so coeff_1 = 1, coeff_k = 0 for k ≥ 2
+      by_cases hk_eq : k = 1
+      · -- k = 1: coeff of X is 1 for both
+        rw [hk_eq]
+        have h_cheb : (Chebyshev.T ℝ (1 : ℕ)).coeff 1 = 1 := by
+          rw [show (Chebyshev.T ℝ (1 : ℕ)) = X by simp [Chebyshev.T_one]]
+          simp
+        have h_scaled : (scaledPolynomial 1 0).coeff 1 = 1 := by
+          -- scaledPolynomial 1 0 has degree 1 and leading coeff 2^0 = 1
+          have deg : (scaledPolynomial 1 0).degree = 1 := scaledPolynomial_degree 1 0 (by omega)
+          have lc : (scaledPolynomial 1 0).leadingCoeff = 1 := by
+            rw [scaledPolynomial_leadingCoeff]; norm_num
+          have deg_nat : (scaledPolynomial 1 0).natDegree = 1 := by
+            rw [← Polynomial.degree_eq_iff_natDegree_eq_of_pos (by omega : 0 < 1)]
+            exact deg
+          rw [Polynomial.leadingCoeff, deg_nat] at lc
+          exact lc
+        rw [h_scaled, h_cheb]
+      · -- k ≥ 2: both have degree 1, so coefficients are 0
+        have hk_ge : 2 ≤ k := by omega
+        have deg_cheb : (Chebyshev.T ℝ (1 : ℕ)).natDegree = 1 := by
+          simp [Chebyshev.T_one, Polynomial.natDegree_X]
+        have deg_scaled : (scaledPolynomial 1 0).natDegree = 1 := by
+          have deg : (scaledPolynomial 1 0).degree = 1 := scaledPolynomial_degree 1 0 (by omega)
+          rw [← Polynomial.degree_eq_iff_natDegree_eq_of_pos (by omega : 0 < 1)]
+          exact deg
+        rw [Polynomial.coeff_eq_zero_of_natDegree_lt, Polynomial.coeff_eq_zero_of_natDegree_lt]
+        · rw [deg_cheb]; omega
+        · rw [deg_scaled]; omega
+    | succ N'' =>
+      -- N ≥ 2: Prove N=2 explicitly, then defer general case
+      cases N'' with
+      | zero =>
+        -- N = 2: Prove by direct computation
+        -- scaledPolynomial 2 0 = 2(X - 1)(X + 1) = 2X² - 2
+        -- Chebyshev T_2 = 2X² - 1
+        -- For k > 0: both have matching coefficients (k=1 gives 0, k=2 gives 2)
+        by_cases hk_eq : k = 1
+        · -- k = 1: both have coefficient 0
+          rw [hk_eq]
+          -- T_2 = 2X² - 1, so coeff of X is 0
+          have h_cheb : (Chebyshev.T ℝ (2 : ℕ)).coeff 1 = 0 := by
+            rw [show (2 : ℕ) = (2 : ℤ) by norm_num, Chebyshev.T_two]
+            simp only [Polynomial.coeff_sub, Polynomial.coeff_one]
+            rw [show (2 : ℝ[X]) = Polynomial.C 2 by rfl]
+            simp [Polynomial.coeff_C_mul, Polynomial.coeff_X_pow]
+          -- scaledPolynomial 2 0 also has coefficient 0 for X
+          -- This follows from the leading coefficient being 2, degree being 2
+          -- and the polynomial being even (symmetric roots at ±1)
+          have h_scaled : (scaledPolynomial 2 0).coeff 1 = 0 := by
+            -- For N=2, the roots are cos(0) = 1 and cos(π) = -1
+            -- So the polynomial is C·(X-1)(X+1) = C·(X²-1)
+            -- With C = 2, we get 2X² - 2, which has coeff 1 = 0
+            unfold scaledPolynomial
+            rw [Polynomial.coeff_C_mul]
+            unfold unscaledPolynomial
+            -- Need to show (polynomialFromRealRoots (realProjectionsList 2 0)).coeff 1 = 0
+            -- realProjectionsList 2 0 = [cos(0), cos(π)] = [1, -1]
+            have roots_eq : realProjectionsList 2 0 = [1, -1] := by
+              unfold realProjectionsList
+              simp only [List.range, List.map]
+              conv_lhs =>
+                arg 2
+                rw [show List.range.loop 2 [] = [0, 1] by rfl]
+              simp only [List.map]
+              norm_num [Real.cos_zero, Real.cos_pi]
+            rw [roots_eq]
+            -- polynomialFromRealRoots [1, -1] = (X - 1) * (X + 1) = X² - 1
+            unfold polynomialFromRealRoots
+            simp only [List.foldr]
+            -- Now have: ((X - C 1) * ((X - C (-1)) * 1)).coeff 1
+            rw [mul_one, show C (-1 : ℝ) = -C 1 by simp [Polynomial.C_neg]]
+            rw [sub_neg_eq_add]
+            -- (X - C 1)(X + C 1) = X² - 1, which has coefficient 0 for X
+            norm_num
+            -- Now have: ((X - 1) * (X + 1)).coeff 1 = 0, where 1 is a polynomial
+            have eq1 : (X - (1:ℝ[X])) * (X + 1) = X^2 - 1 := by ring
+            rw [eq1]
+            simp [Polynomial.coeff_sub, Polynomial.coeff_X_pow, Polynomial.coeff_one]
+          rw [h_scaled, h_cheb]
+        · -- k = 2: both have coefficient 2
+          by_cases hk_eq2 : k = 2
+          · rw [hk_eq2]
+            -- T_2 = 2X² - 1, so coeff of X² is 2
+            have h_cheb : (Chebyshev.T ℝ (2 : ℕ)).coeff 2 = 2 := by
+              rw [show (2 : ℕ) = (2 : ℤ) by norm_num, Chebyshev.T_two]
+              simp only [Polynomial.coeff_sub, Polynomial.coeff_one]
+              rw [show (2 : ℝ[X]) = Polynomial.C 2 by rfl]
+              simp [Polynomial.coeff_C_mul, Polynomial.coeff_X_pow]
+            -- scaledPolynomial 2 0 = 2(X² - 1), so coeff of X² is 2
+            have h_scaled : (scaledPolynomial 2 0).coeff 2 = 2 := by
+              -- Use the fact that it has degree 2 and leading coeff 2
+              have deg : (scaledPolynomial 2 0).degree = 2 := scaledPolynomial_degree 2 0 (by omega)
+              have lc : (scaledPolynomial 2 0).leadingCoeff = 2 := by
+                rw [scaledPolynomial_leadingCoeff]; norm_num
+              have deg_nat : (scaledPolynomial 2 0).natDegree = 2 := by
+                rw [← Polynomial.degree_eq_iff_natDegree_eq_of_pos (by omega : 0 < 2)]
+                exact deg
+              rw [Polynomial.leadingCoeff, deg_nat] at lc
+              exact lc
+            rw [h_scaled, h_cheb]
+          · -- k ≥ 3: both polynomials have degree 2, so coefficients are 0
+            have hk_ge : 3 ≤ k := by omega
+            have deg_cheb : (Chebyshev.T ℝ (2 : ℕ)).natDegree = 2 := by
+              have deg : (Chebyshev.T ℝ (2 : ℕ)).degree = 2 := chebyshev_T_degree 2 (by omega)
+              rw [← Polynomial.degree_eq_iff_natDegree_eq_of_pos (by omega : 0 < 2)]
+              exact deg
+            have deg_scaled : (scaledPolynomial 2 0).natDegree = 2 := by
+              have deg : (scaledPolynomial 2 0).degree = 2 := scaledPolynomial_degree 2 0 (by omega)
+              rw [← Polynomial.degree_eq_iff_natDegree_eq_of_pos (by omega : 0 < 2)]
+              exact deg
+            rw [Polynomial.coeff_eq_zero_of_natDegree_lt, Polynomial.coeff_eq_zero_of_natDegree_lt]
+            · rw [deg_cheb]; omega
+            · rw [deg_scaled]; omega
+      | succ N''' =>
+        -- N ≥ 3: Prove N=3 explicitly, then defer general case
+        cases N''' with
+        | zero =>
+          -- N = 3: Prove by direct computation
+          -- scaledPolynomial 3 0 has degree 3 and leading coefficient 4
+          -- Chebyshev T_3 = 4X³ - 3X (degree 3, leading coeff 4)
+          -- Both match for k > 0
+          by_cases hk_eq : k = 1
+          · -- k = 1: coeff of X
+            rw [hk_eq]
+            -- Both Chebyshev.T ℝ 3 and scaledPolynomial 3 0 have coeff 1 = -3
+            -- Chebyshev T_3(X) = 4X³ - 3X, computed from T_0 = 1, T_1 = X, T_{n+2} = 2X·T_{n+1} - T_n
+            -- T_2 = 2X·X - 1 = 2X² - 1
+            -- T_3 = 2X·(2X²-1) - X = 4X³ - 2X - X = 4X³ - 3X
+            have h_cheb : (Chebyshev.T ℝ (3 : ℕ)).coeff 1 = -3 := by
+              -- T_3 = 2X·T_2 - T_1 = 2X·(2X² - 1) - X = 4X³ - 2X - X = 4X³ - 3X
+              -- So coeff of X is -3
+              have h_eq : Polynomial.Chebyshev.T ℝ (3 : ℤ) = 2 * X * (Polynomial.Chebyshev.T ℝ 2) - Polynomial.Chebyshev.T ℝ 1 := by
+                have := Polynomial.Chebyshev.T_add_two ℝ (1 : ℤ)
+                exact this
+              simp only [show (3 : ℕ) = (3 : ℤ) by norm_num]
+              rw [h_eq, Polynomial.Chebyshev.T_two, Polynomial.Chebyshev.T_one]
+              -- Compute coeff of X in (2*X*(2*X²-1) - X)
+              have : (2 * X * (2 * X ^ 2 - 1) - X : ℝ[X]) = 4 * X ^ 3 - 3 * X := by ring
+              rw [this]
+              norm_num [Polynomial.coeff_sub, Polynomial.coeff_X_pow, Polynomial.coeff_X]
+            have h_scaled : (scaledPolynomial 3 0).coeff 1 = -3 := by
+              -- For N=3, the roots are cos(0), cos(2π/3), cos(4π/3) = [1, -1/2, -1/2]
+              -- So scaledPolynomial 3 0 = 4(X - 1)(X + 1/2)(X + 1/2) = 4(X - 1)(X + 1/2)²
+              -- Expanding: (X + 1/2)² = X² + X + 1/4
+              --           (X - 1)(X² + X + 1/4) = X³ + X² + X/4 - X² - X - 1/4 = X³ - 3X/4 - 1/4
+              --           4(X³ - 3X/4 - 1/4) = 4X³ - 3X - 1
+              -- So coeff 1 = -3
+              unfold scaledPolynomial unscaledPolynomial
+              -- Show realProjectionsList 3 0 = [1, -1/2, -1/2]
+              have roots_eq : realProjectionsList 3 0 = [1, -1/2, -1/2] := by
+                unfold realProjectionsList
+                simp only [List.range, List.map]
+                conv_lhs =>
+                  arg 2
+                  rw [show List.range.loop 3 [] = [0, 1, 2] by rfl]
+                simp only [List.map, zero_add]
+                norm_num [Real.cos_zero]
+                constructor
+                · -- cos(2π/3) = -1/2
+                  have h2 : 2 * Real.pi / 3 = Real.pi - Real.pi / 3 := by field_simp; ring
+                  rw [h2, Real.cos_pi_sub]
+                  norm_num
+                · -- cos(4π/3) = -1/2
+                  have h1 : 2 * Real.pi * 2 / 3 = 4 * Real.pi / 3 := by ring
+                  rw [h1]
+                  have h2 : 4 * Real.pi / 3 = Real.pi + Real.pi / 3 := by field_simp; ring
+                  rw [h2]
+                  rw [show Real.pi + Real.pi / 3 = Real.pi / 3 + Real.pi by ring]
+                  rw [Real.cos_add_pi]
+                  norm_num
+              rw [roots_eq]
+              unfold polynomialFromRealRoots
+              simp only [List.foldr, mul_one]
+              -- Now have: (C 4 * ((X - C 1) * ((X - C (-1/2)) * (X - C (-1/2))))).coeff 1 = -3
+              norm_num
+              -- After norm_num: 4 * ((X - 1) * ((X + C (1/2)) * (X + C (1/2)))).coeff 1 = -3
+              -- Polynomial equality: (X - 1) * (X + 1/2)^2 = X^3 - 3/4*X - 1/4
+              have eq1 : ((X - (1:ℝ[X])) * ((X + C (1/2)) * (X + C (1/2)))) =
+                         X^3 - C (3/4) * X - C (1/4) := by
+                calc (X - 1) * ((X + C (1/2)) * (X + C (1/2)))
+                    = (X - 1) * (X^2 + C (1/2) * X + C (1/2) * X + C (1/2) * C (1/2)) := by ring
+                  _ = (X - 1) * (X^2 + C (1/2) * X + C (1/2) * X + C (1/4)) := by norm_num [Polynomial.C_mul]
+                  _ = (X - 1) * (X^2 + C (1/2 + 1/2) * X + C (1/4)) := by rw [← Polynomial.C_add]; ring
+                  _ = (X - 1) * (X^2 + C 1 * X + C (1/4)) := by norm_num
+                  _ = (X - 1) * (X^2 + X + C (1/4)) := by rw [Polynomial.C_1]; ring
+                  _ = X^3 + X^2 + C (1/4) * X - X^2 - X - C (1/4) := by ring
+                  _ = X^3 - C (3/4) * X - C (1/4) := by ring
+              rw [eq1]
+              simp [Polynomial.coeff_sub, Polynomial.coeff_X_pow, Polynomial.coeff_C_mul, Polynomial.coeff_X, Polynomial.coeff_C]
+              norm_num
+            rw [h_scaled, h_cheb]
+          · by_cases hk_eq2 : k = 2
+            · -- k = 2: coeff of X²
+              rw [hk_eq2]
+              -- Both T_3 and scaledPolynomial 3 0 have coeff of X² = 0
+              have h_cheb : (Chebyshev.T ℝ (3 : ℕ)).coeff 2 = 0 := by
+                have h_eq : Polynomial.Chebyshev.T ℝ (3 : ℤ) = 2 * X * (Polynomial.Chebyshev.T ℝ 2) - Polynomial.Chebyshev.T ℝ 1 := by
+                  have := Polynomial.Chebyshev.T_add_two ℝ (1 : ℤ)
+                  exact this
+                simp only [show (3 : ℕ) = (3 : ℤ) by norm_num]
+                rw [h_eq, Polynomial.Chebyshev.T_two, Polynomial.Chebyshev.T_one]
+                -- T_3 = 4X³ - 3X has coeff 2 = 0
+                have : (2 * X * (2 * X ^ 2 - 1) - X : ℝ[X]) = 4 * X ^ 3 - 3 * X := by ring
+                rw [this]
+                norm_num [Polynomial.coeff_sub, Polynomial.coeff_X_pow, Polynomial.coeff_X]
+              have h_scaled : (scaledPolynomial 3 0).coeff 2 = 0 := by
+                -- From the same expansion: 4X³ - 3X - 1 has coeff 2 = 0
+                unfold scaledPolynomial unscaledPolynomial
+                have roots_eq : realProjectionsList 3 0 = [1, -1/2, -1/2] := by
+                  unfold realProjectionsList
+                  simp only [List.range, List.map]
+                  conv_lhs =>
+                    arg 2
+                    rw [show List.range.loop 3 [] = [0, 1, 2] by rfl]
+                  simp only [List.map, zero_add]
+                  norm_num [Real.cos_zero]
+                  constructor
+                  · -- cos(2π/3) = -1/2
+                    have h2 : 2 * Real.pi / 3 = Real.pi - Real.pi / 3 := by field_simp; ring
+                    rw [h2, Real.cos_pi_sub]
+                    norm_num
+                  · -- cos(4π/3) = -1/2
+                    have h1 : 2 * Real.pi * 2 / 3 = 4 * Real.pi / 3 := by ring
+                    rw [h1]
+                    have h2 : 4 * Real.pi / 3 = Real.pi + Real.pi / 3 := by field_simp; ring
+                    rw [h2]
+                    rw [show Real.pi + Real.pi / 3 = Real.pi / 3 + Real.pi by ring]
+                    rw [Real.cos_add_pi]
+                    norm_num
+                rw [roots_eq]
+                unfold polynomialFromRealRoots
+                simp only [List.foldr, mul_one]
+                -- Direct computation: scaledPolynomial 3 0 = 4X^3 - 3X - 1 has coeff_2 = 0
+                sorry
+              rw [h_scaled, h_cheb]
+            · by_cases hk_eq3 : k = 3
+              · -- k = 3: coeff of X³ (leading coefficient)
+                rw [hk_eq3]
+                -- Both have degree 3 with leading coefficient 2^(3-1) = 4
+                have h_cheb : (Chebyshev.T ℝ (3 : ℕ)).coeff 3 = 4 := by
+                  -- T_3 = 4X³ - 3X, so coeff 3 = 4
+                  have h_eq : Polynomial.Chebyshev.T ℝ (3 : ℤ) = 2 * X * (Polynomial.Chebyshev.T ℝ 2) - Polynomial.Chebyshev.T ℝ 1 := by
+                    have := Polynomial.Chebyshev.T_add_two ℝ (1 : ℤ)
+                    exact this
+                  simp only [show (3 : ℕ) = (3 : ℤ) by norm_num]
+                  rw [h_eq, Polynomial.Chebyshev.T_two, Polynomial.Chebyshev.T_one]
+                  have : (2 * X * (2 * X ^ 2 - 1) - X : ℝ[X]) = 4 * X ^ 3 - 3 * X := by ring
+                  rw [this]
+                  norm_num [Polynomial.coeff_sub, Polynomial.coeff_X_pow, Polynomial.coeff_X]
+                have h_scaled : (scaledPolynomial 3 0).coeff 3 = 4 := by
+                  have deg : (scaledPolynomial 3 0).degree = 3 := scaledPolynomial_degree 3 0 (by omega)
+                  have lc : (scaledPolynomial 3 0).leadingCoeff = 4 := by
+                    rw [scaledPolynomial_leadingCoeff]
+                    norm_num
+                  have deg_nat : (scaledPolynomial 3 0).natDegree = 3 := by
+                    rw [← Polynomial.degree_eq_iff_natDegree_eq_of_pos (by omega : 0 < 3)]
+                    exact deg
+                  rw [Polynomial.leadingCoeff, deg_nat] at lc
+                  exact lc
+                rw [h_scaled, h_cheb]
+              · -- k ≥ 4: both polynomials have degree 3, so coefficients are 0
+                have hk_ge : 4 ≤ k := by omega
+                have deg_cheb : (Chebyshev.T ℝ (3 : ℕ)).natDegree = 3 := by
+                  have deg : (Chebyshev.T ℝ (3 : ℕ)).degree = 3 := chebyshev_T_degree 3 (by omega)
+                  rw [← Polynomial.degree_eq_iff_natDegree_eq_of_pos (by omega : 0 < 3)]
+                  exact deg
+                have deg_scaled : (scaledPolynomial 3 0).natDegree = 3 := by
+                  have deg : (scaledPolynomial 3 0).degree = 3 := scaledPolynomial_degree 3 0 (by omega)
+                  rw [← Polynomial.degree_eq_iff_natDegree_eq_of_pos (by omega : 0 < 3)]
+                  exact deg
+                rw [Polynomial.coeff_eq_zero_of_natDegree_lt, Polynomial.coeff_eq_zero_of_natDegree_lt]
+                · rw [deg_cheb]; omega
+                · rw [deg_scaled]; omega
+        | succ N'''' =>
+          -- N ≥ 4: General case requires deep harmonic analysis
+          sorry
 
 /-- The scaled polynomial equals the N-th Chebyshev polynomial plus a θ-dependent constant. -/
 theorem rotated_roots_yield_chebyshev (N : ℕ) (θ : ℝ) (hN : 0 < N) :

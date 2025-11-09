@@ -8,8 +8,7 @@ import Mathlib.Algebra.Polynomial.Derivative
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Complex
 import ChebyshevCircles.RootsOfUnity
 
-set_option linter.style.longLine false
-set_option linter.unusedSimpArgs false
+
 /-!
 # Polynomial Construction from Rotated Roots
 

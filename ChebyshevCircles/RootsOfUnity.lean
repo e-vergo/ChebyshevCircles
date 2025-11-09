@@ -7,7 +7,6 @@ import Mathlib.RingTheory.RootsOfUnity.Complex
 import Mathlib.Analysis.Complex.Exponential
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 
-set_option linter.style.longLine false
 
 /-!
 # Rotated Roots of Unity and Their Real Projections
