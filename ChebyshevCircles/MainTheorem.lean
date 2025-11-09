@@ -873,6 +873,56 @@ The full formalization requires either:
 -/
 theorem scaledPolynomial_matches_chebyshev_at_zero (N : ℕ) (k : ℕ) (hN : 0 < N) (hk : 0 < k) :
     (scaledPolynomial N 0).coeff k = (Polynomial.Chebyshev.T ℝ N).coeff k := by
+  /-
+  This theorem establishes the deep connection between two polynomial constructions:
+
+  1. **scaledPolynomial N 0**: Constructed from N roots of unity projected onto ℝ
+     - Roots: cos(2πk/N) for k = 0, ..., N-1
+     - Leading coefficient: 2^(N-1) (via scaling)
+     - Degree: N
+
+  2. **Chebyshev.T ℝ N**: The N-th Chebyshev polynomial of the first kind
+     - Defined by recurrence: T_{n+2} = 2X·T_{n+1} - T_n
+     - Roots: cos((2m+1)π/(2N)) for m = 0, ..., N-1
+     - Leading coefficient: 2^(N-1) (proven in chebyshev_T_leadingCoeff)
+     - Satisfies: T_N(cos φ) = cos(N·φ)
+
+  **Key Mathematical Insight:**
+  Despite having DIFFERENT root sets, both polynomials share the same coefficients
+  for all powers k > 0. This is because:
+
+  - Power sums ∑ rᵢʲ are the same for both root sets when 0 < j < N
+    (one set is θ-invariant by powerSumCos_invariant, the other can be computed
+    from the Chebyshev evaluation property)
+
+  - Newton's identities express elementary symmetric functions eₘ in terms of
+    power sums p₁, ..., pₘ
+
+  - Vieta's formulas express polynomial coefficients in terms of elementary
+    symmetric functions
+
+  - Therefore, coefficients k with 0 < k < N are equal for both polynomials
+
+  **What's needed to complete this proof:**
+
+  Option A - Power Sum Approach:
+    1. Compute power sums ∑ cos((2m+1)π/(2N))ʲ for Chebyshev roots
+    2. Show these equal ∑ cos(2πk/N)ʲ for our roots (for 0 < j < N)
+    3. Apply Newton's identities to deduce equal elementary symmetric functions
+    4. Apply Vieta's formulas to deduce equal coefficients
+
+  Option B - Direct Coefficient Formula:
+    1. Develop explicit formulas for Chebyshev polynomial coefficients
+    2. Compare with our polynomial's coefficients from Vieta's formulas
+
+  Option C - Uniqueness via Evaluation:
+    1. Show both polynomials have specific evaluation properties at cos(φ) values
+    2. Use polynomial interpolation/uniqueness theorems
+
+  All three approaches require substantial additional formalization beyond
+  the current scope of this project. The mathematical fact is well-established
+  in the literature on Chebyshev polynomials and roots of unity.
+  -/
   sorry
 
 /-- The scaled polynomial equals the N-th Chebyshev polynomial plus a θ-dependent constant. -/
