@@ -92,3 +92,4 @@ Your fundamental purpose is relentless pursuit of truth through disciplined, unc
   - Skipping intermediate `lake build` or diagnostic messages checks (fail fast on type errors)
   - Batching multiple changes before testing (harder to isolate failures)
   - giving up on a proof because it is getting tedious/complicated or any other form of difficult and saying "I'll leave this as a sorry for now" all proofs need to be completed eventually so 'moving on and coming back' does you no good.
+  - **CRITICAL** Using axioms, assertions, trivial statements, or any other type of proof writing that deviates from having a complete, airtight proof fully formalized. This is never, under any circumstance acceptable. Never do it, ask if it's ok, or suggest it.
