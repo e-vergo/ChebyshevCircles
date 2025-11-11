@@ -412,8 +412,221 @@ theorem scaledPolynomial_matches_chebyshev_at_zero (N : ℕ) (k : ℕ) (hN : 0 <
                 · rw [deg_cheb]; omega
                 · rw [deg_scaled]; omega
         | succ N'''' =>
-          -- N ≥ 4: General case requires deep harmonic analysis
-          sorry
+          -- N ≥ 4: Use general power sum equality + Newton's identities
+          let N := N'''' + 4
+
+          -- Define root multisets
+          let rotated_roots : Multiset ℝ := ↑(realProjectionsList N 0)
+          let cheb_roots : Multiset ℝ := ↑(chebyshevRootsList N)
+
+          -- Both have cardinality N
+          have h_card_rot : rotated_roots.card = N := by
+            rw [Multiset.coe_card, card_realProjectionsList]
+
+          have h_card_cheb : cheb_roots.card = N := by
+            unfold cheb_roots chebyshevRootsList
+            rw [Multiset.coe_card, List.length_ofFn]
+
+          -- Power sums are equal for all 0 < j < N
+          have h_psum : ∀ j, 0 < j → j < N →
+              (rotated_roots.map (· ^ j)).sum = (cheb_roots.map (· ^ j)).sum := by
+            intro j hj hjN
+            rw [multiset_powersum_realProjectionsList N 0 j]
+            unfold cheb_roots chebyshevRootsList
+            rw [Multiset.map_coe, Multiset.sum_coe]
+            simp only [List.sum_ofFn, List.map_ofFn, Function.comp, zero_add, chebyshevRoot]
+            -- Goal: ∑ k ∈ range N, cos(2πk/N)^j = ∑ x : Fin N, cos((2x+1)π/(2N))^j
+            -- The RHS is Fintype.sum. Let's convert it to match general_powersum_equality
+            have h_convert : (∑ x : Fin N, Real.cos ((2 * ↑↑x + 1) * π / (2 * ↑N)) ^ j) =
+                             (∑ k ∈ Finset.range N, Real.cos ((2 * ↑k + 1) * π / (2 * ↑N)) ^ j) := by
+              -- Use Fin.sum_univ_eq_sum_range: ∑ i : Fin n, f i = ∑ i ∈ range n, f i
+              exact Fin.sum_univ_eq_sum_range (fun k => Real.cos ((2 * k + 1) * π / (2 * N)) ^ j) N
+            rw [h_convert]
+            exact general_powersum_equality N j hN hj hjN
+
+          -- Elementary symmetric functions are equal
+          have h_esymm : ∀ m, m < rotated_roots.card → rotated_roots.esymm m = cheb_roots.esymm m := by
+            apply esymm_eq_of_psum_eq rotated_roots cheb_roots
+            · rw [h_card_rot, h_card_cheb]
+            · intro j hj hjN
+              exact h_psum j hj (by rwa [← h_card_rot])
+
+          -- Polynomial coefficients from roots are equal
+          have h_coeff_eq : ∀ (k' : ℕ), 0 < k' → k' ≤ N →
+              (C (2^(N - 1)) * (rotated_roots.map (fun r => X - C r)).prod).coeff k' =
+              (C (2^(N - 1)) * (cheb_roots.map (fun r => X - C r)).prod).coeff k' := by
+            intro k' hk' hk'_le
+            apply polynomial_coeff_eq_of_esymm_eq rotated_roots cheb_roots (2^(N - 1))
+            · norm_num
+            · exact h_esymm
+            · rw [h_card_rot, h_card_cheb]
+            · exact hk'
+            · show k' ≤ rotated_roots.card
+              rw [h_card_rot]
+              exact hk'_le
+
+          -- scaledPolynomial equals the rotated_roots polynomial (by definition)
+          have h_scaled_eq : scaledPolynomial N 0 =
+              C (2^(N - 1)) * (rotated_roots.map (fun r => X - C r)).prod := by
+            unfold scaledPolynomial unscaledPolynomial polynomialFromRealRoots
+            unfold rotated_roots
+            rw [list_foldr_eq_multiset_prod]
+
+          -- Chebyshev equals the cheb_roots polynomial
+          -- This requires showing Chebyshev has exactly N roots and using C_leadingCoeff_mul_prod
+          have h_cheb_eq : Chebyshev.T ℝ N =
+              C (2^(N - 1)) * (cheb_roots.map (fun r => X - C r)).prod := by
+            -- Strategy: Show cheb_roots = (Chebyshev.T ℝ N).roots by showing:
+            -- 1. All cheb_roots are roots of the polynomial
+            -- 2. cheb_roots has cardinality N = degree
+            -- 3. Apply C_leadingCoeff_mul_prod_multiset_X_sub_C
+
+            have hN_pos : 0 < N := by omega
+
+            -- Step 1: Show cheb_roots ⊆ (Chebyshev.T ℝ N).roots
+            have h_cheb_roots_subset : ∀ r ∈ cheb_roots, (Chebyshev.T ℝ N).eval r = 0 := by
+              intro r hr
+              unfold cheb_roots chebyshevRootsList at hr
+              rw [Multiset.mem_coe] at hr
+              simp only [List.mem_ofFn] at hr
+              obtain ⟨k, rfl⟩ := hr
+              exact chebyshev_T_eval_chebyshevRoot N k.val hN_pos k.isLt
+
+            -- Step 2: cheb_roots are all distinct (so card as multiset = card as finset)
+            have h_cheb_roots_nodup : cheb_roots.Nodup := by
+              unfold cheb_roots chebyshevRootsList
+              rw [Multiset.coe_nodup]
+              rw [List.nodup_ofFn]
+              intro i j hij
+              exact Fin.ext (chebyshevRoots_distinct N hN_pos i.val j.val i.isLt j.isLt hij)
+
+            -- Step 3: Since there are N distinct roots and degree is N, these are ALL the roots
+            have h_deg : (Chebyshev.T ℝ N).natDegree = N := by
+              have : (Chebyshev.T ℝ N).degree = N := chebyshev_T_degree N hN_pos
+              rw [← Polynomial.degree_eq_iff_natDegree_eq_of_pos (by omega : 0 < N)]
+              exact this
+
+            -- The multiset of roots has cardinality ≤ degree
+            have h_card_le : (Chebyshev.T ℝ N).roots.card ≤ (Chebyshev.T ℝ N).natDegree :=
+              Polynomial.card_roots' _
+
+            -- But we have N distinct elements that are all roots
+            have h_card_ge : N ≤ (Chebyshev.T ℝ N).roots.card := by
+              -- Convert cheb_roots to a finset and show it's a subset of roots
+              let S := cheb_roots.toFinset
+              have hS_card : S.card = N := by
+                rw [Multiset.toFinset_card_of_nodup h_cheb_roots_nodup, h_card_cheb]
+              have hS_subset : S.val ⊆ (Chebyshev.T ℝ N).roots := by
+                intro r hr
+                have : r ∈ cheb_roots := Multiset.mem_toFinset.mp hr
+                have eval_zero := h_cheb_roots_subset r this
+                apply Polynomial.mem_roots'.mpr
+                constructor
+                · -- Chebyshev.T ℝ N ≠ 0
+                  intro h_zero
+                  have : (Chebyshev.T ℝ N).degree = N := chebyshev_T_degree N hN_pos
+                  rw [h_zero] at this
+                  simp at this
+                · exact eval_zero
+              calc N = S.card := hS_card.symm
+                _ ≤ (Chebyshev.T ℝ N).natDegree :=
+                    Polynomial.card_le_degree_of_subset_roots hS_subset
+                _ = (Chebyshev.T ℝ N).roots.card := by
+                    -- h_card_le : roots.card ≤ natDegree
+                    -- h_deg : natDegree = N
+                    -- hS_card : S.card = N
+                    -- Polynomial.card_le_degree_of_subset_roots hS_subset : S.card ≤ natDegree
+                    -- Want: natDegree = roots.card
+                    have : S.card ≤ (Chebyshev.T ℝ N).natDegree :=
+                      Polynomial.card_le_degree_of_subset_roots hS_subset
+                    have h1 : (Chebyshev.T ℝ N).natDegree = N := h_deg
+                    have h2 : S.card = N := hS_card
+                    have h3 : (Chebyshev.T ℝ N).roots.card ≤ (Chebyshev.T ℝ N).natDegree := h_card_le
+                    -- From hS_subset : S.val ⊆ roots and S.val.Nodup, we get S.val ≤ roots
+                    have hS_le : S.val ≤ (Chebyshev.T ℝ N).roots :=
+                      (Multiset.le_iff_subset S.nodup).mpr hS_subset
+                    -- This gives us S.card ≤ roots.card
+                    have h4 : S.card ≤ (Chebyshev.T ℝ N).roots.card :=
+                      Multiset.card_le_card hS_le
+                    -- Now: N = S.card ≤ roots.card ≤ natDegree = N
+                    -- Therefore: roots.card = N = natDegree
+                    have h_le1 : (Chebyshev.T ℝ N).natDegree ≤ (Chebyshev.T ℝ N).roots.card := by
+                      calc (Chebyshev.T ℝ N).natDegree
+                          = N := h1
+                        _ = S.card := h2.symm
+                        _ ≤ (Chebyshev.T ℝ N).roots.card := h4
+                    have h_le2 : (Chebyshev.T ℝ N).roots.card ≤ (Chebyshev.T ℝ N).natDegree := h3
+                    exact Nat.le_antisymm h_le1 h_le2
+
+            have h_card_eq : (Chebyshev.T ℝ N).roots.card = (Chebyshev.T ℝ N).natDegree := by
+              rw [h_deg] at h_card_le
+              omega
+
+            -- Now apply the factorization lemma
+            have h_leading : (Chebyshev.T ℝ N).leadingCoeff = 2 ^ (N - 1) :=
+              chebyshev_T_leadingCoeff N hN_pos
+
+            conv_rhs => rw [← h_leading]
+
+            -- Need to show cheb_roots = (Chebyshev.T ℝ N).roots
+            -- We have: N distinct values, all are roots, degree is N, so they must be ALL the roots
+            have h_roots_eq : cheb_roots = (Chebyshev.T ℝ N).roots := by
+              -- Both multisets have the same cardinality and cheb_roots ⊆ roots
+              -- Use Multiset.eq_of_le_of_card_le: ∀ {s t}, s ≤ t → t.card ≤ s.card → s = t
+              refine Multiset.eq_of_le_of_card_le ?_ ?_
+              · -- cheb_roots ≤ (Chebyshev.T ℝ N).roots
+                -- For multisets, s ≤ t means ∀ a, count a s ≤ count a t
+                -- But we have Nodup, so count is either 0 or 1
+                -- And we know cheb_roots ⊆ roots (as sets)
+                -- Since cheb_roots is nodup and all elements are in roots, cheb_roots ≤ roots
+                apply Multiset.le_iff_count.mpr
+                intro a
+                by_cases ha : a ∈ cheb_roots
+                · -- a ∈ cheb_roots, so need to show a ∈ roots too
+                  have ha_root : a ∈ (Chebyshev.T ℝ N).roots := by
+                    have eval_zero := h_cheb_roots_subset a ha
+                    apply Polynomial.mem_roots'.mpr
+                    constructor
+                    · intro h_zero
+                      have : (Chebyshev.T ℝ N).degree = N := chebyshev_T_degree N hN_pos
+                      rw [h_zero] at this
+                      simp at this
+                    · exact eval_zero
+                  -- Since both are nodup (or at least count is 1), count a cheb_roots ≤ count a roots
+                  rw [Multiset.count_eq_one_of_mem h_cheb_roots_nodup ha]
+                  exact Nat.one_le_iff_ne_zero.mpr (Multiset.count_ne_zero.mpr ha_root)
+                · -- a ∉ cheb_roots, so count a cheb_roots = 0 ≤ anything
+                  rw [Multiset.count_eq_zero.mpr ha]
+                  exact Nat.zero_le _
+              · -- (Chebyshev.T ℝ N).roots.card ≤ cheb_roots.card
+                rw [h_card_cheb, h_card_eq, h_deg]
+
+            rw [h_roots_eq]
+            exact (Polynomial.C_leadingCoeff_mul_prod_multiset_X_sub_C h_card_eq).symm
+
+          -- Need to handle two cases: k ≤ N and k > N
+          by_cases hk_le : k ≤ N
+          · -- Case k ≤ N: use the coefficient equality
+            calc (scaledPolynomial N 0).coeff k
+                = (C (2^(N - 1)) * (rotated_roots.map (fun r => X - C r)).prod).coeff k := by
+                    rw [h_scaled_eq]
+              _ = (C (2^(N - 1)) * (cheb_roots.map (fun r => X - C r)).prod).coeff k := by
+                    exact h_coeff_eq k hk hk_le
+              _ = (Chebyshev.T ℝ N).coeff k := by
+                    rw [← h_cheb_eq]
+          · -- Case k > N: both coefficients are 0
+            have hk_gt : N < k := by omega
+            have deg_scaled : (scaledPolynomial N 0).natDegree = N := by
+              have : (scaledPolynomial N 0).degree = N := scaledPolynomial_degree N 0 (by omega)
+              rw [← Polynomial.degree_eq_iff_natDegree_eq_of_pos (by omega : 0 < N)]
+              exact this
+            have deg_cheb : (Chebyshev.T ℝ N).natDegree = N := by
+              have : (Chebyshev.T ℝ N).degree = N := chebyshev_T_degree N (by omega)
+              rw [← Polynomial.degree_eq_iff_natDegree_eq_of_pos (by omega : 0 < N)]
+              exact this
+            rw [Polynomial.coeff_eq_zero_of_natDegree_lt, Polynomial.coeff_eq_zero_of_natDegree_lt]
+            · rw [deg_cheb]; exact hk_gt
+            · rw [deg_scaled]; exact hk_gt
 
 /-- The scaled polynomial equals the N-th Chebyshev polynomial plus a θ-dependent constant. -/
 theorem rotated_roots_yield_chebyshev (N : ℕ) (θ : ℝ) (hN : 0 < N) :

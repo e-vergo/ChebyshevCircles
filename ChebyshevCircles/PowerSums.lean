@@ -189,6 +189,34 @@ lemma cos_six_formula (x : ℝ) :
   field_simp
   ring
 
+/-- cos¹⁰(x) power-reduction formula. -/
+lemma cos_ten_formula (x : ℝ) :
+    Real.cos x ^ 10 = (126 + 210 * Real.cos (2 * x) + 120 * Real.cos (4 * x) + 45 * Real.cos (6 * x) + 10 * Real.cos (8 * x) + Real.cos (10 * x)) / 512 := by
+  -- cos^10 = (cos^2)^5
+  have h1 : Real.cos x ^ 10 = (Real.cos x ^ 2) ^ 5 := by ring
+  rw [h1]
+  -- cos^2 = (1 + cos(2x))/2
+  have h2 : Real.cos x ^ 2 = (1 + Real.cos (2 * x)) / 2 := by rw [Real.cos_sq]; ring
+  rw [h2]
+  -- Apply binomial expansion: ((1 + cos(2x))/2)^5
+  have h3 : ((1 + Real.cos (2 * x)) / 2) ^ 5 =
+      (1 + 5 * Real.cos (2 * x) + 10 * Real.cos (2 * x) ^ 2 + 10 * Real.cos (2 * x) ^ 3 +
+        5 * Real.cos (2 * x) ^ 4 + Real.cos (2 * x) ^ 5) / 32 := by field_simp; ring
+  rw [h3]
+  -- Reduce higher powers of cos(2x)
+  have h4 : Real.cos (2 * x) ^ 2 = (1 + Real.cos (4 * x)) / 2 := by
+    rw [Real.cos_sq]; ring_nf
+  have h5 : Real.cos (2 * x) ^ 3 = (Real.cos (6 * x) + 3 * Real.cos (2 * x)) / 4 := by
+    convert cos_cube_formula (2 * x) using 1; ring_nf
+  have h6 : Real.cos (2 * x) ^ 4 = (3 + 4 * Real.cos (4 * x) + Real.cos (8 * x)) / 8 := by
+    convert cos_four_formula (2 * x) using 1; ring_nf
+  have h7 : Real.cos (2 * x) ^ 5 = (Real.cos (10 * x) + 5 * Real.cos (6 * x) +
+      10 * Real.cos (2 * x)) / 16 := by
+    convert cos_five_formula (2 * x) using 1; ring_nf
+  rw [h4, h5, h6, h7]
+  field_simp
+  ring
+
 
 /-- Power sum of sixth powers of cosines is θ-invariant for N > 6. -/
 lemma powerSumCos_invariant_j6 (N : ℕ) (θ₁ θ₂ : ℝ) (hN : 6 < N) :
