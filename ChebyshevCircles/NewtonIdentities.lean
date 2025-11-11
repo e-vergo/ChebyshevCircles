@@ -11,20 +11,18 @@ import ChebyshevCircles.RootsOfUnity
 import ChebyshevCircles.PowerSums
 import ChebyshevCircles.TrigonometricIdentities
 
-set_option linter.style.longLine false
-
 /-!
 # Newton's Identities Infrastructure
 
 Lemmas connecting elementary symmetric functions to power sums via Newton's identities.
-This section contains the machinery needed to show that θ-invariant power sums imply
-θ-invariant polynomial coefficients.
+This section contains the machinery needed to show that φ-invariant power sums imply
+φ-invariant polynomial coefficients.
 
 ## Main results
 
 * `multiset_newton_identity`: Newton's identity for multisets
 * `esymm_eq_of_psum_eq`: Equal power sums imply equal elementary symmetric functions
-* `esymm_rotated_roots_invariant`: Elementary symmetric polynomials are θ-invariant
+* `esymm_rotated_roots_invariant`: Elementary symmetric polynomials are φ-invariant
 
 ## Tags
 
@@ -38,14 +36,20 @@ open scoped Polynomial
 
 section NewtonIdentities
 
--- Helper: Finset.univ for Fin n maps to list [0, 1, ..., n-1]
+/-- Conversion between Finset.univ mapped through list indexing and the list itself.
+    Establishes that mapping `List.get` over all indices in `Fin l.length` recovers
+    the original list as a multiset. This is used to convert between indexed sums
+    (over `Fin n`) and multiset operations. -/
 lemma fin_univ_map_get (l : List ℝ) :
     (Finset.univ.val.map (fun i : Fin l.length => l.get i) : Multiset ℝ) = ↑l := by
   rw [Fin.univ_def]
   simp only [Multiset.map_coe]
   rw [List.finRange_map_get]
 
--- Helper: sum over Fin equals multiset sum
+/-- Equality between indexed sums and multiset sums.
+    Shows that summing a function over indexed list elements (via `Fin l.length`)
+    equals the multiset sum obtained by mapping the function and summing.
+    This bridges the gap between finset-indexed sums and multiset operations. -/
 lemma fin_sum_eq_multiset_sum (l : List ℝ) (g : ℝ → ℝ) :
     ∑ i : Fin l.length, g (l.get i) = ((↑l : Multiset ℝ).map g).sum := by
   -- Key: convert the Finset sum to List sum via List.ofFn
@@ -101,7 +105,10 @@ lemma multiset_newton_identity (s : Multiset ℝ) (m : ℕ) (_ : 0 < m) :
       rw [fin_sum_eq_multiset_sum l (· ^ x.2), ← list_eq]
   · rfl
 
--- Helper lemma: flatMap of singletons equals map with cast
+/-- Simplification of flatMap with singleton lists and type coercion.
+    Establishes that flatMapping a list of naturals to singleton lists of reals
+    is equivalent to directly mapping the coercion function. This simplifies
+    list transformations involving type conversions. -/
 lemma flatMap_singleton_cast (l : List ℕ) :
     List.flatMap (fun a => [(a : ℝ)]) l = l.map (↑) := by
   induction l with
@@ -178,8 +185,10 @@ lemma polynomial_coeff_eq_of_esymm_eq (s t : Multiset ℝ) (c : ℝ) (_hc : c �
   -- Use Vieta's formula: coefficient k is determined by esymm (card - k)
   rw [coeff_C_mul, coeff_C_mul]
   congr 1
-  -- Apply Vieta's formula: (s.map (X - C ·)).prod.coeff k = (-1)^(s.card - k) * s.esymm (s.card - k)
-  rw [Multiset.prod_X_sub_C_coeff s hk', Multiset.prod_X_sub_C_coeff t (by rw [← h_card]; exact hk')]
+  -- Apply Vieta's formula:
+  -- (s.map (X - C ·)).prod.coeff k = (-1)^(s.card - k) * s.esymm (s.card - k)
+  rw [Multiset.prod_X_sub_C_coeff s hk',
+      Multiset.prod_X_sub_C_coeff t (by rw [← h_card]; exact hk')]
   -- Now show (-1)^(s.card - k) * s.esymm (s.card - k) = (-1)^(t.card - k) * t.esymm (t.card - k)
   congr 1
   · -- Show s.card - k = t.card - k
@@ -188,29 +197,40 @@ lemma polynomial_coeff_eq_of_esymm_eq (s t : Multiset ℝ) (c : ℝ) (_hc : c �
     have h_diff_lt : s.card - k < s.card := by omega
     rw [h_esymm (s.card - k) h_diff_lt, h_card]
 
-/-- The first elementary symmetric function equals the sum. -/
+/-- The first elementary symmetric function equals the sum.
+    For any multiset `s`, `esymm 1` computes the sum of all elements.
+    This follows from the definition: selecting 1-element subsets gives
+    singleton products, which are just the elements themselves. -/
 lemma multiset_esymm_one_eq_sum {R : Type*} [CommSemiring R] (s : Multiset R) :
     s.esymm 1 = s.sum := by
   simp only [Multiset.esymm, Multiset.powersetCard_one, Multiset.map_map,
              Function.comp_apply, Multiset.prod_singleton, Multiset.map_id']
 
-/-- Sum of a coerced list equals the Finset sum over range. -/
-lemma multiset_coe_realProjectionsList_sum (N : ℕ) (θ : ℝ) :
-    (↑(realProjectionsList N θ) : Multiset ℝ).sum =
-    ∑ k ∈ Finset.range N, Real.cos (θ + 2 * π * k / N) := by
+/-- Multiset sum of real projections equals the Finset sum.
+    Conversion lemma establishing that the multiset sum of `realProjectionsList N φ`
+    (cosines of N equally-spaced angles starting at φ) equals the corresponding
+    Finset sum over `Finset.range N`. Bridges list, multiset, and finset representations
+    of the same sum. -/
+lemma multiset_coe_realProjectionsList_sum (N : ℕ) (φ : ℝ) :
+    (↑(realProjectionsList N φ) : Multiset ℝ).sum =
+    ∑ k ∈ Finset.range N, Real.cos (φ + 2 * π * k / N) := by
   rw [Multiset.sum_coe, realProjectionsList_sum]
 
-/-- Power sum of rotated projections equals Finset power sum. -/
-lemma multiset_powersum_realProjectionsList (N : ℕ) (θ : ℝ) (j : ℕ) :
-    ((↑(realProjectionsList N θ) : Multiset ℝ).map (fun x => x ^ j)).sum =
-    ∑ k ∈ Finset.range N, (Real.cos (θ + 2 * π * k / N)) ^ j := by
+/-- Power sum of real projections as multiset equals Finset power sum.
+    Establishes that the j-th power sum computed via multiset operations
+    (map then sum) equals the same power sum computed as a Finset sum.
+    This conversion is essential for applying Newton's identities to
+    relate elementary symmetric functions to power sums of rotated roots. -/
+lemma multiset_powersum_realProjectionsList (N : ℕ) (φ : ℝ) (j : ℕ) :
+    ((↑(realProjectionsList N φ) : Multiset ℝ).map (fun x => x ^ j)).sum =
+    ∑ k ∈ Finset.range N, (Real.cos (φ + 2 * π * k / N)) ^ j := by
   rw [Multiset.map_coe, Multiset.sum_coe, realProjectionsList_powersum]
 
-/-- Elementary symmetric polynomials in rotated roots are θ-invariant for 0 < m < N. -/
-lemma esymm_rotated_roots_invariant (N : ℕ) (m : ℕ) (θ₁ θ₂ : ℝ)
+/-- Elementary symmetric polynomials in rotated roots are φ-invariant for 0 < m < N. -/
+lemma esymm_rotated_roots_invariant (N : ℕ) (m : ℕ) (φ₁ φ₂ : ℝ)
     (hN : 0 < N) (hm : 0 < m) (hm' : m < N) :
-    let l1 := (realProjectionsList N θ₁ : Multiset ℝ)
-    let l2 := (realProjectionsList N θ₂ : Multiset ℝ)
+    let l1 := (realProjectionsList N φ₁ : Multiset ℝ)
+    let l2 := (realProjectionsList N φ₂ : Multiset ℝ)
     l1.esymm m = l2.esymm m := by
   intro l1 l2
   induction m using Nat.strong_induction_on with
@@ -226,7 +246,7 @@ lemma esymm_rotated_roots_invariant (N : ℕ) (m : ℕ) (θ₁ θ₂ : ℝ)
         simp only [l1, l2]
         have hN2 : 2 ≤ N := by omega
         rw [multiset_coe_realProjectionsList_sum, multiset_coe_realProjectionsList_sum]
-        rw [sum_cos_roots_of_unity N θ₁ hN2, sum_cos_roots_of_unity N θ₂ hN2]
+        rw [sum_cos_roots_of_unity N φ₁ hN2, sum_cos_roots_of_unity N φ₂ hN2]
       | succ k'' =>
         -- Use Newton's identity to express esymm (k''+2) in terms of smaller esymm and power sums
         have h_newton_l1 := multiset_newton_identity l1 (k'' + 2) (by omega)
@@ -276,7 +296,7 @@ lemma esymm_rotated_roots_invariant (N : ℕ) (m : ℕ) (θ₁ θ₂ : ℝ)
                     _ ≤ k'' + 2 := by omega
                     _ = k'' + 1 + 1 := by ring
                     _ < N := hm'
-                exact powerSumCos_invariant N a.2 θ₁ θ₂ hN ha2_pos ha2_N
+                exact powerSumCos_invariant N a.2 φ₁ φ₂ hN ha2_pos ha2_N
           · rfl
 
         -- From Newton's identity: m * esymm m = (-1)^(m+1) * RHS

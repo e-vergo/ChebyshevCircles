@@ -14,7 +14,7 @@ import Mathlib.NumberTheory.Cyclotomic.PrimitiveRoots
 
 Fundamental lemmas about sums of cosines at equally-spaced angles. These leverage the
 geometric sum formulas for primitive roots of unity to show that most trigonometric sums
-vanish, which is key to proving the θ-invariance of power sums.
+vanish, which is key to proving the φ-invariance of power sums.
 
 ## Main results
 
@@ -34,12 +34,12 @@ open Polynomial Real Complex
 open scoped Polynomial
 
 /-- Sum of cosines at N equally spaced angles equals zero for N ≥ 2. -/
-lemma sum_cos_roots_of_unity (N : ℕ) (θ : ℝ) (hN : 2 ≤ N) :
-    ∑ k ∈ Finset.range N, Real.cos (θ + 2 * π * k / N) = 0 := by
+lemma sum_cos_roots_of_unity (N : ℕ) (φ : ℝ) (hN : 2 ≤ N) :
+    ∑ k ∈ Finset.range N, Real.cos (φ + 2 * π * k / N) = 0 := by
   conv_lhs =>
     arg 2
     ext k
-    rw [← Complex.exp_ofReal_mul_I_re (θ + 2 * π * k / N)]
+    rw [← Complex.exp_ofReal_mul_I_re (φ + 2 * π * k / N)]
   rw [← Complex.re_sum]
   simp only [Complex.ofReal_add, Complex.ofReal_mul, Complex.ofReal_div, Complex.ofReal_natCast]
   conv_lhs =>
@@ -77,14 +77,14 @@ lemma list_foldr_eq_multiset_prod (l : List ℝ) :
     simp only [Multiset.map_cons, Multiset.prod_cons]
     rw [ih]
 
-/-- For 0 < m < N, the sum ∑_{k=0}^{N-1} cos(m(θ + 2πk/N)) = 0. -/
-lemma sum_cos_multiple_rotated_roots (N : ℕ) (m : ℕ) (θ : ℝ)
+/-- For 0 < m < N, the sum ∑_{k=0}^{N-1} cos(m(φ + 2πk/N)) = 0. -/
+lemma sum_cos_multiple_rotated_roots (N : ℕ) (m : ℕ) (φ : ℝ)
     (hN : 0 < N) (hm : 0 < m) (hm' : m < N) :
-    ∑ k ∈ Finset.range N, Real.cos (m * (θ + 2 * π * k / N)) = 0 := by
+    ∑ k ∈ Finset.range N, Real.cos (m * (φ + 2 * π * k / N)) = 0 := by
   conv_lhs =>
     arg 2
     ext k
-    rw [← Complex.exp_ofReal_mul_I_re (m * (θ + 2 * π * k / N))]
+    rw [← Complex.exp_ofReal_mul_I_re (m * (φ + 2 * π * k / N))]
   rw [← Complex.re_sum]
   simp only [Complex.ofReal_mul, Complex.ofReal_add, Complex.ofReal_div, Complex.ofReal_natCast]
   have hN' : N ≠ 0 := Nat.pos_iff_ne_zero.mp hN
@@ -132,9 +132,6 @@ lemma sum_cos_multiple_rotated_roots (N : ℕ) (m : ℕ) (θ : ℝ)
 /-- cos³(x) in terms of cos(3x) and cos(x). -/
 lemma cos_cube_formula (x : ℝ) :
     Real.cos x ^ 3 = (Real.cos (3 * x) + 3 * Real.cos x) / 4 := by
-  have h := Real.cos_three_mul x
-  have h1 : 4 * Real.cos x ^ 3 = Real.cos (3 * x) + 3 * Real.cos x := by linarith
-  have h2 : Real.cos x ^ 3 = (Real.cos (3 * x) + 3 * Real.cos x) / 4 := by linarith
-  exact h2
+  linarith [Real.cos_three_mul x]
 
 end

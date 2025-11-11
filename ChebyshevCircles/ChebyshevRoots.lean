@@ -11,8 +11,6 @@ import Mathlib.Data.Real.Basic
 import Mathlib.Data.Finset.Basic
 import ChebyshevCircles.PolynomialProperties
 
-set_option linter.style.longLine false
-
 /-!
 # Chebyshev Polynomial Roots
 
@@ -42,10 +40,6 @@ def chebyshevRoot (N k : ℕ) : ℝ := Real.cos ((2 * k + 1 : ℝ) * π / (2 * N
 def chebyshevRootsList (N : ℕ) : List ℝ :=
   List.ofFn (fun k : Fin N => chebyshevRoot N k)
 
-/-- Unfold definition of chebyshevRoot -/
-lemma chebyshevRoot_def (N k : ℕ) :
-    chebyshevRoot N k = Real.cos ((2 * k + 1 : ℝ) * π / (2 * N)) := rfl
-
 /-- All Chebyshev roots are in [-1, 1] -/
 lemma chebyshevRoot_in_Icc (N k : ℕ) : chebyshevRoot N k ∈ Set.Icc (-1) 1 := by
   unfold chebyshevRoot
@@ -55,7 +49,7 @@ lemma chebyshevRoot_in_Icc (N k : ℕ) : chebyshevRoot N k ∈ Set.Icc (-1) 1 :=
 lemma chebyshev_T_eval_chebyshevRoot (N k : ℕ) (hN : 0 < N) (_hk : k < N) :
     (Polynomial.Chebyshev.T ℝ N).eval (chebyshevRoot N k) = 0 := by
   unfold chebyshevRoot
-  -- Use T_real_cos: T_n(cos θ) = cos(nθ)
+  -- Use T_real_cos: T_n(cos φ) = cos(nφ)
   rw [Polynomial.Chebyshev.T_real_cos]
   -- Need to show: cos(N * ((2k+1)π/(2N))) = 0
   -- Simplify the argument using field_simp and show it equals (2k+1)π/2
@@ -64,7 +58,7 @@ lemma chebyshev_T_eval_chebyshevRoot (N k : ℕ) (hN : 0 < N) (_hk : k < N) :
     push_cast
     field_simp [show (N : ℝ) ≠ 0 by positivity]
   -- Now we need: cos((2k+1)π/2) = 0
-  -- Use Real.cos_eq_zero_iff: cos θ = 0 ↔ ∃ k : ℤ, θ = (2 * k + 1) * π / 2
+  -- Use Real.cos_eq_zero_iff: cos φ = 0 ↔ ∃ k : ℤ, φ = (2 * k + 1) * π / 2
   rw [Real.cos_eq_zero_iff]
   use k
   push_cast
@@ -77,21 +71,21 @@ lemma chebyshevRoots_distinct (N : ℕ) (hN : 0 < N) (k₁ k₂ : ℕ)
   unfold chebyshevRoot at h_eq
 
   -- cos is injective on [0, π], and our angles are in this range
-  let θ₁ := (2 * k₁ + 1 : ℝ) * π / (2 * N)
-  let θ₂ := (2 * k₂ + 1 : ℝ) * π / (2 * N)
+  let φ₁ := (2 * k₁ + 1 : ℝ) * π / (2 * N)
+  let φ₂ := (2 * k₂ + 1 : ℝ) * π / (2 * N)
 
   -- Show both angles are in [0, π]
-  have h₁_mem : θ₁ ∈ Set.Icc (0 : ℝ) π := by
+  have h₁_mem : φ₁ ∈ Set.Icc (0 : ℝ) π := by
     constructor
-    · -- 0 ≤ θ₁
-      simp only [θ₁]
+    · -- 0 ≤ φ₁
+      simp only [φ₁]
       apply div_nonneg
       · apply mul_nonneg
         · norm_cast; omega
         · exact Real.pi_pos.le
       · norm_cast; omega
-    · -- θ₁ ≤ π
-      simp only [θ₁]
+    · -- φ₁ ≤ π
+      simp only [φ₁]
       have : (2 * k₁ + 1 : ℝ) < 2 * N := by norm_cast; omega
       have : (2 * k₁ + 1 : ℝ) * π < (2 * N) * π := by
         exact mul_lt_mul_of_pos_right this Real.pi_pos
@@ -104,17 +98,17 @@ lemma chebyshevRoots_distinct (N : ℕ) (hN : 0 < N) (k₁ k₂ : ℕ)
           _ = π := by field_simp
       exact le_of_lt lt_pi
 
-  have h₂_mem : θ₂ ∈ Set.Icc (0 : ℝ) π := by
+  have h₂_mem : φ₂ ∈ Set.Icc (0 : ℝ) π := by
     constructor
-    · -- 0 ≤ θ₂
-      simp only [θ₂]
+    · -- 0 ≤ φ₂
+      simp only [φ₂]
       apply div_nonneg
       · apply mul_nonneg
         · norm_cast; omega
         · exact Real.pi_pos.le
       · norm_cast; omega
-    · -- θ₂ ≤ π
-      simp only [θ₂]
+    · -- φ₂ ≤ π
+      simp only [φ₂]
       have : (2 * k₂ + 1 : ℝ) < 2 * N := by norm_cast; omega
       have : (2 * k₂ + 1 : ℝ) * π < (2 * N) * π := by
         exact mul_lt_mul_of_pos_right this Real.pi_pos
@@ -128,13 +122,13 @@ lemma chebyshevRoots_distinct (N : ℕ) (hN : 0 < N) (k₁ k₂ : ℕ)
       exact le_of_lt lt_pi
 
   -- Use injectivity of cos on [0, π]
-  have cos_inj : θ₁ = θ₂ := by
+  have cos_inj : φ₁ = φ₂ := by
     have inj := Real.injOn_cos
     unfold Set.InjOn at inj
     apply inj h₁_mem h₂_mem h_eq
 
-  -- From θ₁ = θ₂, conclude k₁ = k₂
-  simp only [θ₁, θ₂] at cos_inj
+  -- From φ₁ = φ₂, conclude k₁ = k₂
+  simp only [φ₁, φ₂] at cos_inj
   have : (2 * k₁ + 1 : ℝ) * π / (2 * N) = (2 * k₂ + 1 : ℝ) * π / (2 * N) := cos_inj
   have : (2 * k₁ + 1 : ℝ) * π = (2 * k₂ + 1 : ℝ) * π := by
     have hN' : (0 : ℝ) < 2 * N := by norm_cast; omega

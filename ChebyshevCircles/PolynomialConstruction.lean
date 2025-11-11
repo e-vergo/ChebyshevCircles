@@ -8,8 +8,6 @@ import Mathlib.Algebra.Polynomial.Derivative
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Complex
 import ChebyshevCircles.RootsOfUnity
 
-set_option linter.style.longLine false
-
 /-!
 # Polynomial Construction from Rotated Roots
 
@@ -38,17 +36,29 @@ open scoped Polynomial
 
 variable {R : Type*} [CommRing R]
 
-/-- Construct a monic polynomial from a list of real roots using the product formula. -/
+/-- Construct a monic polynomial from a list of real roots using the product formula.
+Given a list of real numbers `[r₁, r₂, ..., rₙ]`, this returns the polynomial
+`(X - r₁)(X - r₂)⋯(X - rₙ)`. This is the minimal polynomial with the given roots
+(counted with multiplicity if the list contains duplicates). -/
 def polynomialFromRealRoots (roots : List ℝ) : Polynomial ℝ :=
   roots.foldr (fun r p => (X - C r) * p) 1
 
-/-- The unscaled polynomial constructed from N rotated roots of unity projected to the real axis. -/
-def unscaledPolynomial (N : ℕ) (θ : ℝ) : Polynomial ℝ :=
-  polynomialFromRealRoots (realProjectionsList N θ)
+/-- The unscaled polynomial constructed from N rotated roots of unity projected to the real axis.
+This polynomial has roots at the real projections `cos(φ + 2πk/N)` for `k = 0, 1, ..., N-1`.
+The polynomial is monic with degree N. This construction yields a polynomial whose form
+is related to Chebyshev polynomials of the first kind, but requires scaling to match
+the standard normalization. -/
+def unscaledPolynomial (N : ℕ) (φ : ℝ) : Polynomial ℝ :=
+  polynomialFromRealRoots (realProjectionsList N φ)
 
-/-- The scaled polynomial: multiply by 2^(N-1) to match Chebyshev normalization. -/
-def scaledPolynomial (N : ℕ) (θ : ℝ) : Polynomial ℝ :=
-  C (2 ^ (N - 1)) * unscaledPolynomial N θ
+/-- The scaled polynomial: multiply by 2^(N-1) to match Chebyshev normalization.
+This polynomial is constructed by scaling `unscaledPolynomial` by the factor `2^(N-1)`,
+which adjusts the leading coefficient to match the normalization of Chebyshev polynomials
+of the first kind. When `φ = 0`, this polynomial equals `Tₙ(x) + 1` where `Tₙ` is the
+N-th Chebyshev polynomial of the first kind. The constant term varies with the rotation
+angle φ, while the leading coefficient is always `2^(N-1)`. -/
+def scaledPolynomial (N : ℕ) (φ : ℝ) : Polynomial ℝ :=
+  C (2 ^ (N - 1)) * unscaledPolynomial N φ
 
 /-- Evaluating a polynomial constructed from roots at one of those roots gives zero. -/
 theorem polynomialFromRealRoots_eval_mem (roots : List ℝ) (r : ℝ) (hr : r ∈ roots) :
@@ -80,37 +90,42 @@ theorem polynomialFromRealRoots_degree (roots : List ℝ) :
     ring
 
 /-- The unscaled polynomial has degree N. -/
-theorem unscaledPolynomial_degree (N : ℕ) (θ : ℝ) :
-    (unscaledPolynomial N θ).degree = N := by
+theorem unscaledPolynomial_degree (N : ℕ) (φ : ℝ) :
+    (unscaledPolynomial N φ).degree = N := by
   unfold unscaledPolynomial
   rw [polynomialFromRealRoots_degree, card_realProjectionsList]
 
 /-- The scaled polynomial has degree N. -/
-theorem scaledPolynomial_degree (N : ℕ) (θ : ℝ) (_hN : 0 < N) :
-    (scaledPolynomial N θ).degree = N := by
+theorem scaledPolynomial_degree (N : ℕ) (φ : ℝ) (_hN : 0 < N) :
+    (scaledPolynomial N φ).degree = N := by
   unfold scaledPolynomial
-  rw [degree_C_mul, unscaledPolynomial_degree N θ]
+  rw [degree_C_mul, unscaledPolynomial_degree N φ]
   exact pow_ne_zero (N - 1) two_ne_zero
 
 /-- The unscaled polynomial is monic (leading coefficient is 1). -/
-theorem unscaledPolynomial_monic (N : ℕ) (θ : ℝ) :
-    (unscaledPolynomial N θ).leadingCoeff = 1 := by
+theorem unscaledPolynomial_monic (N : ℕ) (φ : ℝ) :
+    (unscaledPolynomial N φ).leadingCoeff = 1 := by
   unfold unscaledPolynomial polynomialFromRealRoots
-  induction (realProjectionsList N θ) with
+  induction (realProjectionsList N φ) with
   | nil => simp [List.foldr]
   | cons r rs ih =>
     simp only [List.foldr]
     rw [leadingCoeff_mul, leadingCoeff_X_sub_C, ih, mul_one]
 
 /-- The leading coefficient of the scaled polynomial. -/
-theorem scaledPolynomial_leadingCoeff (N : ℕ) (θ : ℝ) :
-    (scaledPolynomial N θ).leadingCoeff = 2 ^ (N - 1) := by
+theorem scaledPolynomial_leadingCoeff (N : ℕ) (φ : ℝ) :
+    (scaledPolynomial N φ).leadingCoeff = 2 ^ (N - 1) := by
   unfold scaledPolynomial
   rw [leadingCoeff_mul, leadingCoeff_C, unscaledPolynomial_monic, mul_one]
 
-/-- Extract the coefficient of X^k from the scaled polynomial. -/
-def scaledPolynomial_coeff (N : ℕ) (θ : ℝ) (k : ℕ) : ℝ :=
-  (scaledPolynomial N θ).coeff k
+/-- Extract the coefficient of X^k from the scaled polynomial.
+This definition provides a convenient way to access individual coefficients of
+`scaledPolynomial N φ`. The coefficient of `X^k` is obtained via the standard
+`Polynomial.coeff` function. For example, `scaledPolynomial_coeff N φ 0` gives
+the constant term, and `scaledPolynomial_coeff N φ N` gives the leading coefficient
+(which equals `2^(N-1)`). -/
+def scaledPolynomial_coeff (N : ℕ) (φ : ℝ) (k : ℕ) : ℝ :=
+  (scaledPolynomial N φ).coeff k
 
 /-- If a polynomial from real roots evaluates to 0 at 0, then 0 is in the list of roots. -/
 lemma polynomialFromRealRoots_eval_zero_iff_mem_zero (roots : List ℝ) :
@@ -139,9 +154,9 @@ lemma polynomialFromRealRoots_eval_zero_iff_mem_zero (roots : List ℝ) :
         right
         exact ih.mpr h
 
-/-- The value cos(θ + 2πk/N) for k=0 equals cos(θ). -/
-lemma realProjectionsList_mem_cos_theta (N : ℕ) (θ : ℝ) (hN : 0 < N) :
-    Real.cos θ ∈ realProjectionsList N θ := by
+/-- The value cos(φ + 2πk/N) for k=0 equals cos(φ). -/
+lemma realProjectionsList_mem_cos_theta (N : ℕ) (φ : ℝ) (hN : 0 < N) :
+    Real.cos φ ∈ realProjectionsList N φ := by
   unfold realProjectionsList
   simp only [List.mem_map, List.mem_range]
   use 0
@@ -186,9 +201,78 @@ lemma realProjectionsList_theta_zero_no_zero (N : ℕ) (hN_odd : Odd N) (hN_ge :
   · have hk_pos : 0 < k := Nat.pos_of_ne_zero h_zero
     exact cos_two_pi_k_div_odd_N_ne_zero N k hN_odd hN_ge hk_pos hk
 
-/-- The constant term of the scaled polynomial depends on θ. -/
+/-- Helper lemma: For odd N ≥ 7, the constant term varies with φ. -/
+private lemma scaledPolynomial_constantTerm_varies_odd_ge_7 (N : ℕ) (h_odd : Odd N)
+    (hN_ge : N ≥ 7) :
+    ∃ φ₁ φ₂ : ℝ, scaledPolynomial_coeff N φ₁ 0 ≠ scaledPolynomial_coeff N φ₂ 0 := by
+  use 0, Real.pi / 2
+  unfold scaledPolynomial_coeff scaledPolynomial unscaledPolynomial
+  rw [Polynomial.coeff_C_mul, Polynomial.coeff_C_mul]
+  intro h_eq
+  have h_right : (polynomialFromRealRoots (realProjectionsList N (Real.pi / 2))).coeff 0 = 0 := by
+    rw [coeff_zero_eq_eval_zero, polynomialFromRealRoots_eval_zero_iff_mem_zero]
+    have h_mem := realProjectionsList_mem_cos_theta N (Real.pi / 2) (by omega : 0 < N)
+    rw [Real.cos_pi_div_two] at h_mem
+    exact h_mem
+  have h_left : (polynomialFromRealRoots (realProjectionsList N 0)).coeff 0 ≠ 0 := by
+    intro h_zero
+    rw [coeff_zero_eq_eval_zero, polynomialFromRealRoots_eval_zero_iff_mem_zero] at h_zero
+    exact realProjectionsList_theta_zero_no_zero N h_odd (by omega) h_zero
+  rw [h_right, mul_zero] at h_eq
+  have h_pow : (2 : ℝ) ^ (N - 1) ≠ 0 := pow_ne_zero _ (by norm_num)
+  exact h_left (mul_eq_zero.mp h_eq |>.resolve_left h_pow)
+
+/-- Helper lemma: For even N ≥ 7, the constant term varies with φ. -/
+private lemma scaledPolynomial_constantTerm_varies_even_ge_7 (N : ℕ) (h_even : Even N)
+    (hN_ge : N ≥ 7) :
+    ∃ φ₁ φ₂ : ℝ, scaledPolynomial_coeff N φ₁ 0 ≠ scaledPolynomial_coeff N φ₂ 0 := by
+  use Real.pi / (2 * N), Real.pi / 2
+  unfold scaledPolynomial_coeff scaledPolynomial unscaledPolynomial
+  rw [Polynomial.coeff_C_mul, Polynomial.coeff_C_mul]
+  intro h_eq
+  have h_right : (polynomialFromRealRoots (realProjectionsList N (Real.pi / 2))).coeff 0 = 0 := by
+    rw [coeff_zero_eq_eval_zero, polynomialFromRealRoots_eval_zero_iff_mem_zero]
+    have h_mem := realProjectionsList_mem_cos_theta N (Real.pi / 2) (by omega : 0 < N)
+    rw [Real.cos_pi_div_two] at h_mem
+    exact h_mem
+  have h_left :
+      (polynomialFromRealRoots (realProjectionsList N (Real.pi / (2 * N)))).coeff 0 ≠ 0 := by
+    intro h_zero
+    rw [coeff_zero_eq_eval_zero, polynomialFromRealRoots_eval_zero_iff_mem_zero] at h_zero
+    unfold realProjectionsList at h_zero
+    simp only [List.mem_map, List.mem_range] at h_zero
+    obtain ⟨k, hk_range, hk_eq⟩ := h_zero
+    rw [Real.cos_eq_zero_iff] at hk_eq
+    obtain ⟨m, hm⟩ := hk_eq
+    have h_mul := congr_arg (· * (2 * N / Real.pi)) hm
+    field_simp at h_mul
+    -- h_mul: 1 + 4 * k = N * (2 * m + 1) after simplification
+    have h_N_ne_zero : ((N) : ℝ) ≠ 0 := by positivity
+    have eq_real : (1 : ℝ) + 4 * k = N * (2 * m + 1) := by
+      -- Convert h_mul which has form: 1 + 2^2 * k = N * (2 * m + 1)
+      -- Note: after field_simp, 4 * N * k becomes 2^2 * k when N cancels with denominator
+      convert h_mul using 2
+      ring
+    obtain ⟨n, hn⟩ := h_even
+    have hn_real : (N : ℝ) = (n + n : ℝ) := by exact_mod_cast hn
+    have eq_int : (1 + 4 * k : ℤ) = (2 * (n : ℤ)) * (2 * m + 1) := by
+      rw [hn_real] at eq_real
+      have h_two_n : (n + n : ℝ) = (2 * n : ℝ) := by ring
+      rw [h_two_n] at eq_real
+      have h_cast : (1 : ℝ) + 4 * k = ((2 * (n : ℤ)) * (2 * m + 1) : ℝ) := by
+        convert eq_real using 1
+      exact_mod_cast h_cast
+    have h_rhs_even : Even ((2 * (n : ℤ)) * (2 * m + 1)) := ⟨n * (2 * m + 1), by ring⟩
+    have h_lhs_odd : Odd (1 + 4 * (k : ℤ)) := ⟨2 * k, by ring⟩
+    rw [eq_int] at h_lhs_odd
+    exact Int.not_even_iff_odd.mpr h_lhs_odd h_rhs_even
+  rw [h_right, mul_zero] at h_eq
+  have h_pow : (2 : ℝ) ^ (N - 1) ≠ 0 := pow_ne_zero _ (by norm_num)
+  exact h_left (mul_eq_zero.mp h_eq |>.resolve_left h_pow)
+
+/-- The constant term of the scaled polynomial depends on φ. -/
 theorem scaledPolynomial_constantTerm_varies (N : ℕ) (hN_pos : 0 < N) :
-    ∃ θ₁ θ₂ : ℝ, scaledPolynomial_coeff N θ₁ 0 ≠ scaledPolynomial_coeff N θ₂ 0 := by
+    ∃ φ₁ φ₂ : ℝ, scaledPolynomial_coeff N φ₁ 0 ≠ scaledPolynomial_coeff N φ₂ 0 := by
   obtain ⟨N', rfl⟩ := Nat.exists_eq_succ_of_ne_zero (Nat.pos_iff_ne_zero.mp hN_pos)
   cases N' with
   | zero =>
@@ -377,9 +461,10 @@ theorem scaledPolynomial_constantTerm_varies (N : ℕ) (hN_pos : 0 < N) :
           | succ n6 =>
             cases n6 with
             | zero =>
-              -- N = 6: use θ=0 and θ=π/2
+              -- N = 6: use φ=0 and φ=π/2
               use 0, Real.pi / 2
-              unfold scaledPolynomial_coeff scaledPolynomial unscaledPolynomial polynomialFromRealRoots
+              unfold scaledPolynomial_coeff scaledPolynomial unscaledPolynomial
+              unfold polynomialFromRealRoots
               rw [Polynomial.coeff_C_mul, Polynomial.coeff_C_mul]
               simp only [realProjectionsList]
               have h_range : List.range 6 = [0, 1, 2, 3, 4, 5] := by rfl
@@ -445,109 +530,12 @@ theorem scaledPolynomial_constantTerm_varies (N : ℕ) (hN_pos : 0 < N) :
               -- N = (n7 + 1 + 1 + 1 + 1 + 1 + 1).succ = n7 + 7 ≥ 7
               have N_eq : (n7 + 1 + 1 + 1 + 1 + 1 + 1).succ = n7 + 7 := by omega
               by_cases h_odd : Odd (n7 + 7)
-              · -- Odd N ≥ 7: use θ=0 and θ=π/2
-                use 0, Real.pi / 2
-                unfold scaledPolynomial_coeff scaledPolynomial unscaledPolynomial
-                rw [Polynomial.coeff_C_mul, Polynomial.coeff_C_mul]
+              · -- Odd N ≥ 7: use helper lemma
                 rw [N_eq]
-                intro h_eq
-                -- At θ=π/2, constant term is 0 because cos(π/2) = 0
-                have h_right : (polynomialFromRealRoots (realProjectionsList (n7 + 7) (Real.pi / 2))).coeff 0 = 0 := by
-                  rw [coeff_zero_eq_eval_zero, polynomialFromRealRoots_eval_zero_iff_mem_zero]
-                  have h_mem := realProjectionsList_mem_cos_theta (n7 + 7) (Real.pi / 2) (by omega : 0 < n7 + 7)
-                  rw [Real.cos_pi_div_two] at h_mem
-                  exact h_mem
-                -- At θ=0, constant term is nonzero
-                have h_left : (polynomialFromRealRoots (realProjectionsList (n7 + 7) 0)).coeff 0 ≠ 0 := by
-                  intro h_zero
-                  rw [coeff_zero_eq_eval_zero, polynomialFromRealRoots_eval_zero_iff_mem_zero] at h_zero
-                  exact realProjectionsList_theta_zero_no_zero (n7 + 7) h_odd (by omega) h_zero
-                -- This contradicts the equality
-                have h1 : 2 ^ (n7 + 7 - 1) * (polynomialFromRealRoots (realProjectionsList (n7 + 7) 0)).coeff 0 =
-                    2 ^ (n7 + 7 - 1) * (polynomialFromRealRoots (realProjectionsList (n7 + 7) (Real.pi / 2))).coeff 0 := h_eq
-                rw [h_right, mul_zero] at h1
-                have h_pow : (2 : ℝ) ^ (n7 + 7 - 1) ≠ 0 := pow_ne_zero _ (by norm_num)
-                exact h_left (mul_eq_zero.mp h1 |>.resolve_left h_pow)
-              · -- Even N ≥ 7: use θ = π/(2N) and θ = π/2
-                -- At θ = π/2, the constant term is 0
-                -- At θ = π/(2N), the constant term is nonzero (proof deferred to sorry)
-                use Real.pi / (2 * (n7 + 7)), Real.pi / 2
-                unfold scaledPolynomial_coeff scaledPolynomial unscaledPolynomial
-                rw [Polynomial.coeff_C_mul, Polynomial.coeff_C_mul]
+                exact scaledPolynomial_constantTerm_varies_odd_ge_7 (n7 + 7) h_odd (by omega)
+              · -- Even N ≥ 7: use helper lemma
                 rw [N_eq]
-                intro h_eq
-                -- At θ=π/2, constant term is 0 because cos(π/2) = 0
-                have h_right : (polynomialFromRealRoots (realProjectionsList (n7 + 7) (Real.pi / 2))).coeff 0 = 0 := by
-                  rw [coeff_zero_eq_eval_zero, polynomialFromRealRoots_eval_zero_iff_mem_zero]
-                  have h_mem := realProjectionsList_mem_cos_theta (n7 + 7) (Real.pi / 2) (by omega : 0 < n7 + 7)
-                  rw [Real.cos_pi_div_two] at h_mem
-                  exact h_mem
-                -- At θ=π/(2N), constant term is nonzero
-                -- This requires showing that cos(π/(2N) + 2πk/N) ≠ 0 for all k ∈ [0,N)
-                have h_left : (polynomialFromRealRoots (realProjectionsList (n7 + 7) (Real.pi / (2 * (n7 + 7))))).coeff 0 ≠ 0 := by
-                  intro h_zero
-                  rw [coeff_zero_eq_eval_zero, polynomialFromRealRoots_eval_zero_iff_mem_zero] at h_zero
-                  -- 0 ∈ realProjectionsList means ∃k, cos(π/(2N) + 2πk/N) = 0
-                  unfold realProjectionsList at h_zero
-                  simp only [List.mem_map, List.mem_range] at h_zero
-                  obtain ⟨k, hk_range, hk_eq⟩ := h_zero
-                  -- Now hk_eq : cos(π/(2N) + 2πk/N) = 0 and k < n7 + 7
-                  -- cos(x) = 0 iff x = (2m + 1)π/2 for some integer m
-                  rw [Real.cos_eq_zero_iff] at hk_eq
-                  obtain ⟨m, hm⟩ := hk_eq
-                  -- hm: π/(2N) + 2πk/N = (2m+1)π/2
-                  -- Multiply both sides by 2(n7+7)/π
-                  have h_mul := congr_arg (· * (2 * (n7 + 7) / Real.pi)) hm
-                  field_simp at h_mul
-                  -- h_mul: ↑(n7 + 7) + 2 ^ 2 * (↑n7 + 7) * ↑k = (↑n7 + 7) * ↑(n7 + 7) * (2 * ↑m + 1)
-                  -- Simplify to: 1 + 4k = (n7 + 7) * (2m + 1)
-                  have h_n7_ne_zero : ((n7 + 7) : ℝ) ≠ 0 := by positivity
-                  have eq_real : (1 : ℝ) + 4 * k = (n7 + 7) * (2 * m + 1) := by
-                    -- h_mul has form: ↑(n7 + 7) + 2^2 * (↑n7 + 7) * ↑k = ...
-                    -- First normalize the cast issue: ↑(n7 + 7) = ↑n7 + 7
-                    have cast_eq : (↑(n7 + 7) : ℝ) = ↑n7 + 7 := by norm_cast
-                    rw [cast_eq] at h_mul
-                    -- Now h_mul: (↑n7 + 7) + 2^2 * (↑n7 + 7) * ↑k = (↑n7 + 7) * (↑n7 + 7) * (2m+1)
-                    -- Factor LHS
-                    have h_lhs : (↑n7 + 7 : ℝ) + 2 ^ 2 * (↑n7 + 7) * ↑k = (↑n7 + 7) * (1 + 4 * k) := by ring
-                    rw [h_lhs] at h_mul
-                    -- Now h_mul: (↑n7 + 7) * (1 + 4 * k) = (↑n7 + 7) * (↑n7 + 7) * (2m+1)
-                    -- Reassociate RHS
-                    have h_rhs : (↑n7 + 7 : ℝ) * (↑n7 + 7) * (2 * ↑m + 1) = (↑n7 + 7) * ((↑n7 + 7) * (2 * m + 1)) := by ring
-                    rw [h_rhs] at h_mul
-                    have h_n7_ne_zero' : (↑n7 + 7 : ℝ) ≠ 0 := by positivity
-                    exact mul_left_cancel₀ h_n7_ne_zero' h_mul
-                  -- Since ¬Odd (n7 + 7), we have Even (n7 + 7)
-                  have h_even_nat : Even (n7 + 7) := by
-                    cases Nat.even_or_odd (n7 + 7) with
-                    | inl h => exact h
-                    | inr h => exact absurd h h_odd
-                  obtain ⟨n, hn⟩ := h_even_nat
-                  -- So 1 + 4k = 2n(2m + 1), which is even
-                  -- First, convert hn to a real equality
-                  have hn_real : (n7 + 7 : ℝ) = (n + n : ℝ) := by exact_mod_cast hn
-                  have eq_int : (1 + 4 * k : ℤ) = (2 * (n : ℤ)) * (2 * m + 1) := by
-                    -- Substitute hn_real into eq_real
-                    rw [hn_real] at eq_real
-                    have h_two_n : (n + n : ℝ) = (2 * n : ℝ) := by ring
-                    rw [h_two_n] at eq_real
-                    -- Now eq_real : 1 + 4 * k = 2 * n * (2 * m + 1)
-                    -- Convert to integer equality
-                    have h_cast : (1 : ℝ) + 4 * k = ((2 * (n : ℤ)) * (2 * m + 1) : ℝ) := by
-                      convert eq_real using 1
-                    exact_mod_cast h_cast
-                  -- The RHS is even
-                  have h_rhs_even : Even ((2 * (n : ℤ)) * (2 * m + 1)) := ⟨n * (2 * m + 1), by ring⟩
-                  -- But the LHS is odd
-                  have h_lhs_odd : Odd (1 + 4 * (k : ℤ)) := ⟨2 * k, by ring⟩
-                  -- Contradiction
-                  rw [eq_int] at h_lhs_odd
-                  exact Int.not_even_iff_odd.mpr h_lhs_odd h_rhs_even
-                -- This contradicts the equality
-                have h1 : 2 ^ (n7 + 7 - 1) * (polynomialFromRealRoots (realProjectionsList (n7 + 7) (Real.pi / (2 * (n7 + 7))))).coeff 0 =
-                    2 ^ (n7 + 7 - 1) * (polynomialFromRealRoots (realProjectionsList (n7 + 7) (Real.pi / 2))).coeff 0 := h_eq
-                rw [h_right, mul_zero] at h1
-                have h_pow : (2 : ℝ) ^ (n7 + 7 - 1) ≠ 0 := pow_ne_zero _ (by norm_num)
-                exact h_left (mul_eq_zero.mp h1 |>.resolve_left h_pow)
+                have h_even : Even (n7 + 7) := Nat.even_or_odd (n7 + 7) |>.resolve_right h_odd
+                exact scaledPolynomial_constantTerm_varies_even_ge_7 (n7 + 7) h_even (by omega)
 
 end

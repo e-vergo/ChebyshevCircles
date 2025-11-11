@@ -21,7 +21,8 @@ open Complex Real Finset
 
 namespace ChebyshevCircles
 
-/-- Sum of exponentials at Chebyshev angles can be factored into a geometric sum. -/
+/-- Factor sum of exponentials at Chebyshev angles θ_k = (2k+1)π/(2N) into geometric form.
+    Extracts the common phase exp(mπi/(2N)), leaving a sum of exp(kmπi/N) terms. -/
 lemma sum_exp_chebyshev_angles (N m : ℕ) :
     ∑ k ∈ range N, exp ((2 * k + 1 : ℂ) * m * π * I / (2 * N)) =
     exp (m * π * I / (2 * N)) * ∑ k ∈ range N, exp (k * m * π * I / N) := by
@@ -35,8 +36,8 @@ lemma sum_exp_chebyshev_angles (N m : ℕ) :
 
 /-- Sum of cosines at Chebyshev angles vanishes for non-zero odd frequencies.
 
-    Proof strategy: Chebyshev angles satisfy θ_k + θ_{N-1-k} = π.
-    For odd m, cos(m·θ_{N-1-k}) = cos(m·(π - θ_k)) = -cos(m·θ_k).
+    Proof strategy: Chebyshev angles satisfy φ_k + φ_{N-1-k} = π.
+    For odd m, cos(m·φ_{N-1-k}) = cos(m·(π - φ_k)) = -cos(m·φ_k).
     Terms pair up and cancel via the involution k ↦ N-1-k. -/
 lemma sum_cos_chebyshev_angles_vanishes (N : ℕ) (m : ℤ) (hN : 0 < N)
     (hm : m ≠ 0) (hm_odd : Odd m) (hm_bound : |m| < 2 * N) :
@@ -45,7 +46,7 @@ lemma sum_cos_chebyshev_angles_vanishes (N : ℕ) (m : ℤ) (hN : 0 < N)
   let f : ℕ → ℝ := fun k ↦ Real.cos (m * (2 * k + 1 : ℝ) * π / (2 * N))
 
   -- We'll show the sum vanishes by pairing terms using symmetry
-  -- Key observation: θ_k + θ_{N-1-k} = (2k+1)π/(2N) + (2(N-1-k)+1)π/(2N) = π
+  -- Key observation: φ_k + φ_{N-1-k} = (2k+1)π/(2N) + (2(N-1-k)+1)π/(2N) = π
 
   -- First, prove the pairing lemma: f(k) + f(N-1-k) = 0
   have pair_sum_zero : ∀ k ∈ range N, f k + f (N - 1 - k) = 0 := by
@@ -142,7 +143,8 @@ lemma sum_cos_chebyshev_angles_vanishes (N : ℕ) (m : ℤ) (hN : 0 < N)
     have := pair_sum_zero k hk
     linarith
 
-/-- Helper: cos(x) expressed using complex exponentials -/
+/-- Euler's formula for cosine: cos(x) = Re((e^{ix} + e^{-ix})/2).
+    Bridges real trigonometric sums and complex exponential manipulations. -/
 lemma cos_as_exp_chebyshev (x : ℝ) :
     Real.cos x = ((Complex.exp (x * Complex.I) + Complex.exp (-(x * Complex.I))) / 2).re := by
   rw [show (Complex.exp (↑x * Complex.I) + Complex.exp (-(↑x * Complex.I))) / 2 =
@@ -153,7 +155,8 @@ lemma cos_as_exp_chebyshev (x : ℝ) :
     rw [neg_mul]]
   exact Complex.cos_ofReal_re x
 
-/-- Helper: binomial expansion for (e^{ix} + e^{-ix})^j -/
+/-- Binomial expansion of (e^{ix} + e^{-ix})^j = ∑ C(j,r) e^{i(2r-j)x}.
+    Powers of the sum expand into exponentials with frequency shifts (2r-j). -/
 lemma exp_add_exp_pow_chebyshev (x : ℂ) (j : ℕ) :
     (Complex.exp (x * Complex.I) + Complex.exp (-(x * Complex.I))) ^ j =
     ∑ r ∈ range (j + 1), (j.choose r : ℂ) * Complex.exp ((2 * r - j : ℤ) * x * Complex.I) := by
@@ -172,7 +175,7 @@ lemma exp_add_exp_pow_chebyshev (x : ℂ) (j : ℕ) :
 /-- Lemma 5: Express power sum of cosines at Chebyshev angles as binomial expansion.
 
     This adapts the binomial expansion from PowerSums.lean to Chebyshev root angles.
-    The key difference is that angles are (2k+1)π/(2N) instead of θ + 2πk/N. -/
+    The key difference is that angles are (2k+1)π/(2N) instead of φ + 2πk/N. -/
 lemma sum_cos_pow_chebyshev_binomial (N j : ℕ) (_hN : 0 < N) (_hj : 0 < j) (_hj' : j < 2 * N) :
     ∑ k ∈ range N, (Real.cos ((2 * k + 1 : ℝ) * π / (2 * N))) ^ j =
     (2 : ℝ) ^ (-(j : ℤ)) * ∑ r ∈ range (j + 1), (j.choose r : ℝ) *
@@ -261,7 +264,7 @@ lemma sum_cos_pow_chebyshev_binomial (N j : ℕ) (_hN : 0 < N) (_hj : 0 < j) (_h
 
   rw [lhs_norm]
 
-  -- Now show: exp(m*θ*I).re = (exp(m*θ*I).re + exp(-m*θ*I).re) / 2
+  -- Now show: exp(m*φ*I).re = (exp(m*φ*I).re + exp(-m*φ*I).re) / 2
   have h1 : (Complex.exp ((2 * ↑r - ↑j) * (2 * ↑k + 1) * ↑π / (2 * ↑N) * Complex.I)).re =
     Real.cos ((2 * ↑r - ↑j) * (2 * ↑k + 1) * π / (2 * ↑N)) := by
     have : (2 * ↑r - ↑j) * (2 * ↑k + 1) * ↑π / (2 * ↑N) * Complex.I =

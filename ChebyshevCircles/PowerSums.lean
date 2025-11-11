@@ -10,8 +10,6 @@ import Mathlib.Algebra.BigOperators.Field
 import ChebyshevCircles.TrigonometricIdentities
 import ChebyshevCircles.RootsOfUnity
 
-set_option linter.style.longLine false
-
 /-!
 # Power Sum Lemmas
 
@@ -166,7 +164,8 @@ lemma cos_five_formula (x : ℝ) :
 
 /-- cos⁶(x) power-reduction formula. -/
 lemma cos_six_formula (x : ℝ) :
-    Real.cos x ^ 6 = (10 + 15 * Real.cos (2 * x) + 6 * Real.cos (4 * x) + Real.cos (6 * x)) / 32 := by
+    Real.cos x ^ 6 =
+      (10 + 15 * Real.cos (2 * x) + 6 * Real.cos (4 * x) + Real.cos (6 * x)) / 32 := by
   -- cos^6 = (cos^2)^3
   have h1 : Real.cos x ^ 6 = (Real.cos x ^ 2) ^ 3 := by ring
   rw [h1]
@@ -191,7 +190,8 @@ lemma cos_six_formula (x : ℝ) :
 
 /-- cos¹⁰(x) power-reduction formula. -/
 lemma cos_ten_formula (x : ℝ) :
-    Real.cos x ^ 10 = (126 + 210 * Real.cos (2 * x) + 120 * Real.cos (4 * x) + 45 * Real.cos (6 * x) + 10 * Real.cos (8 * x) + Real.cos (10 * x)) / 512 := by
+    Real.cos x ^ 10 = (126 + 210 * Real.cos (2 * x) + 120 * Real.cos (4 * x) +
+      45 * Real.cos (6 * x) + 10 * Real.cos (8 * x) + Real.cos (10 * x)) / 512 := by
   -- cos^10 = (cos^2)^5
   have h1 : Real.cos x ^ 10 = (Real.cos x ^ 2) ^ 5 := by ring
   rw [h1]
@@ -231,12 +231,18 @@ lemma powerSumCos_invariant_j6 (N : ℕ) (θ₁ θ₂ : ℝ) (hN : 6 < N) :
   have h6_1 := sum_cos_multiple_rotated_roots N 6 θ₁ (by omega) (by omega) (by omega)
   have h6_2 := sum_cos_multiple_rotated_roots N 6 θ₂ (by omega) (by omega) (by omega)
   -- Convert sums
-  have eq1 : ∑ x ∈ Finset.range N, Real.cos (2 * (θ₁ + 2 * π * x / N)) = 0 := by convert h2_1 using 2
-  have eq2 : ∑ x ∈ Finset.range N, Real.cos (2 * (θ₂ + 2 * π * x / N)) = 0 := by convert h2_2 using 2
-  have eq3 : ∑ x ∈ Finset.range N, Real.cos (4 * (θ₁ + 2 * π * x / N)) = 0 := by convert h4_1 using 2
-  have eq4 : ∑ x ∈ Finset.range N, Real.cos (4 * (θ₂ + 2 * π * x / N)) = 0 := by convert h4_2 using 2
-  have eq5 : ∑ x ∈ Finset.range N, Real.cos (6 * (θ₁ + 2 * π * x / N)) = 0 := by convert h6_1 using 2
-  have eq6 : ∑ x ∈ Finset.range N, Real.cos (6 * (θ₂ + 2 * π * x / N)) = 0 := by convert h6_2 using 2
+  have eq1 : ∑ x ∈ Finset.range N, Real.cos (2 * (θ₁ + 2 * π * x / N)) = 0 := by
+    convert h2_1 using 2
+  have eq2 : ∑ x ∈ Finset.range N, Real.cos (2 * (θ₂ + 2 * π * x / N)) = 0 := by
+    convert h2_2 using 2
+  have eq3 : ∑ x ∈ Finset.range N, Real.cos (4 * (θ₁ + 2 * π * x / N)) = 0 := by
+    convert h4_1 using 2
+  have eq4 : ∑ x ∈ Finset.range N, Real.cos (4 * (θ₂ + 2 * π * x / N)) = 0 := by
+    convert h4_2 using 2
+  have eq5 : ∑ x ∈ Finset.range N, Real.cos (6 * (θ₁ + 2 * π * x / N)) = 0 := by
+    convert h6_1 using 2
+  have eq6 : ∑ x ∈ Finset.range N, Real.cos (6 * (θ₂ + 2 * π * x / N)) = 0 := by
+    convert h6_2 using 2
   simp only [← Finset.sum_div, ← Finset.mul_sum, eq1, eq2, eq3, eq4, eq5, eq6]
 
 /-- Power sum of fifth powers of cosines is θ-invariant for N > 5. -/
@@ -384,7 +390,8 @@ lemma sum_cos_int_multiple_vanishes (N : ℕ) (m : ℤ) (θ : ℝ)
 /-- Helper: cos(x) expressed using complex exponentials -/
 lemma cos_as_exp (x : ℝ) :
     Real.cos x = ((Complex.exp (x * Complex.I) + Complex.exp (-(x * Complex.I))) / 2).re := by
-  rw [show (Complex.exp (↑x * Complex.I) + Complex.exp (-(↑x * Complex.I))) / 2 = Complex.cos (x : ℂ) by
+  rw [show (Complex.exp (↑x * Complex.I) + Complex.exp (-(↑x * Complex.I))) / 2 =
+      Complex.cos (x : ℂ) by
     rw [Complex.cos]
     congr 2
     congr 1
@@ -462,10 +469,13 @@ lemma sum_cos_pow_eq_sum_binomial (N j : ℕ) (θ : ℝ) (_hN : 0 < N) (_hj : j 
   -- Apply binomial expansion to each term, then manipulate
   simp only [div_pow]
   -- Apply binomial expansion inside the sum and factor out 2^j
-  rw [show ∑ x ∈ Finset.range N, (Complex.exp (↑(θ + 2 * π * ↑x / ↑N) * Complex.I) +
-      Complex.exp (-(↑(θ + 2 * π * ↑x / ↑N) * Complex.I))) ^ j / (2 : ℂ) ^ j =
-    ∑ x ∈ Finset.range N, (∑ r ∈ Finset.range (j + 1), (j.choose r : ℂ) *
-      Complex.exp ((2 * r - j : ℤ) * ↑(θ + 2 * π * ↑x / ↑N) * Complex.I)) / (2 : ℂ) ^ j by
+  rw [show ∑ x ∈ Finset.range N,
+        (Complex.exp (↑(θ + 2 * π * ↑x / ↑N) * Complex.I) +
+          Complex.exp (-(↑(θ + 2 * π * ↑x / ↑N) * Complex.I))) ^ j / (2 : ℂ) ^ j =
+      ∑ x ∈ Finset.range N,
+        (∑ r ∈ Finset.range (j + 1), (j.choose r : ℂ) *
+          Complex.exp ((2 * r - j : ℤ) * ↑(θ + 2 * π * ↑x / ↑N) * Complex.I)) /
+        (2 : ℂ) ^ j by
     apply Finset.sum_congr rfl
     intro i _
     rw [exp_add_exp_pow (↑(θ + 2 * π * ↑i / ↑N)) j]]
@@ -504,15 +514,17 @@ lemma sum_cos_pow_eq_sum_binomial (N j : ℕ) (θ : ℝ) (_hN : 0 < N) (_hj : j 
   intro k _
   -- Show exp(...).re = (exp(...).re + exp(-...).re) / 2
   -- Use that exp(ix).re = cos(x) and exp(-ix).re = cos(-x) = cos(x)
-  have h1 : (Complex.exp ((2 * ↑r - ↑j) * (↑θ + 2 * ↑π * ↑k / ↑N) * Complex.I)).re =
-    Real.cos ((2 * ↑r - ↑j) * (θ + 2 * π * ↑k / ↑N)) := by
+  have h1 :
+      (Complex.exp ((2 * ↑r - ↑j) * (↑θ + 2 * ↑π * ↑k / ↑N) * Complex.I)).re =
+        Real.cos ((2 * ↑r - ↑j) * (θ + 2 * π * ↑k / ↑N)) := by
     have : (2 * ↑r - ↑j) * (↑θ + 2 * ↑π * ↑k / ↑N) * Complex.I =
       ↑((2 * ↑r - ↑j) * (θ + 2 * π * ↑k / ↑N)) * Complex.I := by
       push_cast
       ring
     rw [this, Complex.exp_ofReal_mul_I_re]
-  have h2 : (Complex.exp (-((2 * ↑r - ↑j) * (↑θ + 2 * ↑π * ↑k / ↑N) * Complex.I))).re =
-    Real.cos ((2 * ↑r - ↑j) * (θ + 2 * π * ↑k / ↑N)) := by
+  have h2 :
+      (Complex.exp (-((2 * ↑r - ↑j) * (↑θ + 2 * ↑π * ↑k / ↑N) * Complex.I))).re =
+        Real.cos ((2 * ↑r - ↑j) * (θ + 2 * π * ↑k / ↑N)) := by
     have : -((2 * ↑r - ↑j) * (↑θ + 2 * ↑π * ↑k / ↑N) * Complex.I) =
       ↑(-((2 * ↑r - ↑j) * (θ + 2 * π * ↑k / ↑N))) * Complex.I := by
       push_cast
@@ -665,11 +677,15 @@ lemma powerSumCos_invariant (N : ℕ) (j : ℕ) (θ₁ θ₂ : ℝ)
       -- where ω = e^{2πi/N}
 
       -- Express cos in terms of exponential
-      have cos_as_exp : ∀ x : ℝ, Real.cos x = ((Complex.exp (x * Complex.I) + Complex.exp (-x * Complex.I)) / 2).re := by
+      have cos_as_exp : ∀ x : ℝ, Real.cos x =
+          ((Complex.exp (x * Complex.I) + Complex.exp (-x * Complex.I)) /
+            2).re := by
         intro x
         have h := Complex.two_cos (↑x)
-        have : Complex.cos (↑x) = (Complex.exp (↑x * Complex.I) + Complex.exp (-↑x * Complex.I)) / 2 := by
-          have h' : Complex.exp (-(↑x * Complex.I)) = Complex.exp (-↑x * Complex.I) := by ring_nf
+        have : Complex.cos (↑x) = (Complex.exp (↑x * Complex.I) +
+            Complex.exp (-↑x * Complex.I)) / 2 := by
+          have h' : Complex.exp (-(↑x * Complex.I)) =
+              Complex.exp (-↑x * Complex.I) := by ring_nf
           field_simp
           rw [mul_comm, h']
           exact h

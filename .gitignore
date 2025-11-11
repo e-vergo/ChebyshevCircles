@@ -1,2 +1,5 @@
 /.lake
-.venv
+/.venv
+/.agent_tasks
+/.claude
+/.github

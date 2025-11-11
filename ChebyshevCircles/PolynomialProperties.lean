@@ -11,17 +11,15 @@ import ChebyshevCircles.RootsOfUnity
 import ChebyshevCircles.TrigonometricIdentities
 import ChebyshevCircles.NewtonIdentities
 
-set_option linter.style.longLine false
-
 /-!
 # Polynomial Properties and Coefficient Invariance
 
 Lemmas about degree, evaluation, and coefficient structure of both the scaledPolynomial
-and Chebyshev polynomials. The key result is that non-constant coefficients are θ-invariant.
+and Chebyshev polynomials. The key result is that non-constant coefficients are φ-invariant.
 
 ## Main results
 
-* `constant_term_only_varies`: The constant term is the only coefficient that varies with θ
+* `constant_term_only_varies`: The constant term is the only coefficient that varies with φ
 * `chebyshev_T_degree`: The Chebyshev polynomial T_N has degree N for N ≥ 1
 * `scaledPolynomial_degree_eq_chebyshev`: Scaled polynomial has same degree as Chebyshev
 
@@ -37,60 +35,35 @@ open scoped Polynomial
 
 section PolynomialProperties
 
-/-- The constant term is the only coefficient that varies with θ. -/
-theorem constant_term_only_varies (N : ℕ) (θ₁ θ₂ : ℝ) (k : ℕ) (hN : 0 < N) (hk : 0 < k) :
-    (scaledPolynomial N θ₁).coeff k = (scaledPolynomial N θ₂).coeff k := by
-  unfold scaledPolynomial
-  rw [coeff_C_mul, coeff_C_mul]
+/-- The constant term is the only coefficient that varies with φ. -/
+theorem constant_term_only_varies (N : ℕ) (φ₁ φ₂ : ℝ) (k : ℕ) (hN : 0 < N)
+    (hk : 0 < k) : (scaledPolynomial N φ₁).coeff k = (scaledPolynomial N φ₂).coeff k := by
+  unfold scaledPolynomial unscaledPolynomial polynomialFromRealRoots
+  simp only [coeff_C_mul]
   congr 1
-  unfold unscaledPolynomial polynomialFromRealRoots
-  -- Convert List.foldr to Multiset.prod
+  -- Convert to multiset form
   rw [list_foldr_eq_multiset_prod, list_foldr_eq_multiset_prod]
-  -- Simplify to use realProjectionsList coerced to multiset
-  have h1 : (↑(realProjectionsList N θ₁) : Multiset ℝ) = ↑(realProjectionsList N θ₁) := rfl
-  have h2 : (↑(realProjectionsList N θ₂) : Multiset ℝ) = ↑(realProjectionsList N θ₂) := rfl
-  -- Case split on whether k ≤ N
+  -- Factor out the card lemma
+  have h_card (φ : ℝ) : ((realProjectionsList N φ : Multiset ℝ)).card = N := by
+    rw [Multiset.coe_card, card_realProjectionsList]
+  -- Split cases
   by_cases hk_le : k ≤ N
-  · -- When k ≤ N, use Vieta's formula
-    rw [Multiset.prod_X_sub_C_coeff]
-    · rw [Multiset.prod_X_sub_C_coeff]
-      · -- The (-1) power terms are identical, and we need to show esymm are equal
-        congr 1
-        · -- First goal: (-1) powers are equal (follows from card being N)
-          have h_card1 : ((realProjectionsList N θ₁ : Multiset ℝ)).card = N := by
-            rw [Multiset.coe_card, card_realProjectionsList]
-          have h_card2 : ((realProjectionsList N θ₂ : Multiset ℝ)).card = N := by
-            rw [Multiset.coe_card, card_realProjectionsList]
-          rw [h_card1, h_card2]
-        · -- Second goal: esymm are equal
-          -- Handle two subcases: k = N and k < N
-          by_cases hk_eq : k = N
-          · -- When k = N, esymm 0 = 1 for both sides
-            have h_card1 : ((realProjectionsList N θ₁ : Multiset ℝ)).card = N := by
-              rw [Multiset.coe_card, card_realProjectionsList]
-            have h_card2 : ((realProjectionsList N θ₂ : Multiset ℝ)).card = N := by
-              rw [Multiset.coe_card, card_realProjectionsList]
-            rw [h_card1, h_card2, hk_eq]
-            norm_num [Multiset.esymm, Multiset.powersetCard_zero_left]
-          · -- When k < N, apply esymm_rotated_roots_invariant
-            have h_card1 : ((realProjectionsList N θ₁ : Multiset ℝ)).card = N := by
-              rw [Multiset.coe_card, card_realProjectionsList]
-            have h_card2 : ((realProjectionsList N θ₂ : Multiset ℝ)).card = N := by
-              rw [Multiset.coe_card, card_realProjectionsList]
-            rw [h_card1, h_card2]
-            have hk_lt : k < N := Nat.lt_of_le_of_ne hk_le hk_eq
-            exact esymm_rotated_roots_invariant N (N - k) θ₁ θ₂ hN (by omega) (by omega)
-      · rw [Multiset.coe_card, card_realProjectionsList]; exact hk_le
-    · rw [Multiset.coe_card, card_realProjectionsList]
-      exact hk_le
-  · -- When k > N, both coefficients are 0 (natDegree is N)
-    have deg1 : (Multiset.map (fun r => X - C r) (realProjectionsList N θ₁ : Multiset ℝ)).prod.natDegree = N := by
-      rw [Polynomial.natDegree_multiset_prod_X_sub_C_eq_card, Multiset.coe_card, card_realProjectionsList]
-    have deg2 : (Multiset.map (fun r => X - C r) (realProjectionsList N θ₂ : Multiset ℝ)).prod.natDegree = N := by
-      rw [Polynomial.natDegree_multiset_prod_X_sub_C_eq_card, Multiset.coe_card, card_realProjectionsList]
+  · -- k ≤ N: use Vieta's formula
+    rw [Multiset.prod_X_sub_C_coeff (realProjectionsList N φ₁ : Multiset ℝ) (by rwa [h_card]),
+        Multiset.prod_X_sub_C_coeff (realProjectionsList N φ₂ : Multiset ℝ) (by rwa [h_card])]
+    congr 1
+    · rw [h_card, h_card]
+    · by_cases hk_eq : k = N
+      · rw [hk_eq, h_card, h_card]; norm_num [Multiset.esymm, Multiset.powersetCard_zero_left]
+      · rw [h_card, h_card]
+        exact esymm_rotated_roots_invariant N (N - k) φ₁ φ₂ hN (by omega) (by omega)
+  · -- k > N: both coefficients are 0
+    have deg (φ : ℝ) : (Multiset.map (fun r => X - C r)
+        (realProjectionsList N φ : Multiset ℝ)).prod.natDegree = N := by
+      rw [Polynomial.natDegree_multiset_prod_X_sub_C_eq_card, h_card]
     rw [Polynomial.coeff_eq_zero_of_natDegree_lt, Polynomial.coeff_eq_zero_of_natDegree_lt]
-    · rw [deg2]; omega
-    · rw [deg1]; omega
+    · rw [deg]; omega
+    · rw [deg]; omega
 
 /-- The Chebyshev polynomial T_N has degree N for N ≥ 1. -/
 lemma chebyshev_T_degree (N : ℕ) (hN : 0 < N) :
@@ -128,23 +101,23 @@ lemma chebyshev_T_degree (N : ℕ) (hN : 0 < N) :
         rw [Polynomial.degree_sub_eq_left_of_degree_lt h_deg_smaller, h_deg_prod]
 
 /-- The scaled polynomial has the same degree as the Chebyshev polynomial. -/
-lemma scaledPolynomial_degree_eq_chebyshev (N : ℕ) (θ : ℝ) (hN : 0 < N) :
-    (scaledPolynomial N θ).degree = (Polynomial.Chebyshev.T ℝ N).degree := by
+lemma scaledPolynomial_degree_eq_chebyshev (N : ℕ) (φ : ℝ) (hN : 0 < N) :
+    (scaledPolynomial N φ).degree = (Polynomial.Chebyshev.T ℝ N).degree := by
   rw [chebyshev_T_degree N hN]
-  exact scaledPolynomial_degree N θ hN
+  exact scaledPolynomial_degree N φ hN
 
 /-- Evaluating the unscaled polynomial at a projected root gives zero. -/
-lemma unscaledPolynomial_eval_at_projection (N : ℕ) (θ : ℝ) (k : ℕ) (hk : k < N) :
-    (unscaledPolynomial N θ).eval (Real.cos (θ + 2 * π * k / N)) = 0 := by
+lemma unscaledPolynomial_eval_at_projection (N : ℕ) (φ : ℝ) (k : ℕ) (hk : k < N) :
+    (unscaledPolynomial N φ).eval (Real.cos (φ + 2 * π * k / N)) = 0 := by
   unfold unscaledPolynomial
   apply polynomialFromRealRoots_eval_mem
-  exact realProjection_mem_list N θ k hk
+  exact realProjection_mem_list N φ k hk
 
 /-- Evaluating the scaled polynomial at a projected root gives zero. -/
-lemma scaledPolynomial_eval_at_projection (N : ℕ) (θ : ℝ) (k : ℕ) (hk : k < N) :
-    (scaledPolynomial N θ).eval (Real.cos (θ + 2 * π * k / N)) = 0 := by
+lemma scaledPolynomial_eval_at_projection (N : ℕ) (φ : ℝ) (k : ℕ) (hk : k < N) :
+    (scaledPolynomial N φ).eval (Real.cos (φ + 2 * π * k / N)) = 0 := by
   unfold scaledPolynomial
-  rw [eval_mul, unscaledPolynomial_eval_at_projection N θ k hk]
+  rw [eval_mul, unscaledPolynomial_eval_at_projection N φ k hk]
   simp
 
 /-- The Chebyshev polynomial T_N evaluated at cos(φ) equals cos(N·φ). -/
