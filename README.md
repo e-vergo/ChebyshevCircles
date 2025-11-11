@@ -1,296 +1,162 @@
 # Chebyshev Circles
 
-## 🎉 100% COMPLETE - Fully Formalized Proof
-
-Formal Lean 4 proof connecting rotated roots of unity to Chebyshev polynomials.
-
-**Status:** ✅ **COMPLETE** - Zero sorries, zero axioms, production-ready
-
-## Main Theorem
-
-When N-th roots of unity are rotated by angle θ and projected onto the real axis, the polynomial formed from these projections, scaled by 2^(N-1), equals the N-th Chebyshev polynomial of the first kind plus a θ-dependent constant.
+When the N-th roots of unity are rotated by angle φ and projected onto the real axis and then taken to be the roots of a polynomial, after scaling by 2^(N-1) the polynomial formed from these projections equals the N-th Chebyshev polynomial of the first kind plus a φ-dependent constant.
 
 ```lean
-theorem rotated_roots_yield_chebyshev (N : ℕ) (θ : ℝ) (hN : 0 < N) :
-    ∃ (c : ℝ), scaledPolynomial N θ = Polynomial.Chebyshev.T ℝ N + C c
+theorem rotated_roots_yield_chebyshev (N : ℕ) (φ : ℝ) (hN : 0 < N) :
+    ∃ (c : ℝ), scaledPolynomial N φ = Polynomial.Chebyshev.T ℝ N + C c
 ```
 
 **Construction:**
-- Projected roots: `cos(θ + 2πk/N)` for k = 0, ..., N-1
-- Unscaled polynomial: `P(x) = ∏(x - cos(θ + 2πk/N))`
+- Projected roots: `cos(φ + 2πk/N)` for k = 0, ..., N-1
+- Unscaled polynomial: `P(x) = ∏(x - cos(φ + 2πk/N))`
 - Scaled polynomial: `S(x) = 2^(N-1) · P(x)`
-- Result: `S(x) = T_N(x) + c(θ)`
+- Result: `S(x) = T_N(x) + c(φ)`
 
-## Build Status
 
-```
-✅ Build: Clean compilation (2,455 jobs)
-✅ Sorries: 0 (ZERO)
-✅ Axioms: 0 (ZERO)
-✅ Errors: 0 (ZERO)
-✅ Completion: 100%
-```
+## Project Organization
 
-## Project Structure
+The proof is structured into 10 modules totaling 3,457 lines of Lean 4 code:
 
-The formalization is organized into focused, independently-compilable modules:
+| Module | Lines | Purpose |
+|--------|-------|---------|
+| [RootsOfUnity.lean](ChebyshevCircles/RootsOfUnity.lean) | 108 | Root definitions and list properties |
+| [PolynomialConstruction.lean](ChebyshevCircles/PolynomialConstruction.lean) | 541 | Polynomial construction from roots |
+| [TrigonometricIdentities.lean](ChebyshevCircles/TrigonometricIdentities.lean) | 137 | Trigonometric sum identities |
+| [ChebyshevRoots.lean](ChebyshevCircles/ChebyshevRoots.lean) | 235 | Chebyshev root characterization |
+| [PowerSums.lean](ChebyshevCircles/PowerSums.lean) | 705 | Power sum φ-invariance |
+| [NewtonIdentities.lean](ChebyshevCircles/NewtonIdentities.lean) | 317 | Newton's identities framework |
+| [PolynomialProperties.lean](ChebyshevCircles/PolynomialProperties.lean) | 130 | Polynomial degree and coefficient properties |
+| [PowerSumEquality.lean](ChebyshevCircles/PowerSumEquality.lean) | 273 | General power sum equality |
+| [ChebyshevOrthogonality.lean](ChebyshevCircles/ChebyshevOrthogonality.lean) | 538 | Discrete orthogonality relations |
+| [MainTheorem.lean](ChebyshevCircles/MainTheorem.lean) | 473 | Main theorem and supporting results |
 
-```
-ChebyshevCircles/
-├── Basic.lean                      # Placeholder imports (1 line)
-├── RootsOfUnity.lean               # ✅ Root definitions and properties (104 lines)
-├── PolynomialConstruction.lean     # ✅ Polynomial construction (553 lines)
-├── TrigonometricIdentities.lean    # ✅ Fundamental trig sums (140 lines)
-├── ChebyshevRoots.lean             # ✅ Chebyshev root characterization (242 lines)
-├── PowerSums.lean                  # ✅ Power sum θ-invariance (769 lines)
-├── NewtonIdentities.lean           # ✅ Newton's identities infrastructure (297 lines)
-├── PolynomialProperties.lean       # ✅ Degree and coefficient properties (157 lines)
-├── PowerSumEquality.lean           # ✅ Power sum equality for all j < N (1,277 lines)
-├── ChebyshevOrthogonality.lean     # ✅ Discrete orthogonality (518 lines)
-└── MainTheorem.lean                # ✅ Main results (580 lines)
-```
+## Mathematical Content
 
-**Total:** ~4,700 lines of fully proven Lean 4 code across 11 modules
+### Core Definitions
 
-## Module Status Summary
+**Rotated Roots** ([RootsOfUnity.lean](ChebyshevCircles/RootsOfUnity.lean))
+- `rotatedRootsOfUnity N φ`: N-th roots of unity rotated by angle φ
+- `realProjections N φ`: Real parts of rotated roots as a multiset
+- `realProjectionsList N φ`: List representation for computation
 
-| Module | Status | Lines | Sorries | Purpose |
-|--------|--------|-------|---------|---------|
-| [RootsOfUnity.lean](ChebyshevCircles/RootsOfUnity.lean) | ✅ Complete | 104 | 0 | Root definitions, list properties, cardinality |
-| [PolynomialConstruction.lean](ChebyshevCircles/PolynomialConstruction.lean) | ✅ Complete | 553 | 0 | Polynomial construction, degree, leading coefficient |
-| [TrigonometricIdentities.lean](ChebyshevCircles/TrigonometricIdentities.lean) | ✅ Complete | 140 | 0 | Trig sums using roots of unity |
-| [ChebyshevRoots.lean](ChebyshevCircles/ChebyshevRoots.lean) | ✅ Complete | 242 | 0 | Root characterization of T_N |
-| [PowerSums.lean](ChebyshevCircles/PowerSums.lean) | ✅ Complete | 769 | 0 | θ-invariance via binomial expansion |
-| [NewtonIdentities.lean](ChebyshevCircles/NewtonIdentities.lean) | ✅ Complete | 297 | 0 | Newton's identities, esymm invariance |
-| [PolynomialProperties.lean](ChebyshevCircles/PolynomialProperties.lean) | ✅ Complete | 157 | 0 | Degree lemmas, constant term variance |
-| [PowerSumEquality.lean](ChebyshevCircles/PowerSumEquality.lean) | ✅ Complete | 1,277 | 0 | General power sum equality (all j < N) |
-| [ChebyshevOrthogonality.lean](ChebyshevCircles/ChebyshevOrthogonality.lean) | ✅ Complete | 518 | 0 | Discrete orthogonality framework |
-| [MainTheorem.lean](ChebyshevCircles/MainTheorem.lean) | ✅ Complete | 580 | 0 | Leading coeff, coefficient matching, main theorem |
-| **Total** | **✅ 100% Complete** | **~4,700** | **0** | |
+**Polynomial Construction** ([PolynomialConstruction.lean](ChebyshevCircles/PolynomialConstruction.lean))
+- `polynomialFromRealRoots`: Construct polynomial from list of real roots
+- `unscaledPolynomial N φ`: Monic polynomial with rotated roots as zeros
+- `scaledPolynomial N φ`: Unscaled polynomial multiplied by 2^(N-1)
 
-## What We Built
+**Chebyshev Roots** ([ChebyshevRoots.lean](ChebyshevCircles/ChebyshevRoots.lean))
+- `chebyshevRoot N k`: The k-th Chebyshev root `cos((2k+1)π/(2N))`
+- Full characterization of zeros of T_N on [-1, 1]
 
-### Core Infrastructure (100% Complete)
+### Key Results
 
-**[TrigonometricIdentities.lean](ChebyshevCircles/TrigonometricIdentities.lean)** - ✅ COMPLETE
-- `sum_cos_roots_of_unity`: Sum of cosines at N equally-spaced angles equals 0
-- `sum_cos_multiple_rotated_roots`: Generalized sum for multiples m·θ
-- `list_foldr_eq_multiset_prod`: List.foldr conversion to Multiset.prod
-- `cos_cube_formula`: Power reduction formula for cos³
+**Trigonometric Identities** ([TrigonometricIdentities.lean](ChebyshevCircles/TrigonometricIdentities.lean))
+- `sum_cos_roots_of_unity`: Sum of cosines over N equally-spaced angles vanishes
+- `sum_cos_multiple_rotated_roots`: Generalization to integer multiples
 
-**[RootsOfUnity.lean](ChebyshevCircles/RootsOfUnity.lean)** - ✅ COMPLETE
-- Definitions: `rotatedRootsList`, `realProjectionsList`
-- `realProjectionsList_sum`: List sum to Finset sum conversion
-- `realProjectionsList_powersum`: Power sum conversion for arbitrary j
-- `card_realProjectionsList`: Cardinality equals N
-- `realProjection_mem_list`: Membership proofs
+**Power Sum Invariance** ([PowerSums.lean](ChebyshevCircles/PowerSums.lean))
+- `powerSumCos_invariant`: For 0 < j < N, the sum ∑ cos(φ + 2πk/N)^j is independent of φ
+- Proof uses binomial expansion and geometric sum cancellation
 
-**[PolynomialConstruction.lean](ChebyshevCircles/PolynomialConstruction.lean)** - ✅ COMPLETE
-- Construction: `polynomialFromRealRoots`, `unscaledPolynomial`, `scaledPolynomial`
-- `scaledPolynomial_degree`: Degree equals N
-- `scaledPolynomial_leadingCoeff`: Leading coefficient is 2^(N-1)
-- `polynomialFromRealRoots_eval_mem`: Root evaluation
-
-**[ChebyshevRoots.lean](ChebyshevCircles/ChebyshevRoots.lean)** - ✅ COMPLETE
-- `chebyshevRoot`: Definition of k-th Chebyshev root cos((2k+1)π/(2N))
-- `chebyshev_T_eval_chebyshevRoot`: T_N vanishes at Chebyshev roots ✅
-- `chebyshevRoots_distinct`: Pairwise distinctness ✅
-- `chebyshev_T_eval_eq_zero_iff`: Full root characterization ✅
-
-**[PowerSums.lean](ChebyshevCircles/PowerSums.lean)** - ✅ COMPLETE
-- `powerSumCos_invariant`: General θ-invariance theorem via binomial expansion ✅
-- Power reduction formulas: cos², cos³, cos⁴, cos⁵, cos⁶, cos¹⁰ ✅
-- Helper lemmas for complex exponentials and binomial coefficients
-- All cases fully proven using trigonometric identities and roots of unity
-
-**[NewtonIdentities.lean](ChebyshevCircles/NewtonIdentities.lean)** - ✅ COMPLETE
-- `multiset_newton_identity`: Newton's identities for multisets
+**Newton's Identities** ([NewtonIdentities.lean](ChebyshevCircles/NewtonIdentities.lean))
 - `esymm_eq_of_psum_eq`: Equal power sums imply equal elementary symmetric functions
-- `esymm_rotated_roots_invariant`: θ-invariant power sums imply θ-invariant coefficients
-- Critical bridge from power sum invariance to coefficient invariance
+- `esymm_rotated_roots_invariant`: Polynomial coefficients (except constant term) are φ-invariant
 
-**[PolynomialProperties.lean](ChebyshevCircles/PolynomialProperties.lean)** - ✅ COMPLETE
-- `constant_term_only_varies`: Non-constant coefficients are θ-invariant
-- `chebyshev_T_degree`: T_N has degree N for N ≥ 1
-- `scaledPolynomial_degree_eq_chebyshev`: Degree matching
-- `chebyshev_eval_cos`: T_N(cos φ) = cos(N·φ)
+**Discrete Orthogonality** ([ChebyshevOrthogonality.lean](ChebyshevOrthogonality.lean))
+- `sum_cos_chebyshev_angles_vanishes`: Odd frequency terms vanish via involution pairing
+- `sum_cos_chebyshev_angles_even_vanishes`: Even frequency terms vanish via geometric sums
+- `binomial_terms_vanish_chebyshev`: All non-constant binomial expansion terms cancel
 
-**[PowerSumEquality.lean](ChebyshevCircles/PowerSumEquality.lean)** - ✅ COMPLETE
-- `powersum_j1_equality` through `powersum_j6_equality`: Explicit base cases ✅
-- `general_powersum_equality`: **General theorem for ALL j < N** ✅
-  - Uses binomial expansion + discrete orthogonality
-  - Works for arbitrary N and j (not just specific cases)
-  - No sorries in the main theorem
-- Helper value lemmas: `rotated_roots_powersum_value`, `chebyshev_roots_powersum_value`
+**Power Sum Equality** ([PowerSumEquality.lean](ChebyshevCircles/PowerSumEquality.lean))
+- `general_powersum_equality`: For all 0 < j < N, power sums over rotated roots equal power sums over Chebyshev roots
+- Closed-form value lemmas for both root systems
 
-**[ChebyshevOrthogonality.lean](ChebyshevCircles/ChebyshevOrthogonality.lean)** - ✅ COMPLETE (NEW MODULE)
-- `sum_exp_chebyshev_angles`: Factorization of exponential sums ✅
-- `sum_cos_chebyshev_angles_vanishes`: Odd multiplier vanishing via involution pairing ✅
-- `sum_cos_chebyshev_angles_even_vanishes`: Even multiplier vanishing via geometric sums ✅
-- `sum_cos_pow_chebyshev_binomial`: Binomial expansion for Chebyshev roots ✅
-- `binomial_terms_vanish_chebyshev`: Non-constant terms vanish ✅
-- Complete discrete orthogonality framework for Chebyshev angles
+**Polynomial Properties** ([PolynomialProperties.lean](ChebyshevCircles/PolynomialProperties.lean))
+- `constant_term_only_varies`: All coefficients except the constant term are φ-independent
+- Degree and leading coefficient lemmas
 
-### Main Results (MainTheorem.lean) - ✅ COMPLETE
+**Main Results** ([MainTheorem.lean](ChebyshevCircles/MainTheorem.lean))
+- `chebyshev_T_leadingCoeff`: Leading coefficient of T_N is 2^(N-1) for N ≥ 1
+- `scaledPolynomial_matches_chebyshev_at_zero`: All non-constant coefficients match at φ=0
+- `rotated_roots_coeffs_match_chebyshev`: Coefficients match for all φ
+- `rotated_roots_yield_chebyshev`: Main theorem
 
-**[MainTheorem.lean](ChebyshevCircles/MainTheorem.lean)** - ✅ ALL PROOFS COMPLETE
+## Proof Architecture
 
-Completed proofs:
-- `chebyshev_T_leadingCoeff`: Leading coefficient of T_N is 2^(N-1) ✅
-- `rotated_roots_yield_chebyshev`: Main theorem ✅
-- `rotated_roots_coeffs_match_chebyshev`: All k > 0 coefficients match ✅
-- `scaledPolynomial_matches_chebyshev_at_zero`: Coefficient matching at θ=0 ✅
-  - N = 1: Complete ✅
-  - N = 2: Complete ✅
-  - N = 3: Complete ✅
-  - **N ≥ 4: Complete ✅** (via general power sum equality)
+The proof establishes that the constant term is the only coefficient varying with rotation angle φ:
 
-## The Breakthrough: General Power Sum Equality
+1. **Power sum φ-invariance**: For rotated roots at `cos(φ + 2πk/N)`, power sums ∑ cos^j are independent of φ for 0 < j < N
 
-The key to completing the proof was developing a **unified framework** for proving power sum equality across both root systems:
+2. **Discrete orthogonality**: For Chebyshev roots at `cos((2k+1)π/(2N))`, binomial expansion terms vanish via:
+   - Odd frequencies: Involution pairing using cos(π - x) = -cos(x)
+   - Even frequencies: Geometric sum cancellation
 
-### Mathematical Insight
+3. **Power sum equality**: Both root systems yield identical power sum values for all 0 < j < N
 
-For rotated roots `cos(2πk/N)` and Chebyshev roots `cos((2k+1)π/(2N))`, we needed:
+4. **Newton's identities**: Power sums determine elementary symmetric functions, which determine polynomial coefficients via Vieta's formulas
 
-```
-∑_{k=0}^{N-1} cos(2πk/N)^j = ∑_{k=0}^{N-1} cos((2k+1)π/(2N))^j
-```
+5. **Coefficient matching**: Since power sums match and determine all non-constant coefficients, the polynomials differ only by a constant
 
-for ALL 0 < j < N.
+## Proof Techniques
 
-### The Solution
+The formalization employs:
 
-**For Rotated Roots (Already Known):**
-- Use binomial expansion: `cos^j(x) = sum of cos(mx)` terms
-- Apply geometric sum cancellation for non-zero frequencies
-- Result: Only constant term survives
-
-**For Chebyshev Roots (New Work):**
-- **Odd multipliers (m odd):** Involution pairing
-  - Chebyshev angles satisfy: `θ_k + θ_{N-1-k} = π`
-  - For odd m: `cos(m·θ_{N-1-k}) = -cos(m·θ_k)`
-  - Terms cancel in pairs via `Finset.sum_involution`
-
-- **Even multipliers (m even):** Geometric sums
-  - Express as complex exponentials: `exp(i·m·(2k+1)π/(2N))`
-  - Factor into primitive roots of unity
-  - Apply `mul_geom_sum` with appropriate root conditions
-
-### Infrastructure Built
-
-1. **ChebyshevOrthogonality.lean** (~500 lines)
-   - Discrete orthogonality lemmas for both odd and even frequencies
-   - Binomial expansion framework adapted to Chebyshev angles
-   - Proof that all non-constant frequency terms vanish
-
-2. **PowerSumEquality.lean** (extended to ~1,300 lines)
-   - Base cases j=1,2,3,4,5,6 proven explicitly
-   - General theorem `general_powersum_equality` for all j < N
-   - Helper lemmas computing exact power sum values
-
-3. **MainTheorem.lean** (completed)
-   - Integration of general power sum equality
-   - Application of Newton's identities
-   - Final coefficient matching for N ≥ 4
-
-## Technical Achievements
-
-### Proof Techniques Used
-
-- **Binomial Theorem** (De Moivre's formula for cos^j)
-- **Discrete Fourier Analysis** (roots of unity, geometric sums)
-- **Involution Pairing** (symmetry arguments for Chebyshev angles)
-- **Newton's Identities** (power sums → elementary symmetric functions)
-- **Primitive Root Theory** (IsPrimitiveRoot API from Mathlib)
-- **Complex Exponentials** (converting trigonometric to algebraic problems)
-
-### Key Mathlib Lemmas Leveraged
-
-- `IsPrimitiveRoot.geom_sum_eq_zero`: Geometric sum vanishing
-- `mul_geom_sum`: Geometric series formula
-- `Finset.sum_involution`: Pairing/cancellation technique
-- `Finset.sum_bij`: Sum reindexing
-- `Multiset.card_le_card`, `Nat.le_antisymm`: Cardinality arguments
-- `Real.cos_int_mul_pi_sub`: Cosine angle formulas
-
-### Code Quality Metrics
-
-- ✅ **Zero axioms**: All proofs from first principles
-- ✅ **Zero sorries**: Complete formalization
-- ✅ **Mathlib standards**: Follows naming conventions, proof style
-- ✅ **Modular design**: Each file has clear purpose and dependencies
-- ✅ **Well-documented**: Extensive comments explaining strategies
-- ✅ **Type-checked**: All 2,455 compilation units successful
-
-## Theory Overview
-
-### The Main Mathematical Insight
-
-The constant term is the only coefficient that varies with rotation angle θ. All other coefficients are θ-invariant because:
-
-1. **Power sums are θ-invariant:** ∑ cos(θ + 2πk/N)^j is independent of θ for 0 < j < N (PowerSums.lean)
-2. **Power sums equal for both root systems:** Proven via discrete orthogonality (PowerSumEquality.lean + ChebyshevOrthogonality.lean)
-3. **Newton's identities:** Express elementary symmetric functions in terms of power sums (NewtonIdentities.lean)
-4. **Vieta's formulas:** Relate polynomial coefficients to elementary symmetric functions
-5. **Conclusion:** Coefficients for k > 0 are determined solely by the (equal) power sums
-
-Therefore, `scaledPolynomial N θ` and `Chebyshev.T ℝ N` can only differ by a constant term.
-
-## Development Workflow
-
-### Build and Test
-```bash
-# Full build
-lake build
-# Output: Build completed successfully (2455 jobs)
-
-# Check for sorries (should find 0)
-grep -r "sorry" ChebyshevCircles/*.lean | grep -v "^--"
-
-# Run visualization
-python3 main.py  # Creates chebyshev_animation.gif
-```
-
-### Project Statistics
-
-- **Total Lean Code:** ~4,700 lines
-- **Modules:** 11
-- **Compilation Units:** 2,455
-- **Sorries:** 0
-- **Axioms:** 0
-- **Development Time:** Multiple sessions across several weeks
-- **Proof Complexity:** Research-level harmonic analysis
+- **Binomial expansion** via De Moivre's formula for cos^j
+- **Discrete Fourier analysis** using roots of unity and geometric sums
+- **Involution arguments** exploiting symmetry of Chebyshev angles
+- **Newton's identities** connecting power sums to elementary symmetric functions
+- **Primitive root theory** from Mathlib's cyclotomic infrastructure
+- **Complex exponential methods** for trigonometric sum evaluation
 
 ## Technical Environment
 
-- **Lean Version:** 4.25.0-rc2
-- **Mathlib Imports:**
-  - `RingTheory.Polynomial.Chebyshev`
-  - `Analysis.SpecialFunctions.Trigonometric.Chebyshev`
-  - `RingTheory.Polynomial.Vieta`
-  - `RingTheory.MvPolynomial.Symmetric.NewtonIdentities`
-  - `NumberTheory.Cyclotomic.PrimitiveRoots`
-  - `Analysis.SpecialFunctions.Trigonometric.Complex`
-- **Quality:** Production-ready, Mathlib submission quality
+**Lean Version:** 4.25.0-rc2
 
-## What This Proves
+**Key Mathlib Dependencies:**
+- `RingTheory.Polynomial.Chebyshev`
+- `Analysis.SpecialFunctions.Trigonometric.Chebyshev`
+- `RingTheory.Polynomial.Vieta`
+- `RingTheory.MvPolynomial.Symmetric.NewtonIdentities`
+- `NumberTheory.Cyclotomic.PrimitiveRoots`
+- `Analysis.SpecialFunctions.Trigonometric.Complex`
 
-This formalization establishes a rigorous connection between:
+**Build Information:**
+```bash
+# Full project build
+lake build
+# Expected: Build completed successfully (2454 jobs)
 
-- **Algebraic structures** (roots of unity)
-- **Trigonometric functions** (cosines at special angles)
-- **Orthogonal polynomials** (Chebyshev polynomials of the first kind)
-- **Harmonic analysis** (discrete orthogonality relations)
+# Verify no sorries
+grep -r "sorry" ChebyshevCircles/*.lean | grep -v "^--"
+# Expected: No output
+```
 
-The proof demonstrates that complex mathematical identities involving multiple domains can be fully formalized in dependent type theory, verified by computer, and made accessible for future mathematical work.
+## Documentation
 
-## Acknowledgments
+All modules include:
+- Module-level docstrings describing purpose and main results
+- Declaration-level docstrings for all public definitions, lemmas, and theorems
+- Implementation notes explaining proof strategies
+- Full adherence to Mathlib style guidelines
 
-This project represents a complete formalization effort, demonstrating that deep mathematical results requiring harmonic analysis, binomial expansions, and discrete orthogonality can be rigorously proven in Lean 4 without gaps, shortcuts, or axioms.
+## Code Quality
 
-**Status: COMPLETE** ✅
+- Zero axioms beyond Lean's core foundations
+- Zero sorry placeholders
+- Complete type-checked verification
+- Modular architecture with clear dependencies
+- Helper lemmas extracted for complex case analysis
+- All line lengths within 100-character limit
+- Consistent naming conventions following Mathlib standards
 
----
+## Significance
 
-*"The proof is complete when there are no sorries left."* - Achieved 2025-01-11
+This formalization provides a computer-verified proof connecting:
+
+- Algebraic structures (roots of unity, polynomial rings)
+- Trigonometric functions (cosine at special angles)
+- Orthogonal polynomials (Chebyshev polynomials)
+- Harmonic analysis (discrete orthogonality relations)
+
+The proof demonstrates that research-level results involving multiple mathematical domains can be completely formalized in dependent type theory with full mechanical verification.
