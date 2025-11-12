@@ -48,7 +48,8 @@ jobs:
             texlive-latex-extra \
             texlive-fonts-recommended \
             texlive-fonts-extra \
-            texlive-science
+            texlive-science \
+            latexmk
 
       - name: Install Python dependencies
         run: |
