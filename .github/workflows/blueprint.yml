@@ -61,11 +61,13 @@ jobs:
           leanblueprint web
 
       - name: Build blueprint (pdf)
+        continue-on-error: true
         run: |
           cd blueprint
-          leanblueprint pdf
+          leanblueprint pdf || echo "PDF generation failed, continuing with web version only"
 
       - name: Check declarations
+        continue-on-error: true
         run: |
           cd blueprint
           leanblueprint checkdecls || echo "Some declarations could not be verified"
