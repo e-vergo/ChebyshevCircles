@@ -1,7 +1,5 @@
 /.lake
 /.venv
-/.agent_tasks
-/.claude
 /.github
 
 # LaTeX auxiliary files (keep the PDF)
