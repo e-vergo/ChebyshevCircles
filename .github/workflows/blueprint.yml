@@ -72,11 +72,24 @@ jobs:
           cd blueprint
           leanblueprint checkdecls || echo "Some declarations could not be verified"
 
+      - name: List generated files
+        run: |
+          echo "=== Files in blueprint/src/web/ ==="
+          ls -la blueprint/src/web/ || echo "Web directory not found"
+          echo "=== Files in blueprint/src/print/ ==="
+          ls -la blueprint/src/print/ || echo "Print directory not found"
+
       - name: Copy blueprint to docs
         run: |
           mkdir -p _site/blueprint
-          cp -r blueprint/src/web/* _site/blueprint/ || echo "Web build not found"
-          cp blueprint/src/print/*.pdf _site/blueprint/ || echo "PDF not found"
+          if [ -d "blueprint/src/web" ] && [ "$(ls -A blueprint/src/web)" ]; then
+            cp -r blueprint/src/web/* _site/blueprint/
+            echo "Blueprint web files copied successfully"
+          else
+            echo "ERROR: Web build not found or empty"
+            exit 1
+          fi
+          cp blueprint/src/print/*.pdf _site/blueprint/ || echo "PDF not found (non-fatal)"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
