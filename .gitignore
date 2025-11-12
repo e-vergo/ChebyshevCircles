@@ -1,6 +1,5 @@
 /.lake
 /.venv
-/.github
 
 # LaTeX auxiliary files (keep the PDF)
 paper/*.aux

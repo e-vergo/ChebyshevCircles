@@ -1,0 +1,259 @@
+name: Build and Deploy Documentation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Lean
+        uses: leanprover/lean-action@v1
+        with:
+          auto-build: false
+
+      - name: Get Lean build cache
+        run: lake exe cache get || true
+
+      - name: Build Lean project
+        run: lake build
+
+      # Build API Documentation
+      - name: Build API documentation
+        run: |
+          lake -R -Kenv=dev build Mathlib:docs
+          # doc-gen4 outputs to .lake/build/doc
+          mkdir -p _site/docs
+          if [ -d ".lake/build/doc" ]; then
+            cp -r .lake/build/doc/* _site/docs/
+            echo "API documentation built successfully"
+          else
+            echo "WARNING: API documentation not found"
+          fi
+
+      # Build Blueprint
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz libgraphviz-dev \
+            texlive-latex-base \
+            texlive-latex-extra \
+            texlive-fonts-recommended \
+            texlive-fonts-extra \
+            texlive-science \
+            latexmk
+
+      - name: Install Python dependencies
+        run: pip install leanblueprint
+
+      - name: Build blueprint (web)
+        run: |
+          cd blueprint
+          leanblueprint web
+
+      - name: Build blueprint (pdf)
+        continue-on-error: true
+        run: |
+          cd blueprint
+          leanblueprint pdf || echo "PDF generation failed, continuing with web version only"
+
+      - name: Check declarations
+        continue-on-error: true
+        run: |
+          cd blueprint
+          leanblueprint checkdecls || echo "Some declarations could not be verified"
+
+      - name: Copy blueprint to deployment directory
+        run: |
+          mkdir -p _site/blueprint
+          if [ -d "blueprint/src/web" ] && [ "$(ls -A blueprint/src/web)" ]; then
+            cp -r blueprint/src/web/* _site/blueprint/
+            echo "Blueprint web files copied successfully"
+          else
+            echo "ERROR: Blueprint web build not found or empty"
+            exit 1
+          fi
+          cp blueprint/src/print/*.pdf _site/blueprint/ 2>/dev/null || echo "PDF not available (non-fatal)"
+
+      # Create landing page
+      - name: Create landing page
+        run: |
+          cat > _site/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Chebyshev Circles - Formal Verification</title>
+              <style>
+                  * {
+                      margin: 0;
+                      padding: 0;
+                      box-sizing: border-box;
+                  }
+                  body {
+                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                      line-height: 1.6;
+                      color: #333;
+                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                      min-height: 100vh;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      padding: 20px;
+                  }
+                  .container {
+                      max-width: 800px;
+                      background: white;
+                      border-radius: 12px;
+                      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                      padding: 50px;
+                      text-align: center;
+                  }
+                  h1 {
+                      font-size: 2.5em;
+                      margin-bottom: 20px;
+                      color: #667eea;
+                  }
+                  .subtitle {
+                      font-size: 1.2em;
+                      color: #666;
+                      margin-bottom: 40px;
+                  }
+                  .theorem {
+                      background: #f8f9fa;
+                      border-left: 4px solid #667eea;
+                      padding: 20px;
+                      margin: 30px 0;
+                      text-align: left;
+                      font-family: 'Courier New', monospace;
+                      font-size: 0.95em;
+                      border-radius: 4px;
+                  }
+                  .links {
+                      display: grid;
+                      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                      gap: 20px;
+                      margin-top: 40px;
+                  }
+                  .link-card {
+                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                      color: white;
+                      padding: 30px 20px;
+                      border-radius: 8px;
+                      text-decoration: none;
+                      transition: transform 0.2s, box-shadow 0.2s;
+                      display: flex;
+                      flex-direction: column;
+                      align-items: center;
+                      justify-content: center;
+                  }
+                  .link-card:hover {
+                      transform: translateY(-5px);
+                      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                  }
+                  .link-card h2 {
+                      font-size: 1.5em;
+                      margin-bottom: 10px;
+                  }
+                  .link-card p {
+                      font-size: 0.9em;
+                      opacity: 0.9;
+                  }
+                  .github-link {
+                      margin-top: 30px;
+                      padding-top: 30px;
+                      border-top: 1px solid #eee;
+                  }
+                  .github-link a {
+                      color: #667eea;
+                      text-decoration: none;
+                      font-weight: 500;
+                  }
+                  .github-link a:hover {
+                      text-decoration: underline;
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <h1>Chebyshev Circles</h1>
+                  <p class="subtitle">Formal Verification of Rotated Roots of Unity</p>
+
+                  <div class="theorem">
+                      <strong>theorem rotated_roots_yield_chebyshev</strong> (N : ℕ) (φ : ℝ) (hN : 0 < N) :<br>
+                      &nbsp;&nbsp;∃ (c : ℝ), scaledPolynomial N φ = Polynomial.Chebyshev.T ℝ N + C c
+                  </div>
+
+                  <p>
+                      When the N-th roots of unity are rotated by angle φ and projected onto the real axis,
+                      the scaled polynomial formed from these projections equals the N-th Chebyshev polynomial
+                      of the first kind plus a φ-dependent constant.
+                  </p>
+
+                  <div class="links">
+                      <a href="./blueprint/" class="link-card">
+                          <h2>Blueprint</h2>
+                          <p>Interactive formalization map and dependency graph</p>
+                      </a>
+
+                      <a href="./docs/" class="link-card">
+                          <h2>API Documentation</h2>
+                          <p>Generated Lean 4 documentation for all modules</p>
+                      </a>
+                  </div>
+
+                  <div class="github-link">
+                      <p>
+                          Full source code, research paper, and visualizations available on
+                          <a href="https://github.com/e-vergo/ChebyshevCircles" target="_blank">GitHub</a>
+                      </p>
+                  </div>
+              </div>
+          </body>
+          </html>
+          EOF
+
+      - name: List deployment contents
+        run: |
+          echo "=== Deployment structure ==="
+          find _site -type f | head -50
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
