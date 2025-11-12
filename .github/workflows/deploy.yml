@@ -38,7 +38,7 @@ jobs:
       # Build API Documentation
       - name: Build API documentation
         run: |
-          lake -R -Kenv=dev build Mathlib:docs
+          lake -R -Kenv=dev build :docs
           # doc-gen4 outputs to .lake/build/doc
           mkdir -p _site/docs
           if [ -d ".lake/build/doc" ]; then
