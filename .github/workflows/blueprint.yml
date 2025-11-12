@@ -27,7 +27,13 @@ jobs:
       - name: Install Lean
         uses: leanprover/lean-action@v1
         with:
-          auto-build: true
+          auto-build: false
+
+      - name: Get Lean build cache
+        run: lake exe cache get || true
+
+      - name: Build Lean project (skip docgen)
+        run: lake build
 
       - name: Set up Python
         uses: actions/setup-python@v5
