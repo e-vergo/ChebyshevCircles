@@ -20,3 +20,8 @@ paper/missfont.log
 __pycache__/
 *.pyc
 *.pyo
+
+# Blueprint generated files
+blueprint/src/web/
+blueprint/src/print/
+blueprint/*.pdf

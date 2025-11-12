@@ -1,0 +1,41 @@
+\documentclass[11pt]{report}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{mathtools}
+\usepackage{tikz-cd}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{enumitem}
+
+% Theorem environments
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\title{Rotated Roots of Unity and Chebyshev Polynomials:\\
+A Geometric Construction\\
+\large Formalization Blueprint}
+\author{Eric Vergo}
+\date{\today}
+
+% Include common macros
+\input{macros/common}
+% Include print-specific macros
+\input{macros/print}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+
+\input{content}
+
+\end{document}

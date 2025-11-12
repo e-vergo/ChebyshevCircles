@@ -63,11 +63,12 @@ The result is always T_N(x) plus a constant. This provides a bridge between:
 
 ## Project Organization
 
-This project comprises three main components:
+This project comprises four main components:
 
 1. **Research Paper** (`paper/`) - A traditional mathematics paper presenting the main theorem and complete proofs in classical mathematical notation (14 pages, LaTeX)
 2. **Formal Verification** (`ChebyshevCircles/`) - Complete Lean 4 formalization across 10 modules totaling 3,457 lines
-3. **Visualizations** (Python scripts) - Animated GIFs demonstrating the geometric construction
+3. **Blueprint** (`blueprint/`) - Interactive documentation showing the dependency structure and formalization status
+4. **Visualizations** (Python scripts) - Animated GIFs demonstrating the geometric construction
 
 ### Research Paper
 
@@ -130,6 +131,24 @@ This is the discrete analog of continuous Fourier orthogonality.
 - Proving non-degeneracy of roots (no duplicates) for polynomial construction
 - Managing index arithmetic modulo N in discrete sums
 - Careful degree tracking to apply Newton's identities correctly
+
+### Blueprint
+
+An interactive formalization blueprint is available in the `blueprint/` directory:
+
+- **Blueprint:** [View online](https://e-vergo.github.io/ChebyshevCircles/blueprint/) (once deployed)
+- **View Locally:** Run `./view_blueprint.sh` from the project root (automatically builds and serves)
+- **Features:**
+  - Dependency graph visualization showing how lemmas connect
+  - Formalization status tracking (which theorems are proven)
+  - Cross-references between mathematical exposition and Lean code
+  - Interactive navigation through the proof structure
+- **Manual Building:** See [blueprint/README.md](blueprint/README.md) for detailed instructions
+
+The blueprint provides a "map" of the formalization, making it easier to understand the proof architecture and see which parts correspond to the paper. It's particularly useful for:
+- Understanding the dependency structure before diving into the code
+- Tracking formalization progress for contributors
+- Bridging between traditional mathematics and formal proofs
 
 ## Prerequisites
 
@@ -199,6 +218,14 @@ open paper/chebyshev_circles.pdf
 # Compile from source (requires LaTeX)
 cd paper
 make
+```
+
+**View the blueprint:**
+```bash
+# Quick start - automatically builds and serves
+./view_blueprint.sh
+
+# Then open your browser to http://localhost:8000
 ```
 
 **Explore the Lean proofs:**
