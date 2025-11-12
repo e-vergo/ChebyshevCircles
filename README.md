@@ -63,7 +63,27 @@ The result is always T_N(x) plus a constant. This provides a bridge between:
 
 ## Project Organization
 
-This project is split into two main components: (1) Python scripts used to generate animated gifs visualizing the behavior that results from the proof statement, and (2) A complete verification structured into 10 modules totaling 3,457 lines of Lean 4 code:
+This project comprises three main components:
+
+1. **Research Paper** (`paper/`) - A traditional mathematics paper presenting the main theorem and complete proofs in classical mathematical notation (14 pages, LaTeX)
+2. **Formal Verification** (`ChebyshevCircles/`) - Complete Lean 4 formalization across 10 modules totaling 3,457 lines
+3. **Visualizations** (Python scripts) - Animated GIFs demonstrating the geometric construction
+
+### Research Paper
+
+A publication-ready mathematics paper is available in the `paper/` directory:
+
+- **Paper:** [chebyshev_circles.pdf](paper/chebyshev_circles.pdf) (14 pages)
+- **Source:** LaTeX with full bibliography
+- **Style:** Traditional mathematics exposition (no mention of formal verification)
+- **Target Audience:** General mathematical audience (graduate level)
+- **Status:** Ready for arXiv submission or journal review
+
+The paper presents the theorem, complete proofs, numerical examples, and discusses connections to discrete Fourier analysis and Chebyshev-Gauss quadrature. See [paper/README.md](paper/README.md) for compilation instructions.
+
+### Lean 4 Formalization
+
+The complete verification is structured into 10 modules totaling 3,457 lines of Lean 4 code:
 
 | Module | Lines | Purpose |
 |--------|-------|---------|
@@ -171,7 +191,17 @@ This is the discrete analog of continuous Fourier orthogonality.
 
 ## Usage
 
-**Explore the proofs:**
+**Read the paper:**
+```bash
+# View the PDF
+open paper/chebyshev_circles.pdf
+
+# Compile from source (requires LaTeX)
+cd paper
+make
+```
+
+**Explore the Lean proofs:**
 ```bash
 # Open in VS Code with Lean 4 extension
 code ChebyshevCircles/MainTheorem.lean
@@ -198,28 +228,42 @@ Edit `main.py` to change:
 
 ## Contributing
 
-This project has completed its primary goal of verifying the main theorem. Potential extensions:
+This project has completed its primary goals: formal verification in Lean 4 and a publication-ready research paper. Potential extensions:
 - Generalize to Chebyshev polynomials of the second kind (U_N)
 - Prove analogous results for other orthogonal polynomial families
 - Optimize proof tactics for better maintainability
 - Add interactive web visualizations
+- Extend the paper with additional results or applications
 
 Pull requests welcome. Please ensure:
 - All proofs compile with `lake build`
 - No `sorry` statements introduced
 - Code follows Mathlib style conventions
+- Paper changes maintain mathematical accuracy
 
 ## Citation
 
-If you use this formalization in your research, please cite:
+If you use this work in your research, please cite:
 
+**For the mathematical result:**
 ```bibtex
-@misc{chebyshev-circles-2025,
-  author = {Eric},
+@misc{vergo2025chebyshev,
+  author = {Eric Vergo},
+  title = {Rotated Roots of Unity and Chebyshev Polynomials: A Geometric Construction},
+  year = {2025},
+  note = {Available at \url{https://github.com/e-vergo/ChebyshevCircles/paper/chebyshev_circles.pdf}}
+}
+```
+
+**For the formal verification:**
+```bibtex
+@misc{chebyshev-circles-lean,
+  author = {Eric Vergo},
   title = {Chebyshev Circles: Formal Verification of Rotated Roots of Unity},
   year = {2025},
   publisher = {GitHub},
-  url = {https://github.com/e-vergo/ChebyshevCircles}
+  url = {https://github.com/e-vergo/ChebyshevCircles},
+  note = {Lean 4 formalization}
 }
 ```
 

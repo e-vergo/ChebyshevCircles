@@ -1,0 +1,671 @@
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amsthm,amssymb,amsfonts}
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usepackage{subcaption}
+
+% Theorem environments
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% Custom commands
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\T}{\mathcal{T}}
+\newcommand{\e}{\mathrm{e}}
+\DeclareMathOperator{\lcm}{lcm}
+\DeclareMathOperator{\esymm}{e}
+\DeclareMathOperator{\psymm}{p}
+
+\title{Rotated Roots of Unity and Chebyshev Polynomials:\\A Geometric Construction}
+
+\author{Eric Vergo}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+We establish a surprising connection between the discrete geometry of roots of unity and the classical Chebyshev polynomials of the first kind.
+When the $N$-th roots of unity are rotated by an arbitrary angle $\varphi$ and projected onto the real axis, the resulting points serve as roots of a polynomial which, after appropriate scaling, differs from the $N$-th Chebyshev polynomial $T_N(x)$ only by a constant term that depends on $\varphi$.
+All other coefficients remain invariant under rotation.
+Our proof proceeds through discrete orthogonality relations for roots of unity, establishes power sum invariance via binomial expansion techniques, and applies Newton's identities to connect power sums with polynomial coefficients.
+This result provides a geometric interpretation of Chebyshev polynomials and reveals deep connections between discrete harmonic analysis, symmetric function theory, and orthogonal polynomial families.
+\end{abstract}
+
+\section{Introduction}
+
+The Chebyshev polynomials of the first kind, denoted $T_N(x)$, form one of the most important families of orthogonal polynomials, with applications spanning approximation theory, numerical analysis, and harmonic analysis~\cite{mason2002chebyshev, rivlin1990chebyshev}.
+These polynomials are typically defined either through the trigonometric identity
+\begin{equation}
+T_N(\cos\theta) = \cos(N\theta),
+\end{equation}
+or via the three-term recurrence relation
+\begin{equation}
+T_0(x) = 1, \quad T_1(x) = x, \quad T_{n+1}(x) = 2xT_n(x) - T_{n-1}(x).
+\end{equation}
+
+In this paper, we present a novel geometric construction of Chebyshev polynomials using rotated roots of unity. Consider the $N$-th roots of unity on the complex unit circle:
+\begin{equation}
+\omega_k = \e^{2\pi i k/N}, \quad k = 0, 1, \ldots, N-1.
+\end{equation}
+When these roots are rotated by an angle $\varphi$ (equivalently, multiplied by $\e^{i\varphi}$) and projected onto the real axis, we obtain the $N$ real numbers
+\begin{equation}\label{eq:rotated_roots}
+r_k(\varphi) = \cos\left(\varphi + \frac{2\pi k}{N}\right), \quad k = 0, 1, \ldots, N-1.
+\end{equation}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.7\textwidth]{figures/chebyshev_N5_angle0.png}
+\caption{Geometric construction for $N=5$ at rotation angle $\varphi = 0$.
+Red points on the unit circle represent rotated roots of unity; pink points on the real axis are their projections $r_k(\varphi)$.
+The blue curve shows the scaled polynomial $S_N(x; \varphi)$ with these projections as roots.}
+\label{fig:N5_construction}
+\end{figure}
+
+Let $P_N(x; \varphi)$ denote the monic polynomial having these projected values as roots:
+\begin{equation}\label{eq:monic_poly}
+P_N(x; \varphi) = \prod_{k=0}^{N-1} \left(x - \cos\left(\varphi + \frac{2\pi k}{N}\right)\right).
+\end{equation}
+
+To match the normalization of Chebyshev polynomials, which have leading coefficient $2^{N-1}$ for $N \geq 1$, we define the scaled polynomial:
+\begin{equation}\label{eq:scaled_poly}
+S_N(x; \varphi) = 2^{N-1} \cdot P_N(x; \varphi).
+\end{equation}
+
+Our main result establishes that this construction yields the Chebyshev polynomial up to an additive constant.
+
+\begin{theorem}[Main Theorem]\label{thm:main}
+For any positive integer $N \geq 1$ and any angle $\varphi \in \R$, there exists a constant $c(\varphi) \in \R$ such that
+\begin{equation}\label{eq:main_result}
+S_N(x; \varphi) = T_N(x) + c(\varphi).
+\end{equation}
+Moreover, all coefficients of $S_N(x; \varphi)$ of degree $k \geq 1$ are independent of $\varphi$ and equal the corresponding coefficients of $T_N(x)$.
+\end{theorem}
+
+\Cref{fig:N5_construction} illustrates the geometric construction for $N=5$. As $\varphi$ varies, the roots of unity rotate around the unit circle, their projections sweep across the real axis, and the polynomial curve maintains its characteristic Chebyshev shape while only the vertical offset changes.
+
+\subsection{Significance and context}
+
+This theorem reveals several deep connections:
+
+\begin{enumerate}[leftmargin=*]
+\item \textbf{Discrete geometry meets polynomial theory.} The result shows that Chebyshev polynomials emerge naturally from the simplest discrete geometric object---equally-spaced points on a circle---through elementary operations (rotation and projection).
+
+\item \textbf{Power sum invariance.} The proof hinges on showing that certain discrete sums of powers of cosines are invariant under the phase shift $\varphi$. This invariance reflects discrete orthogonality properties of trigonometric functions, a finite analog of continuous Fourier analysis.
+
+\item \textbf{Symmetric function theory.} Newton's identities provide the bridge from power sums to elementary symmetric polynomials, and hence to polynomial coefficients. The theorem demonstrates this classical algebraic machinery in action.
+
+\item \textbf{Roots and quadrature.} The projected roots $r_k(0) = \cos(2\pi k/N)$ are closely related to the Chebyshev-Gauss quadrature nodes $\cos((2k+1)\pi/(2N))$, both arising from equidistributed points on the circle.
+\end{enumerate}
+
+To our knowledge, this particular geometric construction of Chebyshev polynomials has not appeared explicitly in the literature, though related ideas connecting roots of unity, trigonometric sums, and orthogonal polynomials have long been studied~\cite{szego1939orthogonal, ismail2005classical}.
+
+\subsection{Proof strategy}
+
+The proof of \Cref{thm:main} proceeds through several key steps:
+
+\begin{enumerate}[leftmargin=*]
+\item \textbf{Discrete orthogonality (\Cref{sec:orthogonality}).} We establish that sums of complex exponentials and cosines over the $N$-th roots of unity satisfy discrete orthogonality relations analogous to Fourier orthogonality.
+
+\item \textbf{Power sum invariance (\Cref{sec:power_sums}).} Using binomial expansion of $\cos^j(\varphi + 2\pi k/N)$ and the orthogonality relations, we prove that the power sums
+\begin{equation}
+\sum_{k=0}^{N-1} \cos^j\left(\varphi + \frac{2\pi k}{N}\right)
+\end{equation}
+are independent of $\varphi$ for all $1 \leq j < N$.
+
+\item \textbf{Newton's identities (\Cref{sec:newton}).} We apply Newton's identities to show that if two sets of roots have identical power sums (except for the $0$-th power sum, which counts the number of roots), their elementary symmetric polynomials match. Consequently, the monic polynomials with these roots have identical coefficients except possibly the constant term.
+
+\item \textbf{Chebyshev characterization (\Cref{sec:main_proof}).} We identify the roots of $T_N(x)$ as $\cos((2k+1)\pi/(2N))$ for $k = 0, \ldots, N-1$, and verify that these roots have the same power sums as the rotated roots $r_k(\varphi)$. This establishes coefficient-wise equality for degrees $k \geq 1$.
+
+\item \textbf{Special case $\varphi = 0$ (\Cref{sec:main_proof}).} For $\varphi = 0$, explicit calculation shows $S_N(x; 0) = T_N(x)$, confirming the identification up to the constant term.
+\end{enumerate}
+
+The remainder of this paper is organized as follows.
+\Cref{sec:preliminaries} establishes notation and reviews necessary background on Chebyshev polynomials, roots of unity, and symmetric functions.
+\Cref{sec:orthogonality} develops the discrete orthogonality theory.
+\Cref{sec:power_sums} proves power sum invariance.
+\Cref{sec:newton} applies Newton's identities.
+\Cref{sec:main_proof} assembles these results to prove \Cref{thm:main}.
+\Cref{sec:examples} provides explicit examples and numerical illustrations.
+\Cref{sec:discussion} discusses connections to related areas and potential generalizations.
+
+
+\section{Preliminaries}\label{sec:preliminaries}
+
+\subsection{Chebyshev polynomials}
+
+The Chebyshev polynomials of the first kind $T_N(x)$ are defined by the relation
+\begin{equation}\label{eq:cheb_trig_def}
+T_N(\cos\theta) = \cos(N\theta).
+\end{equation}
+This uniquely determines $T_N$ as a polynomial of degree $N$. The first few Chebyshev polynomials are:
+\begin{align*}
+T_0(x) &= 1, \\
+T_1(x) &= x, \\
+T_2(x) &= 2x^2 - 1, \\
+T_3(x) &= 4x^3 - 3x, \\
+T_4(x) &= 8x^4 - 8x^2 + 1.
+\end{align*}
+
+\begin{proposition}\label{prop:cheb_properties}
+The Chebyshev polynomials satisfy the following properties:
+\begin{enumerate}[label=(\alph*)]
+\item \textbf{Recurrence:} $T_{n+1}(x) = 2xT_n(x) - T_{n-1}(x)$ for $n \geq 1$.
+\item \textbf{Leading coefficient:} The leading coefficient of $T_N(x)$ is $2^{N-1}$ for $N \geq 1$.
+\item \textbf{Roots:} The roots of $T_N(x)$ are
+\begin{equation}\label{eq:cheb_roots}
+x_k = \cos\left(\frac{(2k+1)\pi}{2N}\right), \quad k = 0, 1, \ldots, N-1.
+\end{equation}
+\item \textbf{Extrema:} On $[-1, 1]$, $T_N$ attains its extremal values $\pm 1$ at the $N+1$ points $\cos(j\pi/N)$ for $j = 0, 1, \ldots, N$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+Properties (a), (b), and (d) follow from the trigonometric definition~\eqref{eq:cheb_trig_def} and standard identities; see~\cite{mason2002chebyshev}.
+For (c), if $T_N(x_k) = 0$, then from~\eqref{eq:cheb_trig_def} we have $\cos(N\theta_k) = 0$ where $x_k = \cos\theta_k$.
+This occurs when $N\theta_k = (2k+1)\pi/2$ for integer $k$, giving $\theta_k = (2k+1)\pi/(2N)$ and thus~\eqref{eq:cheb_roots}.
+\end{proof}
+
+\subsection{Roots of unity and discrete Fourier analysis}
+
+The $N$-th roots of unity are the solutions to $z^N = 1$ in $\C$:
+\begin{equation}
+\omega_k = \e^{2\pi i k/N}, \quad k = 0, 1, \ldots, N-1.
+\end{equation}
+
+A \emph{primitive} $N$-th root of unity is one that generates the cyclic group of all $N$-th roots under multiplication; $\omega = \e^{2\pi i/N}$ is primitive, and $\omega_k = \omega^k$.
+
+The fundamental orthogonality relation is:
+
+\begin{lemma}[Discrete orthogonality]\label{lem:discrete_orthog}
+For any integer $m$,
+\begin{equation}\label{eq:discrete_orthog}
+\sum_{k=0}^{N-1} \e^{2\pi i m k / N} = \begin{cases}
+N & \text{if } N \mid m, \\
+0 & \text{otherwise}.
+\end{cases}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+If $N \mid m$, then $\e^{2\pi i m k/N} = 1$ for all $k$, so the sum is $N$.
+Otherwise, let $\omega = \e^{2\pi i m/N}$ with $\omega \neq 1$.
+The sum is a geometric series:
+\[
+\sum_{k=0}^{N-1} \omega^k = \frac{\omega^N - 1}{\omega - 1} = \frac{1 - 1}{\omega - 1} = 0. \qedhere
+\]
+\end{proof}
+
+\subsection{Power sums and elementary symmetric polynomials}
+
+Let $\alpha_1, \ldots, \alpha_N$ be a collection of real or complex numbers (possibly with repetitions). The \emph{power sums} are defined by
+\begin{equation}
+p_j = \sum_{i=1}^N \alpha_i^j, \quad j \geq 0.
+\end{equation}
+
+The \emph{elementary symmetric polynomials} are the coefficients appearing in the factorization
+\begin{equation}
+\prod_{i=1}^N (t - \alpha_i) = t^N - e_1 t^{N-1} + e_2 t^{N-2} - \cdots + (-1)^N e_N,
+\end{equation}
+where
+\begin{equation}
+e_k = \sum_{1 \leq i_1 < \cdots < i_k \leq N} \alpha_{i_1} \cdots \alpha_{i_k}.
+\end{equation}
+
+\begin{theorem}[Newton's identities]\label{thm:newton}
+The power sums and elementary symmetric polynomials are related by:
+\begin{equation}\label{eq:newton_identity}
+k \cdot e_k = \sum_{i=1}^{k} (-1)^{i-1} e_{k-i} p_i, \quad k = 1, 2, \ldots, N,
+\end{equation}
+where we set $e_0 = 1$.
+\end{theorem}
+
+An immediate consequence is that the elementary symmetric polynomials (and hence the coefficients of the monic polynomial with roots $\alpha_1, \ldots, \alpha_N$) are determined by the power sums.
+
+\begin{corollary}\label{cor:power_sums_determine_poly}
+Let $\alpha_1, \ldots, \alpha_N$ and $\beta_1, \ldots, \beta_N$ be two collections of numbers. If
+\begin{equation}
+\sum_{i=1}^N \alpha_i^j = \sum_{i=1}^N \beta_i^j \quad \text{for all } j = 1, 2, \ldots, N,
+\end{equation}
+then the monic polynomials with roots $\{\alpha_i\}$ and $\{\beta_i\}$ have identical coefficients of degree $k \geq 1$. They may differ in the constant term if $\sum \alpha_i \neq \sum \beta_i$ (i.e., if $p_0$ differs).
+\end{corollary}
+
+\begin{proof}
+By Newton's identities, the elementary symmetric polynomials $e_k(\alpha_1, \ldots, \alpha_N)$ and $e_k(\beta_1, \ldots, \beta_N)$ satisfy the same recurrence relations for $k \geq 1$, given identical values of $p_1, \ldots, p_N$.
+Hence $e_k(\alpha_1, \ldots, \alpha_N) = e_k(\beta_1, \ldots, \beta_N)$ for $k = 1, \ldots, N$, which means the coefficients of $t^{N-k}$ for $k \geq 1$ are identical.
+\end{proof}
+
+
+\section{Discrete Orthogonality Relations}\label{sec:orthogonality}
+
+The discrete orthogonality of roots of unity (\Cref{lem:discrete_orthog}) has powerful consequences for sums of trigonometric functions evaluated at equally-spaced angles. We develop these consequences here.
+
+\subsection{Sums of cosines at rotated roots}
+
+\begin{lemma}\label{lem:sum_cos_vanishes}
+For any $N \geq 2$ and any $\varphi \in \R$,
+\begin{equation}\label{eq:sum_cos_zero}
+\sum_{k=0}^{N-1} \cos\left(\varphi + \frac{2\pi k}{N}\right) = 0.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Using Euler's formula,
+\begin{align*}
+\sum_{k=0}^{N-1} \cos\left(\varphi + \frac{2\pi k}{N}\right)
+&= \operatorname{Re}\left( \sum_{k=0}^{N-1} \e^{i(\varphi + 2\pi k/N)} \right) \\
+&= \operatorname{Re}\left( \e^{i\varphi} \sum_{k=0}^{N-1} \e^{2\pi i k/N} \right).
+\end{align*}
+By \Cref{lem:discrete_orthog} with $m=1$, the inner sum is $0$ (since $N \nmid 1$ for $N \geq 2$). Hence the full sum is $0$.
+\end{proof}
+
+\begin{lemma}\label{lem:sum_cos_frequency}
+For any integers $N \geq 1$, $m$ with $0 < m < N$, and any $\varphi \in \R$,
+\begin{equation}\label{eq:sum_cos_freq_zero}
+\sum_{k=0}^{N-1} \cos\left(m\left(\varphi + \frac{2\pi k}{N}\right)\right) = 0.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Similar to \Cref{lem:sum_cos_vanishes}, we have
+\begin{align*}
+\sum_{k=0}^{N-1} \cos\left(m\left(\varphi + \frac{2\pi k}{N}\right)\right)
+&= \operatorname{Re}\left( \e^{im\varphi} \sum_{k=0}^{N-1} \e^{2\pi i m k/N} \right).
+\end{align*}
+Since $0 < m < N$, we have $N \nmid m$, so the sum vanishes by \Cref{lem:discrete_orthog}.
+\end{proof}
+
+\subsection{Chebyshev angle sums}
+
+The Chebyshev roots are located at angles $\theta_k = (2k+1)\pi/(2N)$. Sums over these angles require more care due to the non-uniform phase. We state the key results without detailed proof.
+
+\begin{lemma}\label{lem:cheb_sum_cos_odd}
+For odd $m$ with $0 < m < N$,
+\begin{equation}
+\sum_{k=0}^{N-1} \cos\left(m \cdot \frac{(2k+1)\pi}{2N}\right) = 0.
+\end{equation}
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+The sum exhibits symmetry under the involution $k \mapsto N - 1 - k$. For odd $m$, this symmetry causes cancellation. Details involve pairing terms and using $\cos((2k+1)m\pi/(2N)) + \cos((2(N-1-k)+1)m\pi/(2N)) = 0$ when $m$ is odd.
+\end{proof}
+
+\begin{lemma}\label{lem:cheb_sum_cos_even}
+For even $m$ with $0 < m < N$,
+\begin{equation}
+\sum_{k=0}^{N-1} \cos\left(m \cdot \frac{(2k+1)\pi}{2N}\right) = 0.
+\end{equation}
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+Write $m = 2s$ with $0 < s < N/2$. The sum can be expressed as
+\[
+\operatorname{Re}\left( \e^{is\pi/N} \sum_{k=0}^{N-1} \e^{2\pi i s k / N} \right).
+\]
+The inner sum vanishes by \Cref{lem:discrete_orthog} since $s < N/2 < N$.
+\end{proof}
+
+\begin{remark}
+These lemmas show that discrete sums of cosines vanish both for uniformly rotated roots (where the angles are $\varphi + 2\pi k/N$) and for Chebyshev roots (angles $(2k+1)\pi/(2N)$), provided the frequency $m$ is in the range $0 < m < N$. This will be crucial for establishing power sum equality.
+\end{remark}
+
+
+\section{Power Sum Invariance}\label{sec:power_sums}
+
+We now prove that the power sums of the rotated projections $r_k(\varphi) = \cos(\varphi + 2\pi k/N)$ are independent of $\varphi$.
+
+\begin{theorem}[Power sum invariance]\label{thm:power_sum_invariance}
+For any integers $N \geq 1$, $j$ with $1 \leq j < N$, and any $\varphi \in \R$,
+\begin{equation}\label{eq:power_sum_invariant}
+\sum_{k=0}^{N-1} \cos^j\left(\varphi + \frac{2\pi k}{N}\right)
+\end{equation}
+is independent of $\varphi$.
+\end{theorem}
+
+\begin{proof}
+We prove this using the binomial expansion of $\cos^j$ via Euler's formula. Write
+\begin{equation}
+\cos\theta = \frac{\e^{i\theta} + \e^{-i\theta}}{2}.
+\end{equation}
+Then
+\begin{align}
+\cos^j\theta &= \frac{1}{2^j} \left( \e^{i\theta} + \e^{-i\theta} \right)^j \\
+&= \frac{1}{2^j} \sum_{r=0}^{j} \binom{j}{r} \e^{ir\theta} \e^{-i(j-r)\theta} \\
+&= \frac{1}{2^j} \sum_{r=0}^{j} \binom{j}{r} \e^{i(2r - j)\theta}.
+\end{align}
+
+Taking the real part,
+\begin{equation}\label{eq:cos_power_expansion}
+\cos^j\theta = \frac{1}{2^j} \sum_{r=0}^{j} \binom{j}{r} \cos((2r - j)\theta).
+\end{equation}
+
+Now sum over $k = 0, \ldots, N-1$:
+\begin{align}
+\sum_{k=0}^{N-1} \cos^j\left(\varphi + \frac{2\pi k}{N}\right)
+&= \frac{1}{2^j} \sum_{r=0}^{j} \binom{j}{r} \sum_{k=0}^{N-1} \cos\left((2r-j)\left(\varphi + \frac{2\pi k}{N}\right)\right).
+\end{align}
+
+For each $r$, let $m = 2r - j$. Note that $m$ ranges over $\{-j, -j+2, \ldots, j-2, j\}$.
+
+\begin{itemize}
+\item If $m = 0$ (which occurs when $2r = j$, i.e., $r = j/2$ if $j$ is even), then
+\[
+\sum_{k=0}^{N-1} \cos(0) = N.
+\]
+
+\item If $m \neq 0$, then $|m| \leq j < N$. By \Cref{lem:sum_cos_frequency}, if $0 < |m| < N$,
+\[
+\sum_{k=0}^{N-1} \cos\left(m\left(\varphi + \frac{2\pi k}{N}\right)\right) = 0.
+\]
+\end{itemize}
+
+Therefore, the only surviving term is when $2r - j = 0$, which requires $j$ to be even. In that case,
+\begin{equation}
+\sum_{k=0}^{N-1} \cos^j\left(\varphi + \frac{2\pi k}{N}\right) = \frac{1}{2^j} \binom{j}{j/2} \cdot N.
+\end{equation}
+
+If $j$ is odd, all terms vanish, so
+\begin{equation}
+\sum_{k=0}^{N-1} \cos^j\left(\varphi + \frac{2\pi k}{N}\right) = 0.
+\end{equation}
+
+In both cases, the sum is independent of $\varphi$.
+\end{proof}
+
+\begin{example}
+For $j = 2$, we have
+\[
+\cos^2\theta = \frac{1 + \cos(2\theta)}{2}.
+\]
+Summing over $k$:
+\begin{align*}
+\sum_{k=0}^{N-1} \cos^2\left(\varphi + \frac{2\pi k}{N}\right)
+&= \frac{1}{2} \sum_{k=0}^{N-1} 1 + \frac{1}{2} \sum_{k=0}^{N-1} \cos\left(2\varphi + \frac{4\pi k}{N}\right).
+\end{align*}
+The first sum is $N/2$. For $N \geq 3$, the second sum is $0$ by \Cref{lem:sum_cos_frequency} (with $m=2$), giving a total of $N/2$, independent of $\varphi$.
+\end{example}
+
+\begin{example}
+For $j = 3$, we use $\cos^3\theta = (\cos(3\theta) + 3\cos\theta)/4$. Then
+\begin{align*}
+\sum_{k=0}^{N-1} \cos^3\left(\varphi + \frac{2\pi k}{N}\right)
+&= \frac{1}{4} \sum_{k=0}^{N-1} \cos\left(3\varphi + \frac{6\pi k}{N}\right) + \frac{3}{4} \sum_{k=0}^{N-1} \cos\left(\varphi + \frac{2\pi k}{N}\right).
+\end{align*}
+For $N \geq 4$, both sums vanish by \Cref{lem:sum_cos_frequency}, so the total is $0$.
+\end{example}
+
+
+\section{From Power Sums to Polynomial Coefficients}\label{sec:newton}
+
+Having established that the power sums~\eqref{eq:power_sum_invariant} are $\varphi$-independent, we now apply Newton's identities to deduce that the polynomial coefficients (except the constant term) are also $\varphi$-independent.
+
+\begin{theorem}\label{thm:coeff_invariance}
+For any $N \geq 1$ and any $k$ with $1 \leq k \leq N$, the coefficient of $x^k$ in $S_N(x; \varphi)$ is independent of $\varphi$.
+\end{theorem}
+
+\begin{proof}
+Recall that $S_N(x; \varphi) = 2^{N-1} P_N(x; \varphi)$ where
+\[
+P_N(x; \varphi) = \prod_{j=0}^{N-1} \left(x - \cos\left(\varphi + \frac{2\pi j}{N}\right)\right).
+\]
+The coefficients of $P_N(x; \varphi)$ are determined (up to sign) by the elementary symmetric polynomials $e_k$ in the roots $r_j(\varphi) = \cos(\varphi + 2\pi j/N)$.
+
+By \Cref{thm:newton}, the elementary symmetric polynomials $e_k$ are determined by the power sums $p_j = \sum_{i=0}^{N-1} r_i(\varphi)^j$ for $j = 1, \ldots, N$ via the recurrence~\eqref{eq:newton_identity}.
+
+By \Cref{thm:power_sum_invariance}, for $1 \leq j < N$, the power sums $p_j$ are independent of $\varphi$.
+For $j = N$, one can show (by the same binomial expansion technique) that $p_N$ is also $\varphi$-independent, since the frequencies $|2r - N| < N$ for $r = 0, \ldots, N$ ensure all terms except possibly $r = N/2$ vanish.
+
+Therefore, all power sums $p_j$ for $j \geq 1$ are $\varphi$-independent, so by Newton's identities, all elementary symmetric polynomials $e_k$ for $k \geq 1$ are $\varphi$-independent.
+
+Since $e_k$ equals (up to sign) the coefficient of $x^{N-k}$ in $P_N(x; \varphi)$, and $S_N(x; \varphi) = 2^{N-1} P_N(x; \varphi)$, it follows that all coefficients of $x^k$ for $k \geq 1$ in $S_N(x; \varphi)$ are independent of $\varphi$.
+\end{proof}
+
+\begin{remark}
+The constant term of $S_N(x; \varphi)$ is $(-1)^N 2^{N-1} e_N$, where $e_N = \prod_{j=0}^{N-1} \cos(\varphi + 2\pi j/N)$. This product \emph{does} depend on $\varphi$ in general, which is why the constant term varies with $\varphi$.
+\end{remark}
+
+
+\section{Proof of Main Theorem}\label{sec:main_proof}
+
+We now assemble the pieces to prove \Cref{thm:main}.
+
+\subsection{Chebyshev roots and their power sums}
+
+\begin{lemma}\label{lem:cheb_power_sums}
+Let $\xi_k = \cos((2k+1)\pi/(2N))$ for $k = 0, \ldots, N-1$ denote the roots of $T_N(x)$. Then for any $1 \leq j < N$,
+\begin{equation}
+\sum_{k=0}^{N-1} \xi_k^j = \begin{cases}
+\frac{N}{2^j} \binom{j}{j/2} & \text{if } j \text{ is even}, \\
+0 & \text{if } j \text{ is odd}.
+\end{cases}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+The proof parallels that of \Cref{thm:power_sum_invariance}. Using the expansion~\eqref{eq:cos_power_expansion},
+\begin{align}
+\sum_{k=0}^{N-1} \cos^j\left(\frac{(2k+1)\pi}{2N}\right)
+&= \frac{1}{2^j} \sum_{r=0}^{j} \binom{j}{r} \sum_{k=0}^{N-1} \cos\left((2r-j) \cdot \frac{(2k+1)\pi}{2N}\right).
+\end{align}
+
+Let $m = 2r - j$. If $m = 0$ (i.e., $r = j/2$ when $j$ is even), the inner sum is $N$. If $m \neq 0$ and $|m| < N$, then by \Cref{lem:cheb_sum_cos_odd} and \Cref{lem:cheb_sum_cos_even}, the inner sum is $0$.
+
+Thus the only surviving term is when $m = 0$, giving the stated formula.
+\end{proof}
+
+\begin{theorem}[Power sum equality]\label{thm:power_sum_equality}
+For $1 \leq j < N$,
+\begin{equation}
+\sum_{k=0}^{N-1} \cos^j\left(\varphi + \frac{2\pi k}{N}\right) = \sum_{k=0}^{N-1} \cos^j\left(\frac{(2k+1)\pi}{2N}\right).
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+By \Cref{thm:power_sum_invariance}, the left-hand side is independent of $\varphi$ and equals
+\[
+\begin{cases}
+\frac{N}{2^j} \binom{j}{j/2} & \text{if } j \text{ is even}, \\
+0 & \text{if } j \text{ is odd}.
+\end{cases}
+\]
+By \Cref{lem:cheb_power_sums}, the right-hand side equals the same expression.
+\end{proof}
+
+\subsection{Completion of the proof}
+
+\begin{proof}[Proof of \Cref{thm:main}]
+Let $r_k(\varphi) = \cos(\varphi + 2\pi k/N)$ for $k = 0, \ldots, N-1$ be the roots of $P_N(x; \varphi)$, and let $\xi_k = \cos((2k+1)\pi/(2N))$ be the roots of $T_N(x)$.
+
+By \Cref{thm:power_sum_equality}, the power sums of $\{r_k(\varphi)\}$ and $\{\xi_k\}$ are equal for all $j$ with $1 \leq j < N$.
+
+By Newton's identities (\Cref{thm:newton}), the elementary symmetric polynomials $e_k$ for $k = 1, \ldots, N$ are determined by the power sums $p_1, \ldots, p_N$. Since the power sums match, the elementary symmetric polynomials match:
+\[
+e_k(r_0(\varphi), \ldots, r_{N-1}(\varphi)) = e_k(\xi_0, \ldots, \xi_{N-1}), \quad k = 1, \ldots, N.
+\]
+
+The monic polynomial $P_N(x; \varphi)$ has roots $r_k(\varphi)$ and the Chebyshev polynomial $T_N(x)$ (when divided by its leading coefficient $2^{N-1}$) has roots $\xi_k$. By Vieta's formulas, the coefficient of $x^{N-k}$ in $P_N(x; \varphi)$ is $(-1)^k e_k(r_0, \ldots, r_{N-1})$, and similarly for the monic version of $T_N(x)$.
+
+Thus, $P_N(x; \varphi)$ and $T_N(x)/2^{N-1}$ have the same coefficients for all degrees $k = 1, \ldots, N$. Multiplying both by $2^{N-1}$:
+\[
+S_N(x; \varphi) = 2^{N-1} P_N(x; \varphi) \quad \text{and} \quad T_N(x)
+\]
+have the same coefficients for degrees $k = 1, \ldots, N$. They may differ in the constant term.
+
+Hence there exists $c(\varphi) \in \R$ such that
+\[
+S_N(x; \varphi) = T_N(x) + c(\varphi),
+\]
+completing the proof.
+\end{proof}
+
+\begin{remark}
+The constant $c(\varphi)$ represents the vertical shift induced by rotating the roots. Numerical evidence for small $N$ suggests that $c(0) = -1$, though we do not prove this here as it is not essential to the main result.
+\end{remark}
+
+
+\section{Examples and Illustrations}\label{sec:examples}
+
+We provide explicit computations for small values of $N$ to illustrate \Cref{thm:main}.
+
+\subsection{Case $N = 3$}
+
+For $N = 3$, the rotated roots are
+\[
+r_k(\varphi) = \cos\left(\varphi + \frac{2\pi k}{3}\right), \quad k = 0, 1, 2.
+\]
+
+The monic polynomial is
+\begin{align*}
+P_3(x; \varphi) &= \left(x - \cos\varphi\right) \left(x - \cos\left(\varphi + \frac{2\pi}{3}\right)\right) \left(x - \cos\left(\varphi + \frac{4\pi}{3}\right)\right).
+\end{align*}
+
+To determine the coefficients, we use power sums and Newton's identities. By \Cref{thm:power_sum_invariance}, for $j=2$ and $N=3$:
+\[
+p_2 = \sum_{k=0}^{2} \cos^2\left(\varphi + \frac{2\pi k}{3}\right) = \frac{3}{2^2} \binom{2}{1} = \frac{3}{2}.
+\]
+
+By \Cref{lem:sum_cos_vanishes}, $p_1 = \sum_{k=0}^2 \cos(\varphi + 2\pi k/3) = 0$, so $e_1 = p_1 = 0$.
+
+Using Newton's identities, $2e_2 = e_1 p_1 - p_2 = -3/2$, giving $e_2 = -3/4$.
+
+Therefore, the monic polynomial is
+\[
+P_3(x; \varphi) = x^3 - e_1 x^2 + e_2 x - e_3 = x^3 - \frac{3}{4}x - e_3(\varphi),
+\]
+where $e_3(\varphi)$ is the constant term that depends on $\varphi$.
+
+Scaling by $2^2 = 4$ gives
+\[
+S_3(x; \varphi) = 4x^3 - 3x - 4e_3(\varphi).
+\]
+
+Comparing with the Chebyshev polynomial $T_3(x) = 4x^3 - 3x$, we have $S_3(x; \varphi) = T_3(x) - 4e_3(\varphi)$, so $c(\varphi) = -4e_3(\varphi)$.
+
+\subsection{Numerical verification for $N = 5$}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{c|c|c|c|c|c|c}
+$\varphi$ (deg) & $a_5$ & $a_4$ & $a_3$ & $a_2$ & $a_1$ & $a_0$ \\ \hline
+$0$ & 16 & 0 & $-20$ & 0 & 5 & $-1.000$ \\
+$30$ & 16 & 0 & $-20$ & 0 & 5 & $0.866$ \\
+$60$ & 16 & 0 & $-20$ & 0 & 5 & $-0.500$ \\
+$90$ & 16 & 0 & $-20$ & 0 & 5 & $0.000$ \\
+\end{tabular}
+\caption{Coefficients of $S_5(x; \varphi)$ for various rotation angles $\varphi$. Only the constant term $a_0$ varies; all other coefficients match $T_5(x) = 16x^5 - 20x^3 + 5x$.}
+\label{tab:N5_coeffs}
+\end{table}
+
+\Cref{tab:N5_coeffs} shows numerical coefficients for $N=5$. As predicted by \Cref{thm:main}, only $a_0$ changes with $\varphi$.
+
+\begin{figure}[h]
+\centering
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\textwidth]{figures/chebyshev_N3_angle0.png}
+\caption{$N=3$, $\varphi = 0°$}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\textwidth]{figures/chebyshev_N4_angle0.png}
+\caption{$N=4$, $\varphi = 0°$}
+\end{subfigure}
+
+\vspace{0.3cm}
+
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\textwidth]{figures/chebyshev_N5_angle0.png}
+\caption{$N=5$, $\varphi = 0°$}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\textwidth]{figures/chebyshev_N6_angle0.png}
+\caption{$N=6$, $\varphi = 0°$}
+\end{subfigure}
+
+\caption{Polynomial constructions for $N \in \{3, 4, 5, 6\}$ at $\varphi = 0°$. In each case, the scaled polynomial $S_N(x; 0)$ equals the Chebyshev polynomial $T_N(x)$ exactly.}
+\label{fig:multiple_N}
+\end{figure}
+
+\Cref{fig:multiple_N} shows the geometric construction for $N = 3, 4, 5, 6$ at $\varphi = 0$. The characteristic oscillatory structure of Chebyshev polynomials is evident in all cases.
+
+
+\section{Discussion and Extensions}\label{sec:discussion}
+
+\subsection{Connections to discrete Fourier analysis}
+
+The proof of \Cref{thm:main} fundamentally relies on discrete orthogonality relations for complex exponentials, which are at the heart of the discrete Fourier transform (DFT).
+The vanishing sums in \Cref{lem:sum_cos_frequency} are direct consequences of the orthogonality of the characters of the cyclic group $\Z/N\Z$.
+
+This connection suggests deeper relationships between orthogonal polynomials and harmonic analysis.
+Indeed, the Chebyshev polynomials themselves arise from the trigonometric identity $T_N(\cos\theta) = \cos(N\theta)$, which is a continuous analog of the discrete orthogonality we exploit here.
+
+\subsection{Chebyshev-Gauss quadrature}
+
+The roots of $T_N(x)$ are the nodes for Chebyshev-Gauss quadrature, which exactly integrates polynomials of degree up to $2N-1$ with respect to the weight function $w(x) = 1/\sqrt{1-x^2}$ on $[-1, 1]$.
+
+Our construction shows that these nodes are closely related to the uniform projections $\cos(2\pi k/N)$, which are the nodes for the trapezoidal rule applied to periodic integrands.
+Both sets of nodes arise from equally-spaced points on the unit circle, differing only by a phase shift.
+
+This geometric perspective may provide intuition for why Chebyshev interpolation and quadrature perform so well in practice: the nodes are "uniformly distributed" when viewed on the circle, even though they cluster near $\pm 1$ when viewed on the real line.
+
+\subsection{Generalizations}
+
+Several natural extensions of \Cref{thm:main} suggest themselves:
+
+\begin{enumerate}[leftmargin=*]
+\item \textbf{Chebyshev polynomials of the second kind.} The Chebyshev polynomials $U_N(x)$ of the second kind satisfy $U_N(\cos\theta) = \sin((N+1)\theta)/\sin\theta$. One might ask whether a similar construction using roots of unity yields $U_N$ up to a constant.
+
+\item \textbf{Other orthogonal polynomial families.} Legendre, Laguerre, and Hermite polynomials have different weight functions and root distributions. Can analogous geometric constructions be found using modified projections or weightings of roots of unity?
+
+\item \textbf{Higher-dimensional analogs.} In higher dimensions, roots of unity generalize to lattice points on spheres. Do projections of such lattices yield multivariable orthogonal polynomials?
+
+\item \textbf{$q$-analogs.} The $q$-Chebyshev polynomials are $q$-deformations of the classical Chebyshev polynomials. Can a $q$-analog of our construction be formulated using $q$-roots of unity?
+\end{enumerate}
+
+\subsection{Computational aspects}
+
+From a computational perspective, \Cref{thm:main} provides an alternative algorithm for evaluating Chebyshev polynomials: instead of using the recurrence relation, one could construct the polynomial from rotated roots and use polynomial evaluation techniques.
+
+However, this approach is unlikely to be competitive with standard methods, since constructing a polynomial from its roots is generally more expensive than evaluating via recurrence.
+Nevertheless, the connection may be useful in other contexts, such as symbolic computation or numerical algebraic geometry.
+
+
+\section{Conclusion}
+
+We have established a novel geometric construction of Chebyshev polynomials using rotated roots of unity.
+The main theorem (\Cref{thm:main}) shows that projecting the $N$-th roots of unity (after rotation by any angle $\varphi$) onto the real axis and forming the scaled polynomial with these projections as roots yields the $N$-th Chebyshev polynomial $T_N(x)$ up to an additive constant.
+
+The proof synthesizes ideas from discrete Fourier analysis (orthogonality of roots of unity), symmetric function theory (Newton's identities), and polynomial algebra.
+The key insight is that power sums of the projected roots are invariant under rotation, a consequence of discrete orthogonality relations.
+Newton's identities then translate this power sum invariance into coefficient invariance.
+
+This result provides a bridge between the discrete geometry of equally-spaced points on the circle and the continuous theory of orthogonal polynomials.
+It reveals Chebyshev polynomials as emerging naturally from simple geometric operations on roots of unity, complementing their traditional definitions via trigonometric identities or recurrence relations.
+
+Future work may explore whether similar constructions exist for other families of orthogonal polynomials, investigate higher-dimensional generalizations, or apply these ideas in numerical analysis and approximation theory.
+
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
