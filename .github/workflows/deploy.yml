@@ -39,8 +39,8 @@ jobs:
       - name: Build API documentation
         run: |
           # Build doc-gen4 executable and run it
-          lake -R -Kenv=dev build doc-gen4:docs
-          lake exe doc-gen4 ChebyshevCircles
+          lake -R -Kenv=dev build doc-gen4
+          lake -R -Kenv=dev exe doc-gen4 -- --verbose ChebyshevCircles
           # doc-gen4 outputs to .lake/build/doc
           mkdir -p _site/docs
           if [ -d ".lake/build/doc" ]; then
