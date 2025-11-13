@@ -6,13 +6,65 @@ set -e
 OUTPUT_DIR="$1"
 PDF_FILE="$2"
 
-if [ -z "$OUTPUT_DIR" ] || [ -z "$PDF_FILE" ]; then
-    echo "Usage: create_graph_page.sh <output_dir> <pdf_file>"
+if [ -z "$OUTPUT_DIR" ]; then
+    echo "Usage: create_graph_page.sh <output_dir> [pdf_file]"
     exit 1
 fi
 
 mkdir -p "$OUTPUT_DIR"
 
+# If no PDF file provided, create placeholder page
+if [ -z "$PDF_FILE" ] || [ ! -f "$OUTPUT_DIR/$PDF_FILE" ]; then
+    cat > "$OUTPUT_DIR/index.html" << 'EOF'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dependency Graph - Chebyshev Circles</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+        .header { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 1rem 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .header-content { max-width: 1200px; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 1.5rem; color: #2c3e50; }
+        .nav { display: flex; gap: 1.5rem; }
+        .nav a { color: #2c3e50; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px; }
+        .nav a:hover { background: #f0f0f0; }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 2rem; }
+        .content { background: #fff; border-radius: 8px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        h2 { color: #2c3e50; margin-bottom: 1rem; }
+        .message { padding: 2rem; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px; margin: 1rem 0; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>Chebyshev Circles - Dependency Graph</h1>
+            <nav class="nav">
+                <a href="../">Home</a>
+                <a href="../blueprint/">Blueprint</a>
+                <a href="../docs/">API Docs</a>
+                <a href="https://github.com/e-vergo/ChebyshevCircles">GitHub</a>
+            </nav>
+        </div>
+    </div>
+    <div class="container">
+        <div class="content">
+            <h2>Dependency Graph</h2>
+            <div class="message">
+                <p><strong>Note:</strong> The dependency graph PDF is currently being generated. Please check back later or visit the <a href="../blueprint/">Blueprint</a> for the interactive dependency visualization.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+EOF
+    echo "Created placeholder graph page at $OUTPUT_DIR/index.html"
+    exit 0
+fi
+
+# Create page with PDF viewer
 cat > "$OUTPUT_DIR/index.html" << 'EOF'
 <!DOCTYPE html>
 <html lang="en">
