@@ -23,7 +23,14 @@ The geometric intuition behind this theorem is best understood through animation
 
 ![N=5 Animation](chebyshev_gifs/chebyshev_animation_N5.gif)
 
-*Animation showing N=5 roots of unity being rotated. Red points on the circle project to pink points on the real axis, which serve as roots for the blue polynomial curve. The curve's shape remains a 5th-degree Chebyshev polynomial; only the constant term changes.*
+*Animation showing N=5 roots of unity being rotated. The regular pentagon (coral edges) rotates with the roots (red points). Vertical projection lines show how roots project to the real axis (pink points), which serve as roots for the blue polynomial curve. The displayed polynomial equation updates in real-time, showing that the curve's shape remains a 5th-degree Chebyshev polynomial (T₅(x)) while only the constant term c changes with rotation angle φ.*
+
+**Animation Features:**
+- **Regular N-gon:** Visual overlay connecting the N roots of unity, rotating in sync
+- **Normalized Speed:** All animations use consistent angular velocity (9 seconds per full rotation)
+- **Real-time Math:** LaTeX-rendered polynomial equation with exact integer coefficients and 2-decimal constant term
+- **Chebyshev Link:** Explicit reference showing S(x) = T_N(x) + c relationship
+- **Scaling Display:** Shows the 2^(N-1) scaling factor applied to the polynomial
 
 <details>
 <summary>More examples (N=3, 4, 6, 12, 13)</summary>
@@ -162,6 +169,9 @@ The blueprint provides a "map" of the formalization, making it easier to underst
 - [Lean 4](https://leanprover.github.io/) (v4.25.0-rc2)
 - [Lake](https://github.com/leanprover/lake) (Lean's build tool, included with Lean)
 - [Python 3.7+](https://www.python.org/) (for visualizations only)
+  - NumPy ≥ 1.20.0
+  - Pillow ≥ 9.0.0
+  - Matplotlib ≥ 3.5.0 (for LaTeX-rendered mathematical notation)
 
 **Expected Build Time:** ~5-10 minutes on first build (compiles Mathlib dependencies)
 
@@ -201,12 +211,14 @@ The blueprint provides a "map" of the formalization, making it easier to underst
    ```bash
    pip install -r requirements.txt
    ```
+   This installs NumPy (array operations), Pillow (image generation), and Matplotlib (LaTeX rendering).
 
 3. **Generate animations:**
    ```bash
    python main.py
    ```
    This creates 6 GIF files in `chebyshev_gifs/` (one for each N ∈ {3,4,5,6,12,13}).
+   Each animation takes approximately 1-2 minutes to generate (300 frames with LaTeX rendering).
 
 ## Usage
 
@@ -249,9 +261,13 @@ The Lean 4 VS Code extension shows the proof state (goals and hypotheses) at any
 
 **Customize visualizations:**
 Edit `main.py` to change:
-- `N_values` (line 156): Which roots of unity to animate
-- `num_frames` (line 161): Animation smoothness
-- `plot_x_range`, `plot_y_range` (lines 75-76): Axis ranges
+- `N_values` (line 298): Which roots of unity to animate
+- `num_frames` (line 303): Animation smoothness (default: 300 frames)
+- `frame_duration` (line 304): Milliseconds per frame (default: 30ms)
+- `plot_x_range`, `plot_y_range` (lines 161-162): Axis ranges
+- `line_spacing` (line 252): Vertical spacing between text lines
+- `text_fontsize` (line 253): Font size for all LaTeX-rendered text
+- Color scheme (lines 164-172): Customize colors for axes, circle, polygon, roots, and curve
 
 ## Contributing
 
