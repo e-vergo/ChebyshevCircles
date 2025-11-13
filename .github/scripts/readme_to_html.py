@@ -12,58 +12,196 @@ def markdown_to_html(md_content):
     """Convert markdown to HTML with basic formatting."""
     html = md_content
 
-    # Convert headers
-    html = re.sub(r'^# (.*?)$', r'<h1>\1</h1>', html, flags=re.MULTILINE)
-    html = re.sub(r'^## (.*?)$', r'<h2>\1</h2>', html, flags=re.MULTILINE)
-    html = re.sub(r'^### (.*?)$', r'<h3>\1</h3>', html, flags=re.MULTILINE)
+    # Step 1: Protect and convert code blocks FIRST (before any other processing)
+    code_blocks = []
+    def save_code_block(match):
+        code_blocks.append(match.group(0))
+        return f'__CODE_BLOCK_{len(code_blocks)-1}__'
+
+    # Fenced code blocks with language
+    html = re.sub(r'```(\w+)\n(.*?)\n```',
+                  lambda m: save_code_block(m) or f'<pre><code class="language-{m.group(1)}">{escape_html(m.group(2))}</code></pre>',
+                  html, flags=re.DOTALL)
+    # Fenced code blocks without language
+    html = re.sub(r'```\n(.*?)\n```',
+                  lambda m: save_code_block(m) or f'<pre><code>{escape_html(m.group(1))}</code></pre>',
+                  html, flags=re.DOTALL)
+
+    # Step 2: Convert headers (before links so [text](#anchor) in headers works)
     html = re.sub(r'^#### (.*?)$', r'<h4>\1</h4>', html, flags=re.MULTILINE)
+    html = re.sub(r'^### (.*?)$', r'<h3>\1</h3>', html, flags=re.MULTILINE)
+    html = re.sub(r'^## (.*?)$', r'<h2>\1</h2>', html, flags=re.MULTILINE)
+    html = re.sub(r'^# (.*?)$', r'<h1>\1</h1>', html, flags=re.MULTILINE)
 
-    # Convert bold and italic
-    html = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', html)
-    html = re.sub(r'\*(.*?)\*', r'<em>\1</em>', html)
-    html = re.sub(r'`([^`]+)`', r'<code>\1</code>', html)
+    # Step 3: Convert tables (before images/links to avoid interference)
+    html = convert_tables(html)
 
-    # Convert links
-    html = re.sub(r'\[([^\]]+)\]\(([^\)]+)\)', r'<a href="\2">\1</a>', html)
+    # Step 4: Convert badges (special case: [![alt](image)](link) pattern)
+    # This must happen before general image/link conversion
+    html = re.sub(r'\[\!\[([^\]]*)\]\(([^\)]+)\)\]\(([^\)]+)\)',
+                  r'<div class="badge"><a href="\3"><img src="\2" alt="\1" /></a></div>',
+                  html)
 
-    # Convert images
+    # Step 5: Convert images (BEFORE links, since images start with !)
     html = re.sub(r'!\[([^\]]*)\]\(([^\)]+)\)', r'<img src="\2" alt="\1" />', html)
 
-    # Convert code blocks
-    html = re.sub(r'```lean\n(.*?)\n```', r'<pre><code class="language-lean">\1</code></pre>', html, flags=re.DOTALL)
-    html = re.sub(r'```bash\n(.*?)\n```', r'<pre><code class="language-bash">\1</code></pre>', html, flags=re.DOTALL)
-    html = re.sub(r'```(.*?)\n(.*?)\n```', r'<pre><code>\2</code></pre>', html, flags=re.DOTALL)
+    # Step 6: Convert links
+    html = re.sub(r'\[([^\]]+)\]\(([^\)]+)\)', r'<a href="\2">\1</a>', html)
 
-    # Convert unordered lists
-    html = re.sub(r'^\- (.*?)$', r'<li>\1</li>', html, flags=re.MULTILINE)
-    html = re.sub(r'((?:<li>.*?</li>\n?)+)', r'<ul>\1</ul>', html, flags=re.DOTALL)
+    # Step 7: Convert bold and italic (after links to avoid interference)
+    html = re.sub(r'\*\*([^\*]+)\*\*', r'<strong>\1</strong>', html)
+    html = re.sub(r'\*([^\*]+)\*', r'<em>\1</em>', html)
 
-    # Convert paragraphs (lines separated by blank lines)
-    paragraphs = []
-    current_p = []
-    for line in html.split('\n'):
-        line = line.strip()
-        if line and not line.startswith('<'):
-            current_p.append(line)
-        else:
-            if current_p:
-                paragraphs.append('<p>' + ' '.join(current_p) + '</p>')
-                current_p = []
-            if line:
-                paragraphs.append(line)
-    if current_p:
-        paragraphs.append('<p>' + ' '.join(current_p) + '</p>')
+    # Step 8: Convert inline code (after bold/italic to avoid conflicts)
+    html = re.sub(r'`([^`]+)`', r'<code>\1</code>', html)
 
-    html = '\n'.join(paragraphs)
+    # Step 9: Convert lists
+    html = convert_lists(html)
 
-    # Handle badges (convert to simple links)
-    html = re.sub(r'<p>\[<img[^>]*alt="([^"]*)"[^>]*>\]\(([^\)]+)\)</p>', r'<div class="badge"><a href="\2">\1</a></div>', html)
+    # Step 10: Handle details/summary (HTML pass-through)
+    html = re.sub(r'<details>', r'<details class="collapsible">', html)
 
-    # Handle details/summary
-    html = re.sub(r'<details>(.*?)</details>', r'<details class="collapsible">\1</details>', html, flags=re.DOTALL)
-    html = re.sub(r'<summary>(.*?)</summary>', r'<summary>\1</summary>', html)
+    # Step 11: Convert remaining text to paragraphs (LAST step)
+    html = wrap_paragraphs(html)
 
     return html
+
+
+def escape_html(text):
+    """Escape HTML special characters."""
+    return (text.replace('&', '&amp;')
+                .replace('<', '&lt;')
+                .replace('>', '&gt;')
+                .replace('"', '&quot;')
+                .replace("'", '&#39;'))
+
+
+def convert_tables(html):
+    """Convert markdown tables to HTML tables."""
+    lines = html.split('\n')
+    result = []
+    in_table = False
+    table_lines = []
+
+    for line in lines:
+        # Detect table rows (lines with | separators)
+        if '|' in line and line.strip().startswith('|'):
+            if not in_table:
+                in_table = True
+                table_lines = []
+            table_lines.append(line)
+        else:
+            # End of table
+            if in_table:
+                result.append(render_table(table_lines))
+                in_table = False
+                table_lines = []
+            result.append(line)
+
+    # Handle table at end of file
+    if in_table:
+        result.append(render_table(table_lines))
+
+    return '\n'.join(result)
+
+
+def render_table(table_lines):
+    """Render markdown table as HTML."""
+    if len(table_lines) < 2:
+        return '\n'.join(table_lines)  # Not a valid table
+
+    html = ['<table>']
+
+    for i, line in enumerate(table_lines):
+        # Skip separator line (contains only |, -, and spaces)
+        if re.match(r'^\s*\|[\s\-:|]+\|\s*$', line):
+            continue
+
+        # Parse cells
+        cells = [cell.strip() for cell in line.strip('|').split('|')]
+
+        # First row is header
+        if i == 0:
+            html.append('<thead><tr>')
+            for cell in cells:
+                html.append(f'<th>{cell}</th>')
+            html.append('</tr></thead><tbody>')
+        else:
+            html.append('<tr>')
+            for cell in cells:
+                html.append(f'<td>{cell}</td>')
+            html.append('</tr>')
+
+    html.append('</tbody></table>')
+    return '\n'.join(html)
+
+
+def convert_lists(html):
+    """Convert markdown lists to HTML lists."""
+    lines = html.split('\n')
+    result = []
+    in_list = False
+    list_items = []
+
+    for line in lines:
+        # Unordered list item
+        if re.match(r'^\s*[-*+]\s+', line):
+            item = re.sub(r'^\s*[-*+]\s+', '', line)
+            if not in_list:
+                in_list = True
+                list_items = []
+            list_items.append(f'<li>{item}</li>')
+        else:
+            # End of list
+            if in_list:
+                result.append('<ul>')
+                result.extend(list_items)
+                result.append('</ul>')
+                in_list = False
+                list_items = []
+            result.append(line)
+
+    # Handle list at end of file
+    if in_list:
+        result.append('<ul>')
+        result.extend(list_items)
+        result.append('</ul>')
+
+    return '\n'.join(result)
+
+
+def wrap_paragraphs(html):
+    """Wrap text that isn't already in HTML tags into paragraphs."""
+    lines = html.split('\n')
+    result = []
+    paragraph_lines = []
+
+    for line in lines:
+        line = line.strip()
+
+        # Skip empty lines
+        if not line:
+            if paragraph_lines:
+                result.append('<p>' + ' '.join(paragraph_lines) + '</p>')
+                paragraph_lines = []
+            result.append('')
+            continue
+
+        # If line starts with HTML tag, it's already formatted
+        if line.startswith('<'):
+            if paragraph_lines:
+                result.append('<p>' + ' '.join(paragraph_lines) + '</p>')
+                paragraph_lines = []
+            result.append(line)
+        else:
+            # Accumulate plain text lines
+            paragraph_lines.append(line)
+
+    # Handle paragraph at end
+    if paragraph_lines:
+        result.append('<p>' + ' '.join(paragraph_lines) + '</p>')
+
+    return '\n'.join(result)
 
 
 def create_html_page(md_content):
@@ -253,18 +391,11 @@ def create_html_page(md_content):
             margin-bottom: 0.5rem;
         }}
 
-        .badge a {{
-            background: #3498db;
-            color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 3px;
-            font-size: 0.85rem;
-            text-decoration: none;
-        }}
-
-        .badge a:hover {{
-            background: #2980b9;
-            text-decoration: none;
+        .badge img {{
+            display: inline-block;
+            margin: 0;
+            box-shadow: none;
+            vertical-align: middle;
         }}
 
         details {{
