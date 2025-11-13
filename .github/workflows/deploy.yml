@@ -115,6 +115,7 @@ jobs:
             texlive-fonts-recommended \
             texlive-fonts-extra \
             texlive-science \
+            texlive-xetex \
             latexmk
 
       - name: Install Python dependencies
@@ -135,8 +136,8 @@ jobs:
           leanblueprint pdf || echo "PDF generation failed, continuing with web version only"
           echo "=== Blueprint PDF build output ==="
           ls -la print/ || echo "WARNING: print directory not found"
-          if [ -f "print/blueprint.pdf" ]; then
-            echo "PDF successfully generated: $(ls -lh print/blueprint.pdf)"
+          if [ -f "print/print.pdf" ]; then
+            echo "PDF successfully generated: $(ls -lh print/print.pdf)"
           else
             echo "PDF not generated"
           fi
@@ -162,8 +163,8 @@ jobs:
         run: |
           mkdir -p _site/graph
           # Copy PDF to graph directory if it exists, then create page
-          if [ -f "blueprint/print/blueprint.pdf" ]; then
-            cp blueprint/print/blueprint.pdf _site/graph/
+          if [ -f "blueprint/print/print.pdf" ]; then
+            cp blueprint/print/print.pdf _site/graph/blueprint.pdf
             echo "Blueprint PDF copied to graph directory"
             bash .github/scripts/create_graph_page.sh _site/graph blueprint.pdf
           else
