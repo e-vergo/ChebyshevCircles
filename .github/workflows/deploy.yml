@@ -17,9 +17,59 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  # Fast build - just landing page and GIFs
+  build-landing:
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
+      - name: Copy static landing page
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+          echo "Static landing page copied successfully"
+
+      - name: Copy visualization GIFs
+        run: |
+          if [ -d "chebyshev_gifs" ]; then
+            cp -r chebyshev_gifs _site/
+            echo "Visualization GIFs copied successfully"
+          else
+            echo "ERROR: Chebyshev GIFs directory not found"
+            exit 1
+          fi
+
+      - name: List landing page contents
+        run: |
+          echo "=== Landing page deployment structure ==="
+          find _site -type f
+
+      - name: Upload landing page artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+          name: 'github-pages-landing'
+
+  # Deploy landing page immediately
+  deploy-landing:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build-landing
+    steps:
+      - name: Deploy landing page to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: 'github-pages-landing'
+
+  # Full build - everything including docs and blueprint
+  build-full:
+    runs-on: ubuntu-latest
+    needs: deploy-landing
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -121,6 +171,11 @@ jobs:
             bash .github/scripts/create_graph_page.sh _site/graph
           fi
 
+      - name: Copy static landing page
+        run: |
+          cp index.html _site/
+          echo "Static landing page copied to full deployment"
+
       - name: Copy visualization GIFs
         run: |
           if [ -d "chebyshev_gifs" ]; then
@@ -130,30 +185,28 @@ jobs:
             echo "WARNING: Chebyshev GIFs directory not found"
           fi
 
-      # Create landing page from README
-      - name: Create landing page from README
+      - name: List full deployment contents
         run: |
-          python3 .github/scripts/readme_to_html.py README.md _site/index.html
-          echo "Landing page created from README.md"
-
-      - name: List deployment contents
-        run: |
-          echo "=== Deployment structure ==="
+          echo "=== Full deployment structure ==="
           find _site -type f | head -50
 
-      - name: Upload artifact
+      - name: Upload full site artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: '_site'
+          name: 'github-pages-full'
 
-  deploy:
+  # Deploy full site
+  deploy-full:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    needs: build
+    needs: build-full
     steps:
-      - name: Deploy to GitHub Pages
+      - name: Deploy full site to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: 'github-pages-full'

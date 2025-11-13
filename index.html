@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chebyshev Circles - Formal Verification</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+
+        .header {
+            background: #fff;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            color: #2c3e50;
+        }
+
+        .nav {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .nav a {
+            color: #2c3e50;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .nav a:hover {
+            background: #f0f0f0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .content {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 3rem;
+        }
+
+        .badges {
+            margin: 1.5rem 0;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badges img {
+            height: 20px;
+        }
+
+        .theorem-box {
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 4px;
+        }
+
+        .theorem-box h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+
+        .theorem-statement {
+            font-family: 'Courier New', monospace;
+            background: #fff;
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin-top: 0.5rem;
+        }
+
+        .construction {
+            margin-top: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .construction ul {
+            margin-left: 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .construction li {
+            margin-bottom: 0.25rem;
+        }
+
+        .visualization {
+            margin: 2.5rem 0;
+            text-align: center;
+        }
+
+        .visualization img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .visualization figcaption {
+            margin-top: 1rem;
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            text-align: left;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 0.5rem;
+        }
+
+        h2:first-of-type {
+            margin-top: 0;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            margin-top: 2rem;
+            margin-bottom: 0.75rem;
+            color: #34495e;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: #555;
+        }
+
+        .components {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .component-card {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .component-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .component-card h3 {
+            margin-top: 0;
+            font-size: 1.25rem;
+            color: #2c3e50;
+        }
+
+        .component-card p {
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+
+        .component-card a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .component-card a:hover {
+            text-decoration: underline;
+        }
+
+        .stats {
+            display: flex;
+            gap: 2rem;
+            margin: 1.5rem 0;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        code {
+            background: #f8f9fa;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>Chebyshev Circles</h1>
+            <nav class="nav">
+                <a href="./blueprint/">Blueprint</a>
+                <a href="./docs/">API Docs</a>
+                <a href="./graph/">Dependency Graph</a>
+                <a href="https://github.com/e-vergo/ChebyshevCircles">GitHub</a>
+            </nav>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="content">
+            <h2>Rotated Roots of Unity and Chebyshev Polynomials</h2>
+
+            <div class="badges">
+                <a href="https://github.com/e-vergo/ChebyshevCircles/actions/workflows/lean_action_ci.yml">
+                    <img src="https://github.com/e-vergo/ChebyshevCircles/actions/workflows/lean_action_ci.yml/badge.svg" alt="CI">
+                </a>
+                <a href="https://e-vergo.github.io/ChebyshevCircles/">
+                    <img src="https://img.shields.io/badge/docs-passing-brightgreen" alt="Documentation">
+                </a>
+                <a href="LICENSE">
+                    <img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg" alt="License">
+                </a>
+            </div>
+
+            <p>
+                When the N-th roots of unity are rotated by angle φ and projected onto the real axis and then taken to be
+                the roots of a polynomial, after scaling by 2<sup>N-1</sup> the polynomial formed from these projections
+                equals the N-th Chebyshev polynomial of the first kind plus a φ-dependent constant.
+            </p>
+
+            <div class="theorem-box">
+                <h3>Main Theorem</h3>
+                <div class="theorem-statement">
+theorem rotated_roots_yield_chebyshev (N : ℕ) (φ : ℝ) (hN : 0 < N) :<br>
+&nbsp;&nbsp;∃ (c : ℝ), scaledPolynomial N φ = Polynomial.Chebyshev.T ℝ N + C c
+                </div>
+                <div class="construction">
+                    <strong>Construction:</strong>
+                    <ul>
+                        <li>Projected roots: <code>cos(φ + 2πk/N)</code> for k = 0, ..., N-1</li>
+                        <li>Unscaled polynomial: <code>P(x) = ∏(x - cos(φ + 2πk/N))</code></li>
+                        <li>Scaled polynomial: <code>S(x) = 2<sup>N-1</sup> · P(x)</code></li>
+                        <li>Result: <code>S(x) = T<sub>N</sub>(x) + c(φ)</code></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="visualization">
+                <figure>
+                    <img src="chebyshev_gifs/chebyshev_animation_N5.gif" alt="N=5 Chebyshev Circle Animation">
+                    <figcaption>
+                        Animation showing N=5 roots of unity being rotated. The regular pentagon (coral edges) rotates with
+                        the roots (red points). Vertical projection lines show how roots project to the real axis (pink points),
+                        which serve as roots for the blue polynomial curve. The displayed polynomial equation updates in real-time,
+                        showing that the curve's shape remains a 5th-degree Chebyshev polynomial (T₅(x)) while only the constant
+                        term <em>c</em> changes with rotation angle φ.
+                    </figcaption>
+                </figure>
+            </div>
+
+            <h2>Project Components</h2>
+
+            <div class="components">
+                <div class="component-card">
+                    <h3>Formal Verification</h3>
+                    <p>Complete Lean 4 formalization across 10 modules with full proofs.</p>
+                    <div class="stats">
+                        <div class="stat">
+                            <div class="stat-number">3,457</div>
+                            <div class="stat-label">Lines of Proof</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number">0</div>
+                            <div class="stat-label">Sorry Statements</div>
+                        </div>
+                    </div>
+                    <a href="./docs/">View API Documentation →</a>
+                </div>
+
+                <div class="component-card">
+                    <h3>Blueprint</h3>
+                    <p>Interactive documentation showing dependency structure and formalization status.</p>
+                    <p>Navigate through the proof architecture and see cross-references between mathematical exposition and Lean code.</p>
+                    <a href="./blueprint/">Explore Blueprint →</a>
+                </div>
+
+                <div class="component-card">
+                    <h3>Dependency Graph</h3>
+                    <p>Visual representation of how all lemmas, theorems, and definitions connect.</p>
+                    <p>See the complete proof structure from foundational results to the main theorem.</p>
+                    <a href="./graph/">View Dependency Graph →</a>
+                </div>
+
+                <div class="component-card">
+                    <h3>Research Paper</h3>
+                    <p>Publication-ready mathematics paper (14 pages) with complete proofs in classical notation.</p>
+                    <p>Traditional exposition targeting a general mathematical audience at graduate level.</p>
+                    <a href="https://github.com/e-vergo/ChebyshevCircles/tree/main/paper">Read Paper →</a>
+                </div>
+            </div>
+
+            <h2>Why This Connection Matters</h2>
+
+            <p>
+                This theorem reveals a surprising geometric interpretation of Chebyshev polynomials. Rather than defining
+                them via recurrence relations or cosine composition, we can construct them by taking N equally-spaced points
+                on the unit circle, rotating them by any angle, projecting onto the real axis, building the polynomial with
+                these projections as roots, and scaling by 2<sup>N-1</sup>. The result is always T<sub>N</sub>(x) plus a constant.
+            </p>
+
+            <p>
+                This provides a bridge between discrete geometry (roots of unity on the circle), harmonic analysis
+                (discrete orthogonality relations), and polynomial theory (Chebyshev polynomials).
+            </p>
+
+            <h3>Proof Strategy</h3>
+
+            <p>
+                The verification establishes that rotated roots and Chebyshev roots have identical power sums (except the
+                zeroth), which by Newton's identities implies they generate polynomials differing only by a constant term.
+                The power sum equality relies on discrete orthogonality of complex exponentials over N-th roots of unity,
+                the discrete analog of continuous Fourier orthogonality.
+            </p>
+
+            <h2>Getting Started</h2>
+
+            <p>
+                <strong>Prerequisites:</strong> Lean 4 (v4.25.0-rc2), basic familiarity with polynomials, complex numbers,
+                and trigonometric identities.
+            </p>
+
+            <p>
+                Clone the repository and build the project:
+            </p>
+
+            <div class="theorem-statement">
+git clone https://github.com/e-vergo/ChebyshevCircles.git<br>
+cd ChebyshevCircles<br>
+lake exe cache get<br>
+lake build
+            </div>
+
+            <p>
+                Explore the <a href="./blueprint/">Blueprint</a> for an interactive map of the formalization,
+                check the <a href="./docs/">API Documentation</a> for detailed proofs, or view the
+                <a href="./graph/">Dependency Graph</a> to understand the proof structure.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
