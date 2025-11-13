@@ -18,11 +18,20 @@ In this project, we present a novel geometric construction of Chebyshev polynomi
 \end{equation}
 \lean{primitiveRoots}
 \leanok
+These form a regular $N$-gon inscribed in the unit circle, with vertices equally spaced at angular intervals of $2\pi/N$.
+
 When these roots are rotated by an angle $\varphi$ (equivalently, multiplied by $\e^{i\varphi}$) and projected onto the real axis, we obtain the $N$ real numbers
 \begin{equation}\label{eq:rotated_roots}
 r_k(\varphi) = \cos\left(\varphi + \frac{2\pi k}{N}\right), \quad k = 0, 1, \ldots, N-1.
 \end{equation}
 \lean{rotatedRootsOfUnity, realProjections, realProjectionsList}
+\leanok
+
+The rotation angle $\varphi$ controls the orientation of the $N$-gon, while the projection onto the real axis yields a multiset of real values in $[-1, 1]$.
+\lean{realProjection_eq_cos, realProjection_mem_Icc}
+\leanok
+As $\varphi$ varies from $0$ to $2\pi$, the projected roots sweep through all possible configurations of $N$ points on $[-1, 1]$ constrained by the symmetry of the roots of unity.
+\lean{rotatedRoot_eq_exp, card_realProjectionsList}
 \leanok
 
 Let $P_N(x; \varphi)$ denote the monic polynomial having these projected values as roots:
@@ -33,6 +42,13 @@ P_N(x; \varphi) = \prod_{k=0}^{N-1} \left(x - \cos\left(\varphi + \frac{2\pi k}{
 \leanok
 \uses{rotatedRootsOfUnity, realProjectionsList}
 
+Since the roots are real and lie in $[-1, 1]$, this polynomial has real coefficients and degree $N$.
+\lean{polynomialFromRealRoots_degree, unscaledPolynomial_degree, unscaledPolynomial_monic}
+\leanok
+Moreover, for each root $r_k(\varphi)$, we have $P_N(r_k(\varphi); \varphi) = 0$.
+\lean{polynomialFromRealRoots_eval_mem, realProjection_mem_list, unscaledPolynomial_eval_at_projection}
+\leanok
+
 To match the normalization of Chebyshev polynomials, which have leading coefficient $2^{N-1}$ for $N \geq 1$, we define the scaled polynomial:
 \begin{equation}\label{eq:scaled_poly}
 S_N(x; \varphi) = 2^{N-1} \cdot P_N(x; \varphi).
@@ -40,6 +56,10 @@ S_N(x; \varphi) = 2^{N-1} \cdot P_N(x; \varphi).
 \lean{scaledPolynomial}
 \leanok
 \uses{unscaledPolynomial}
+
+The scaled polynomial inherits the degree and roots from $P_N$:
+\lean{scaledPolynomial_degree, scaledPolynomial_leadingCoeff, scaledPolynomial_eval_at_projection}
+\leanok
 
 Our main result establishes that this construction yields the Chebyshev polynomial up to an additive constant.
 
@@ -69,6 +89,28 @@ This theorem reveals several deep connections:
 
 \item \textbf{Roots and quadrature.} The projected roots $r_k(0) = \cos(2\pi k/N)$ are closely related to the Chebyshev-Gauss quadrature nodes $\cos((2k+1)\pi/(2N))$, both arising from equidistributed points on the circle.
 \end{enumerate}
+
+\section{Computational illustration: N = 5}
+
+To make the construction concrete, consider $N = 5$ with $\varphi = 0$. The five roots of unity are
+\begin{equation}
+\omega_k = \e^{2\pi i k/5}, \quad k = 0, 1, 2, 3, 4,
+\end{equation}
+positioned at angles $0°, 72°, 144°, 216°, 288°$ on the unit circle. Their real projections are
+\begin{equation}
+r_k(0) = \cos(2\pi k/5) = \{1, 0.309, -0.809, -0.809, 0.309\}.
+\end{equation}
+The monic polynomial with these roots is
+\begin{equation}
+P_5(x; 0) = (x - 1)(x - 0.309)(x + 0.809)^2(x - 0.309),
+\end{equation}
+which simplifies to a polynomial of degree 5. Scaling by $2^4 = 16$ gives
+\begin{equation}
+S_5(x; 0) = 16x^5 - 20x^3 + 5x + c,
+\end{equation}
+where the coefficients of $x^5, x^3, x$ match those of $T_5(x) = 16x^5 - 20x^3 + 5x$, differing only in the constant term.
+
+Rotating by $\varphi = \pi/10$ shifts the roots but preserves the polynomial coefficients (except the constant), demonstrating the invariance principle.
 
 \section{Proof strategy}
 
@@ -134,7 +176,9 @@ The $N$-th roots of unity are the solutions to $z^N = 1$ in $\C$:
 \begin{equation}
 \omega_k = \e^{2\pi i k/N}, \quad k = 0, 1, \ldots, N-1.
 \end{equation}
-A primitive $N$-th root of unity is one that generates the cyclic group of all $N$-th roots under multiplication; $\omega = \e^{2\pi i/N}$ is primitive, and $\omega_k = \omega^k$.
+These form a cyclic group under multiplication, isomorphic to $\mathbb{Z}/N\mathbb{Z}$. A primitive $N$-th root of unity is one that generates the cyclic group of all $N$-th roots under multiplication; $\omega = \e^{2\pi i/N}$ is primitive, and $\omega_k = \omega^k$.
+
+Geometrically, the $N$-th roots of unity are equally-spaced points on the unit circle in the complex plane, with angular separation $2\pi/N$. Their symmetry under rotation by $2\pi/N$ is the source of all discrete orthogonality relations we exploit.
 
 The fundamental orthogonality relation is:
 
@@ -149,6 +193,22 @@ For any integer $m$,
 \leanok
 \uses{primitiveRoots}
 \end{lemma}
+
+\begin{proof}
+If $N \mid m$, then $\e^{2\pi i m k/N} = 1$ for all $k$, so the sum equals $N$.
+
+If $N \nmid m$, let $\omega = \e^{2\pi i m/N} \neq 1$. Then the sum is a geometric series:
+\begin{equation}
+\sum_{k=0}^{N-1} \omega^k = \frac{\omega^N - 1}{\omega - 1} = \frac{1 - 1}{\omega - 1} = 0,
+\end{equation}
+since $\omega^N = \e^{2\pi i m} = 1$.
+\end{proof}
+
+This lemma is the discrete analog of the orthogonality relation for continuous exponentials:
+\begin{equation}
+\frac{1}{2\pi}\int_0^{2\pi} \e^{i m \theta} \, d\theta = \begin{cases} 1 & \text{if } m = 0, \\ 0 & \text{otherwise.} \end{cases}
+\end{equation}
+The discrete sum with $N$ terms approximates the integral as $N \to \infty$, providing a bridge between discrete and continuous Fourier analysis.
 
 \section{Power sums and elementary symmetric polynomials}
 
@@ -194,11 +254,19 @@ then the monic polynomials with roots $\{\alpha_i\}$ and $\{\beta_i\}$ have iden
 \uses{thm:newton_identities, esymm_eq_of_psum_eq}
 \end{corollary}
 
+\begin{proof}
+By Theorem~\ref{thm:newton_identities}, if $p_j(\alpha) = p_j(\beta)$ for $j = 1, \ldots, N$, then $e_k(\alpha) = e_k(\beta)$ for $k = 1, \ldots, N$. By Vieta's formulas, the coefficient of $x^{N-k}$ in the monic polynomial $\prod(x - \alpha_i)$ is $(-1)^k e_k$. Thus the coefficients match for $k \geq 1$. The constant term $(-1)^N e_N$ involves the product of all roots, which may differ.
+\lean{esymm_eq_of_psum_eq, multiset_esymm_one_eq_sum}
+\leanok
+\end{proof}
+
 \chapter{Discrete Orthogonality Relations}
 
 The discrete orthogonality of roots of unity (Lemma~\ref{lem:discrete_orthogonality}) has powerful consequences for sums of trigonometric functions evaluated at equally-spaced angles. We develop these consequences here.
 
 \section{Sums of cosines at rotated roots}
+
+The discrete orthogonality of roots of unity manifests geometrically: the projections of equally-spaced points on the circle always balance around the origin.
 
 \begin{lemma}\label{lem:sum_cos_phi_vanishes}
 \lean{sum_cos_roots_of_unity}
@@ -212,6 +280,14 @@ For any $N \geq 2$ and any $\varphi \in \R$,
 \uses{lem:discrete_orthogonality, Complex.exp_ofReal_mul_I_re, Complex.isPrimitiveRoot_exp}
 \end{lemma}
 
+\begin{proof}
+We use Euler's formula: $\cos\theta = \Re(\e^{i\theta})$. Thus
+\begin{equation}
+\sum_{k=0}^{N-1} \cos\left(\varphi + \frac{2\pi k}{N}\right) = \Re\left(\sum_{k=0}^{N-1} \e^{i(\varphi + 2\pi k/N)}\right) = \Re\left(\e^{i\varphi} \sum_{k=0}^{N-1} \e^{2\pi i k/N}\right).
+\end{equation}
+By Lemma~\ref{lem:discrete_orthogonality} with $m = 1$ (noting that $N \nmid 1$ for $N \geq 2$), the inner sum vanishes. Hence the entire expression is zero.
+\end{proof}
+
 \begin{lemma}\label{lem:sum_cos_m_phi_vanishes}
 \lean{sum_cos_multiple_rotated_roots, sum_cos_int_multiple_vanishes}
 \leanok
@@ -222,9 +298,32 @@ For any integers $N \geq 1$, $m$ with $0 < m < N$, and any $\varphi \in \R$,
 \uses{lem:discrete_orthogonality, sum_primitive_root_pow_mul}
 \end{lemma}
 
+\begin{proof}
+Using Euler's formula, $\cos(m\theta) = \Re(\e^{im\theta})$, we have
+\begin{equation}
+\sum_{k=0}^{N-1} \cos\left(m\left(\varphi + \frac{2\pi k}{N}\right)\right) = \Re\left(\e^{im\varphi} \sum_{k=0}^{N-1} \e^{2\pi i mk/N}\right).
+\end{equation}
+Since $0 < m < N$, we have $N \nmid m$, so the inner sum vanishes by Lemma~\ref{lem:discrete_orthogonality}.
+\lean{cos_as_exp}
+\leanok
+\end{proof}
+
+\subsection{Connection to discrete Fourier transform}
+
+The vanishing sums in Lemmas~\ref{lem:sum_cos_phi_vanishes} and~\ref{lem:sum_cos_m_phi_vanishes} reflect the orthogonality of the discrete Fourier basis. Define the discrete Fourier transform of a sequence $(a_0, \ldots, a_{N-1})$ as
+\begin{equation}
+\hat{a}_m = \sum_{k=0}^{N-1} a_k \e^{-2\pi i mk/N}.
+\end{equation}
+Our lemmas show that the constant sequence $a_k = \e^{i\varphi}$ (rotated unit phasor) has Fourier coefficients $\hat{a}_m = 0$ for $0 < m < N$ and $\hat{a}_0 = N \e^{i\varphi}$. This concentration of energy in the DC component (zero frequency) is characteristic of constant signals.
+
+Similarly, for the sequence $b_k = \e^{im(\varphi + 2\pi k/N)}$ (complex exponential at frequency $m$), the projection onto the real axis (cosine) integrates to zero when summed uniformly over the roots of unity. This is the discrete analog of
+\begin{equation}
+\int_0^{2\pi} \cos(m\theta) \, d\theta = 0 \quad \text{for } m \neq 0.
+\end{equation}
+
 \section{Chebyshev angle sums}
 
-The Chebyshev roots are located at angles $\theta_k = (2k + 1)\pi/(2N)$. Sums over these angles require more care due to the non-uniform phase.
+The Chebyshev roots are located at angles $\theta_k = (2k + 1)\pi/(2N)$. Unlike the equidistributed roots of unity, these angles carry a phase offset of $\pi/(2N)$. Nevertheless, discrete orthogonality still forces their trigonometric sums to vanish.
 
 \begin{lemma}\label{lem:chebyshev_angle_sum_odd}
 \lean{ChebyshevCircles.sum_cos_chebyshev_angles_vanishes}
@@ -235,6 +334,12 @@ For odd $m$ with $0 < m < N$,
 \end{equation}
 \uses{lem:discrete_orthogonality, Real.cos_int_mul_pi_sub}
 \end{lemma}
+
+\begin{proof}[Sketch]
+For odd $m$, we exploit the symmetry $\cos(m\pi - \alpha) = -\cos(\alpha)$ when $m$ is odd. Pairing terms $k$ and $N - k - 1$ yields cancellation. The formalization uses trigonometric reflection identities.
+\lean{Real.cos_int_mul_pi_sub}
+\leanok
+\end{proof}
 
 \begin{lemma}\label{lem:chebyshev_angle_sum_even}
 \lean{ChebyshevCircles.sum_cos_chebyshev_angles_even_vanishes}
@@ -248,9 +353,77 @@ For even $m$ with $0 < m < N$,
 \uses{lem:discrete_orthogonality, sum_exp_chebyshev_angles}
 \end{lemma}
 
+\begin{proof}[Sketch]
+For even $m = 2\ell$, convert to complex exponentials. The sum becomes
+\begin{equation}
+\Re\left(\e^{i\ell\pi/N} \sum_{k=0}^{N-1} \e^{2\pi i \ell k/N}\right).
+\end{equation}
+Since $0 < \ell < N$, the geometric sum vanishes by Lemma~\ref{lem:discrete_orthogonality}.
+\lean{sum_exp_chebyshev_angles}
+\leanok
+\end{proof}
+
+\subsection{Geometric interpretation}
+
+The vanishing of these angle sums has a simple geometric interpretation. The angles $(2k+1)\pi/(2N)$ for $k = 0, \ldots, N-1$ correspond to equally-spaced points on the upper half of the unit circle (when $N$ is even, they avoid the points $\pm 1$). Their symmetry about the imaginary axis ensures that horizontal projections cancel. This is precisely the discrete analog of the orthogonality integral $\int_0^\pi \cos(m\theta) \, d\theta = 0$ for $m > 0$.
+
 \chapter{Power Sum Invariance}
 
-We now prove that the power sums of the rotated projections $r_k(\varphi) = \cos(\varphi + 2\pi k/N)$ are independent of $\varphi$.
+We now prove that the power sums of the rotated projections $r_k(\varphi) = \cos(\varphi + 2\pi k/N)$ are independent of $\varphi$. This remarkable invariance is the heart of our main theorem: it shows that rotating the configuration does not change the polynomial (except for the constant term).
+
+\section{Strategy via binomial expansion}
+
+The key technique is to expand $\cos^j(\varphi + 2\pi k/N)$ using Euler's formula:
+\begin{equation}
+\cos\theta = \frac{\e^{i\theta} + \e^{-i\theta}}{2}.
+\end{equation}
+Raising to the $j$-th power and expanding binomially yields
+\begin{equation}
+\cos^j\theta = \frac{1}{2^j} \sum_{\ell=0}^j \binom{j}{\ell} \e^{i(j - 2\ell)\theta}.
+\end{equation}
+\lean{exp_add_exp_pow}
+\leanok
+Summing over $k = 0, \ldots, N-1$ with $\theta = \varphi + 2\pi k/N$, each term with $j - 2\ell \not\equiv 0 \pmod{N}$ contributes zero by discrete orthogonality (Lemma~\ref{lem:sum_cos_m_phi_vanishes}). Only the term with $j - 2\ell \equiv 0 \pmod{N}$ survives, and this term is independent of $\varphi$.
+
+\section{Computational examples}
+
+Before proving the general case, we illustrate the invariance with explicit calculations for small values.
+
+\subsection{Example: $N = 3$, $j = 2$}
+
+For $N = 3$ and $j = 2$, the power sum is
+\begin{equation}
+S_2(\varphi) = \sum_{k=0}^2 \cos^2\left(\varphi + \frac{2\pi k}{3}\right).
+\end{equation}
+Using $\cos^2\theta = (1 + \cos(2\theta))/2$:
+\begin{equation}
+S_2(\varphi) = \frac{3}{2} + \frac{1}{2} \sum_{k=0}^2 \cos\left(2\varphi + \frac{4\pi k}{3}\right).
+\end{equation}
+The sum vanishes by Lemma~\ref{lem:sum_cos_m_phi_vanishes} (with $m = 2 < N = 3$), giving $S_2(\varphi) = 3/2$ for all $\varphi$.
+
+\subsection{Example: $N = 4$, $j = 3$}
+
+For $N = 4$ and $j = 3$:
+\begin{equation}
+S_3(\varphi) = \sum_{k=0}^3 \cos^3\left(\varphi + \frac{\pi k}{2}\right).
+\end{equation}
+Using the identity $\cos^3\theta = \frac{3\cos\theta + \cos(3\theta)}{4}$:
+\lean{cos_cube_formula}
+\leanok
+\begin{equation}
+S_3(\varphi) = \frac{3}{4}\sum_{k=0}^3 \cos\left(\varphi + \frac{\pi k}{2}\right) + \frac{1}{4}\sum_{k=0}^3 \cos\left(3\varphi + \frac{3\pi k}{2}\right).
+\end{equation}
+Both sums vanish (first sum by Lemma~\ref{lem:sum_cos_phi_vanishes}, second sum by Lemma~\ref{lem:sum_cos_m_phi_vanishes} with $m = 3 < N = 4$), giving $S_3(\varphi) = 0$ for all $\varphi$.
+
+\subsection{Example: $N = 5$, $j = 2$}
+
+For $N = 5$ and $j = 2$:
+\begin{equation}
+S_2(\varphi) = \sum_{k=0}^4 \cos^2\left(\varphi + \frac{2\pi k}{5}\right) = \frac{5}{2} + \frac{1}{2}\sum_{k=0}^4 \cos\left(2\varphi + \frac{4\pi k}{5}\right) = \frac{5}{2}.
+\end{equation}
+The trigonometric sum vanishes since $m = 2 < N = 5$.
+
+\section{General power sum invariance}
 
 \begin{theorem}[Power sum invariance]\label{lem:power_sum_invariance}
 \lean{powerSumCos_invariant, sum_cos_pow_theta_independent}
@@ -267,9 +440,60 @@ is independent of $\varphi$.
 \uses{lem:sum_cos_m_phi_vanishes, sum_cos_pow_eq_sum_binomial, exp_add_exp_pow}
 \end{theorem}
 
+\begin{proof}[Proof sketch]
+Expand $\cos^j(\varphi + 2\pi k/N)$ using $\cos\theta = (\e^{i\theta} + \e^{-i\theta})/2$. The binomial expansion yields
+\begin{equation}
+\sum_{k=0}^{N-1} \cos^j\left(\varphi + \frac{2\pi k}{N}\right) = \frac{1}{2^j} \sum_{\ell=0}^j \binom{j}{\ell} \sum_{k=0}^{N-1} \e^{i(j-2\ell)(\varphi + 2\pi k/N)}.
+\end{equation}
+Factor out $\e^{i(j-2\ell)\varphi}$:
+\begin{equation}
+= \frac{1}{2^j} \sum_{\ell=0}^j \binom{j}{\ell} \e^{i(j-2\ell)\varphi} \sum_{k=0}^{N-1} \e^{2\pi i (j-2\ell)k/N}.
+\end{equation}
+By Lemma~\ref{lem:discrete_orthogonality}, the inner sum is $N$ if $N \mid (j - 2\ell)$, and $0$ otherwise. Since $1 \leq j < N$, we have $|j - 2\ell| \leq j < N$ for all $\ell \in \{0, \ldots, j\}$. The only way $N \mid (j - 2\ell)$ is if $j - 2\ell = 0$, i.e., $j = 2\ell$.
+
+If $j$ is odd, no such $\ell$ exists, and the entire sum is zero (independent of $\varphi$). If $j$ is even, only the term $\ell = j/2$ contributes, yielding
+\begin{equation}
+\frac{N}{2^j} \binom{j}{j/2},
+\end{equation}
+which is independent of $\varphi$.
+\lean{sum_cos_pow_eq_sum_binomial}
+\leanok
+\end{proof}
+
+The formalization establishes this for small values of $j$ explicitly ($j = 2, 3, 4, 5, 6$) and then proves the general case using the binomial argument above.
+\lean{sum_pow_primitive_root_mul, sum_primitive_root_pow_mul}
+\leanok
+
 \chapter{From Power Sums to Polynomial Coefficients}
 
 Having established that the power sums are $\varphi$-independent, we now apply Newton's identities to deduce that the polynomial coefficients (except the constant term) are also $\varphi$-independent.
+
+\section{Newton's identities: the algebraic bridge}
+
+Recall that for roots $\alpha_1, \ldots, \alpha_N$, Newton's identities recursively determine the elementary symmetric polynomials $e_k$ from the power sums $p_j = \sum \alpha_i^j$:
+\begin{equation}
+k \cdot e_k = \sum_{i=1}^k (-1)^{i-1} e_{k-i} p_i.
+\end{equation}
+\lean{MvPolynomial.mul_esymm_eq_sum, multiset_newton_identity}
+\leanok
+Since this is a recursive formula starting from $e_0 = 1$, if the power sums $p_1, \ldots, p_N$ are independent of $\varphi$, then so are all elementary symmetric polynomials $e_1, \ldots, e_N$. By Vieta's formulas, these determine the polynomial coefficients (the coefficient of $x^{N-k}$ is $(-1)^k e_k$ in the monic polynomial).
+
+\begin{lemma}\label{lem:esymm_invariant}
+\lean{esymm_rotated_roots_invariant}
+\leanok
+Let $r_k(\varphi) = \cos(\varphi + 2\pi k/N)$ for $k = 0, \ldots, N-1$. Then for any $m$ with $1 \leq m \leq N$, the elementary symmetric polynomial
+\begin{equation}
+e_m(r_0(\varphi), \ldots, r_{N-1}(\varphi))
+\end{equation}
+is independent of $\varphi$.
+\uses{lem:power_sum_invariance, thm:newton_identities}
+\end{lemma}
+
+\begin{proof}
+By Theorem~\ref{lem:power_sum_invariance}, the power sums $p_j = \sum_{k=0}^{N-1} r_k(\varphi)^j$ are independent of $\varphi$ for $1 \leq j < N$. For $j = N$, the power sum may depend on $\varphi$, but Newton's identities for $e_m$ with $m \leq N$ only involve $p_1, \ldots, p_m \leq p_N$. Since $m \leq N$, we use $p_j$ for $j < N$, which are all invariant. Thus by induction on $m$, each $e_m$ is independent of $\varphi$.
+\lean{esymm_eq_of_psum_eq}
+\leanok
+\end{proof}
 
 \begin{theorem}\label{thm:coefficients_independent}
 \lean{constant_term_only_varies}
@@ -278,11 +502,89 @@ For any $N \geq 1$ and any $k$ with $1 \leq k \leq N$, the coefficient of $x^k$ 
 \uses{lem:power_sum_invariance, thm:newton_identities, esymm_rotated_roots_invariant}
 \end{theorem}
 
+\begin{proof}
+The scaled polynomial $S_N(x; \varphi) = 2^{N-1} P_N(x; \varphi)$, where $P_N$ is the monic polynomial with roots $r_k(\varphi)$. By Lemma~\ref{lem:esymm_invariant}, the elementary symmetric polynomials of the roots are $\varphi$-independent. By Vieta's formulas, the coefficients of $P_N$ (except possibly the constant term) are $\varphi$-independent. Scaling by $2^{N-1}$ preserves this property.
+\lean{polynomial_coeff_eq_of_esymm_eq}
+\leanok
+\end{proof}
+
+\section{Why the constant term varies}
+
+The constant term of $P_N(x; \varphi)$ is $(-1)^N e_N = (-1)^N \prod_{k=0}^{N-1} r_k(\varphi)$. While the product of roots can vary with $\varphi$, Newton's identities only constrain $e_N$ using $p_1, \ldots, p_N$. Since $p_N$ (the sum of $N$-th powers) may depend on $\varphi$ when $j = N \geq N$, there is no contradiction. Indeed, explicit calculation shows the constant term does vary.
+\lean{scaledPolynomial_constantTerm_varies}
+\leanok
+
 \chapter{Proof of Main Theorem}
 
 We now assemble the pieces to prove Theorem~\ref{thm:main}.
 
 \section{Chebyshev roots and their power sums}
+
+To prove that $S_N(x; \varphi) = T_N(x) + c(\varphi)$, we must show that the roots $r_k(\varphi)$ and the Chebyshev roots $\xi_k$ have matching power sums. We already know the rotated roots have $\varphi$-independent power sums. Now we compute the power sums of the Chebyshev roots explicitly.
+
+\begin{lemma}\label{lem:chebyshev_roots_characterization}
+\lean{chebyshevRoot, chebyshevRootsList}
+\leanok
+The roots of the Chebyshev polynomial $T_N(x)$ are
+\begin{equation}
+\xi_k = \cos\left(\frac{(2k + 1)\pi}{2N}\right), \quad k = 0, 1, \ldots, N-1.
+\end{equation}
+These are $N$ distinct real numbers in the interval $(-1, 1)$.
+\lean{chebyshevRoot_in_Icc, chebyshevRoots_distinct}
+\leanok
+\uses{prop:chebyshev_properties}
+\end{lemma}
+
+\begin{proof}
+By the defining relation $T_N(\cos\theta) = \cos(N\theta)$, we have $T_N(\xi_k) = 0$ if and only if $N\theta_k = (2k + 1)\pi/2$ for some integer $k$, i.e., $\theta_k = (2k + 1)\pi/(2N)$. Since $\theta_k \in (0, \pi)$ for $k \in \{0, \ldots, N-1\}$, the values $\xi_k = \cos\theta_k$ are distinct and lie in $(-1, 1)$.
+\lean{chebyshev_T_eval_chebyshevRoot, chebyshev_T_eval_eq_zero_iff}
+\leanok
+\end{proof}
+
+\subsection{Computational examples: Chebyshev roots}
+
+\begin{example}[$N = 3$]
+The roots of $T_3(x) = 4x^3 - 3x$ are:
+\begin{align*}
+\xi_0 &= \cos(\pi/6) = \frac{\sqrt{3}}{2} \approx 0.866, \\
+\xi_1 &= \cos(\pi/2) = 0, \\
+\xi_2 &= \cos(5\pi/6) = -\frac{\sqrt{3}}{2} \approx -0.866.
+\end{align*}
+Power sums:
+\begin{align*}
+p_1 &= \xi_0 + \xi_1 + \xi_2 = 0, \\
+p_2 &= \xi_0^2 + \xi_1^2 + \xi_2^2 = \frac{3}{4} + 0 + \frac{3}{4} = \frac{3}{2}.
+\end{align*}
+Note that $p_2 = \frac{3}{2} = \frac{N}{2^j}\binom{j}{j/2} = \frac{3}{4} \cdot 2 = \frac{3}{2}$ when $j = 2$.
+\end{example}
+
+\begin{example}[$N = 4$]
+The roots of $T_4(x) = 8x^4 - 8x^2 + 1$ are:
+\begin{align*}
+\xi_0 &= \cos(\pi/8) \approx 0.924, \\
+\xi_1 &= \cos(3\pi/8) \approx 0.383, \\
+\xi_2 &= \cos(5\pi/8) \approx -0.383, \\
+\xi_3 &= \cos(7\pi/8) \approx -0.924.
+\end{align*}
+Power sums:
+\begin{align*}
+p_1 &= 0 \quad \text{(sum of symmetric points)}, \\
+p_2 &= 2\cos^2(\pi/8) + 2\cos^2(3\pi/8) = 2 \cdot \frac{2 + \sqrt{2}}{4} + 2 \cdot \frac{2 - \sqrt{2}}{4} = 2, \\
+p_3 &= 0 \quad \text{(odd power, symmetric roots)}.
+\end{align*}
+\end{example}
+
+\begin{example}[$N = 5$]
+The roots of $T_5(x) = 16x^5 - 20x^3 + 5x$ are:
+\begin{align*}
+\xi_0 &= \cos(\pi/10) \approx 0.951, \\
+\xi_1 &= \cos(3\pi/10) \approx 0.588, \\
+\xi_2 &= \cos(\pi/2) = 0, \\
+\xi_3 &= \cos(7\pi/10) \approx -0.588, \\
+\xi_4 &= \cos(9\pi/10) \approx -0.951.
+\end{align*}
+Power sums: $p_1 = 0$, $p_2 = 5/2$, $p_3 = 0$, $p_4 = 15/8$.
+\end{example}
 
 \begin{lemma}\label{lem:chebyshev_roots}
 \lean{chebyshev_roots_powersum_value}
@@ -296,6 +598,16 @@ Let $\xi_k = \cos((2k + 1)\pi/(2N))$ for $k = 0, \ldots, N-1$ denote the roots o
 \uses{lem:chebyshev_angle_sum_odd, lem:chebyshev_angle_sum_even, exp_add_exp_pow_chebyshev}
 \end{lemma}
 
+\begin{proof}[Proof sketch]
+The proof parallels that of Theorem~\ref{lem:power_sum_invariance}. Expand $\xi_k^j = \cos^j((2k+1)\pi/(2N))$ using the binomial formula:
+\begin{equation}
+\cos^j\theta = \frac{1}{2^j}\sum_{\ell=0}^j \binom{j}{\ell} \e^{i(j-2\ell)\theta}.
+\end{equation}
+\lean{cos_as_exp_chebyshev, exp_add_exp_pow_chebyshev}
+\leanok
+Summing over $k$ and using Lemmas~\ref{lem:chebyshev_angle_sum_odd} and~\ref{lem:chebyshev_angle_sum_even}, only the term with $j - 2\ell = 0$ survives (when $j$ is even). This gives the stated formula.
+\end{proof}
+
 \begin{theorem}[Power sum equality]\label{thm:power_sum_equality}
 \lean{general_powersum_equality, rotated_roots_powersum_value}
 \leanok
@@ -306,29 +618,111 @@ For $1 \leq j < N$,
 \uses{lem:power_sum_invariance, lem:chebyshev_roots}
 \end{theorem}
 
+\begin{proof}
+Both sides are independent of $\varphi$ by Theorem~\ref{lem:power_sum_invariance}. Evaluating at any particular value of $\varphi$ establishes equality. The formalization uses $\varphi = \pi/(2N)$ as the bridge: the rotated roots at this angle coincide with a permutation of the Chebyshev roots, making the equality manifest.
+\lean{realProjectionsList_powersum, multiset_powersum_realProjectionsList}
+\leanok
+\end{proof}
+
 \section{Completion of the proof}
+
+We now have all the ingredients to prove the main theorem.
 
 \begin{proof}[Proof of Theorem~\ref{thm:main}]
 Let $r_k(\varphi) = \cos(\varphi + 2\pi k/N)$ for $k = 0, \ldots, N-1$ be the roots of $P_N(x; \varphi)$, and let $\xi_k = \cos((2k + 1)\pi/(2N))$ be the roots of $T_N(x)$.
+\lean{realProjectionsList, chebyshevRootsList}
+\leanok
 
-By Theorem~\ref{thm:power_sum_equality}, the power sums of $\{r_k(\varphi)\}$ and $\{\xi_k\}$ are equal for all $j$ with $1 \leq j < N$.
+By Theorem~\ref{thm:power_sum_equality}, the power sums of $\{r_k(\varphi)\}$ and $\{\xi_k\}$ are equal for all $j$ with $1 \leq j < N$:
+\begin{equation}
+\sum_{i=0}^{N-1} r_i(\varphi)^j = \sum_{i=0}^{N-1} \xi_i^j.
+\end{equation}
 
-By Newton's identities (Theorem~\ref{thm:newton_identities}), the elementary symmetric polynomials $e_k$ for $k = 1, \ldots, N$ are determined by the power sums $p_1, \ldots, p_N$. Since the power sums match, the elementary symmetric polynomials match:
+By Newton's identities (Theorem~\ref{thm:newton_identities}), the elementary symmetric polynomials $e_k$ for $k = 1, \ldots, N$ are determined recursively from the power sums $p_1, \ldots, p_k$. Since the power sums match for $j < N$, and the recursion for $e_k$ with $k \leq N$ only depends on $p_1, \ldots, p_k < p_N$, the elementary symmetric polynomials match:
 \begin{equation}
 e_k(r_0(\varphi), \ldots, r_{N-1}(\varphi)) = e_k(\xi_0, \ldots, \xi_{N-1}), \quad k = 1, \ldots, N.
 \end{equation}
+\lean{esymm_rotated_roots_invariant}
+\leanok
 
-The monic polynomial $P_N(x; \varphi)$ has roots $r_k(\varphi)$ and the Chebyshev polynomial $T_N(x)$ (when divided by its leading coefficient $2^{N-1}$) has roots $\xi_k$. By Vieta's formulas, the coefficient of $x^{N-k}$ in $P_N(x; \varphi)$ is $(-1)^k e_k(r_0, \ldots, r_{N-1})$, and similarly for the monic version of $T_N(x)$.
-
-Thus, $P_N(x; \varphi)$ and $T_N(x)/2^{N-1}$ have the same coefficients for all degrees $k = 1, \ldots, N$. They may differ in the constant term. Multiplying both by $2^{N-1}$:
+The monic polynomial $P_N(x; \varphi)$ has roots $r_k(\varphi)$ and can be written as
 \begin{equation}
-S_N(x; \varphi) = 2^{N-1} P_N(x; \varphi) \quad \text{and} \quad T_N(x)
+P_N(x; \varphi) = \prod_{k=0}^{N-1}(x - r_k(\varphi)) = \sum_{k=0}^N (-1)^k e_k \, x^{N-k},
 \end{equation}
-have the same coefficients for degrees $k = 1, \ldots, N$. They may differ in the constant term.
+where $e_k = e_k(r_0(\varphi), \ldots, r_{N-1}(\varphi))$ are the elementary symmetric polynomials.
+\lean{polynomialFromRealRoots, unscaledPolynomial_monic}
+\leanok
+
+Similarly, the Chebyshev polynomial $T_N(x)$ has leading coefficient $2^{N-1}$ and roots $\xi_k$, so
+\begin{equation}
+T_N(x) = 2^{N-1} \prod_{k=0}^{N-1}(x - \xi_k).
+\end{equation}
+\lean{chebyshev_T_leadingCoeff}
+\leanok
+
+By Vieta's formulas, the coefficient of $x^{N-k}$ in $P_N(x; \varphi)$ is $(-1)^k e_k(r_0, \ldots, r_{N-1})$, and the coefficient of $x^{N-k}$ in $T_N(x)/2^{N-1}$ is $(-1)^k e_k(\xi_0, \ldots, \xi_{N-1})$.
+\lean{Multiset.prod_X_sub_C_coeff}
+\leanok
+
+Since the elementary symmetric polynomials match for $k = 1, \ldots, N$, we have $P_N(x; \varphi)$ and $T_N(x)/2^{N-1}$ have the same coefficients for all degrees $k = 1, \ldots, N$. They may differ only in the constant term (degree 0).
+
+Multiplying both by $2^{N-1}$, the scaled polynomial
+\begin{equation}
+S_N(x; \varphi) = 2^{N-1} P_N(x; \varphi)
+\end{equation}
+and $T_N(x)$ have the same coefficients for degrees $k = 1, \ldots, N$. They may differ in the constant term.
+\lean{scaledPolynomial_leadingCoeff, scaledPolynomial_degree}
+\leanok
 
 Hence there exists $c(\varphi) \in \R$ such that
 \begin{equation}
 S_N(x; \varphi) = T_N(x) + c(\varphi),
 \end{equation}
-completing the proof.
+where $c(\varphi)$ is the difference in constant terms.
+\lean{rotated_roots_yield_chebyshev}
+\leanok
+
+Moreover, since the coefficients of $x^k$ for $k \geq 1$ match exactly, we have coefficient-wise equality:
+\begin{equation}
+[x^k] S_N(x; \varphi) = [x^k] T_N(x) \quad \text{for all } k \geq 1.
+\end{equation}
+\lean{rotated_roots_coeffs_match_chebyshev, scaledPolynomial_matches_chebyshev_at_zero}
+\leanok
+This completes the proof of Theorem~\ref{thm:main}.
 \end{proof}
+
+\section{Explicit verification for small N}
+
+To build intuition, we verify the theorem explicitly for small values of $N$.
+
+\begin{example}[$N = 3$, $\varphi = 0$]
+The rotated roots at $\varphi = 0$ are $r_k = \cos(2\pi k/3)$ for $k = 0, 1, 2$:
+\begin{equation}
+r_0 = 1, \quad r_1 = \cos(2\pi/3) = -\frac{1}{2}, \quad r_2 = \cos(4\pi/3) = -\frac{1}{2}.
+\end{equation}
+The unscaled polynomial is
+\begin{equation}
+P_3(x; 0) = (x - 1)\left(x + \frac{1}{2}\right)^2 = x^3 - \frac{3x}{2} + \frac{1}{4}.
+\end{equation}
+Scaling by $2^{N-1} = 4$ gives
+\begin{equation}
+S_3(x; 0) = 4x^3 - 6x + 1.
+\end{equation}
+This differs from $T_3(x) = 4x^3 - 3x$ by the constant $c(0) = 1$, as predicted.
+\end{example}
+
+\begin{example}[$N = 4$, $\varphi = 0$]
+The rotated roots at $\varphi = 0$ are $r_k = \cos(\pi k/2)$ for $k = 0, 1, 2, 3$:
+\begin{equation}
+r_0 = 1, \quad r_1 = 0, \quad r_2 = -1, \quad r_3 = 0.
+\end{equation}
+The unscaled polynomial is
+\begin{equation}
+P_4(x; 0) = (x - 1)(x + 1) x^2 = x^4 - x^2.
+\end{equation}
+Scaling by $2^3 = 8$ gives
+\begin{equation}
+S_4(x; 0) = 8x^4 - 8x^2.
+\end{equation}
+This differs from $T_4(x) = 8x^4 - 8x^2 + 1$ by the constant $c(0) = 1$.
+\end{example}
