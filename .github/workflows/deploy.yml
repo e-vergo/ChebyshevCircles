@@ -159,18 +159,11 @@ jobs:
             exit 1
           fi
 
-      - name: Create dependency graph page
+      - name: Create dependency graph redirect page
         run: |
-          mkdir -p _site/graph
-          # Copy PDF to graph directory if it exists, then create page
-          if [ -f "blueprint/print/print.pdf" ]; then
-            cp blueprint/print/print.pdf _site/graph/blueprint.pdf
-            echo "Blueprint PDF copied to graph directory"
-            bash .github/scripts/create_graph_page.sh _site/graph blueprint.pdf
-          else
-            echo "WARNING: Blueprint PDF not found, creating placeholder graph page"
-            bash .github/scripts/create_graph_page.sh _site/graph
-          fi
+          # Create redirect page to blueprint's interactive dependency graph
+          bash .github/scripts/create_graph_page.sh _site/graph
+          echo "Dependency graph redirect page created (points to /blueprint/dep_graph_document.html)"
 
       - name: Copy static landing page
         run: |
@@ -184,6 +177,16 @@ jobs:
             echo "Visualization videos copied successfully"
           else
             echo "WARNING: Chebyshev videos directory not found"
+          fi
+
+      - name: Copy paper PDF
+        run: |
+          mkdir -p _site/paper
+          if [ -f "paper/chebyshev_circles.pdf" ]; then
+            cp paper/chebyshev_circles.pdf _site/paper/
+            echo "Paper PDF copied successfully"
+          else
+            echo "WARNING: Paper PDF not found at paper/chebyshev_circles.pdf"
           fi
 
       - name: List full deployment contents

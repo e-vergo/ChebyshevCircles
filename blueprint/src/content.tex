@@ -16,8 +16,6 @@ In this project, we present a novel geometric construction of Chebyshev polynomi
 \begin{equation}
 \omega_k = \e^{2\pi i k/N}, \quad k = 0, 1, \ldots, N-1.
 \end{equation}
-\lean{primitiveRoots}
-\leanok
 These form a regular $N$-gon inscribed in the unit circle, with vertices equally spaced at angular intervals of $2\pi/N$.
 
 When these roots are rotated by an angle $\varphi$ (equivalently, multiplied by $\e^{i\varphi}$) and projected onto the real axis, we obtain the $N$ real numbers
@@ -74,6 +72,10 @@ Moreover, all coefficients of $S_N(x; \varphi)$ of degree $k \geq 1$ are indepen
 \lean{constant_term_only_varies}
 \leanok
 \uses{lem:power_sum_invariance, thm:newton_identities, lem:chebyshev_roots, scaledPolynomial}
+
+\begin{remark}
+This result is proven as Theorem 1.1 in the \href{../paper/chebyshev_circles.pdf}{research paper}.
+\end{remark}
 \end{theorem}
 
 \section{Significance and context}
@@ -192,6 +194,8 @@ For any integer $m$,
 \lean{sum_primitive_root_pow_mul, sum_pow_primitive_root_mul}
 \leanok
 \uses{primitiveRoots}
+
+\textit{(See Lemma 2.2 in \href{../paper/chebyshev_circles.pdf}{the paper})}
 \end{lemma}
 
 \begin{proof}
@@ -237,6 +241,8 @@ where we set $e_0 = 1$.
 \lean{esymm_eq_of_psum_eq, esymm_rotated_roots_invariant}
 \leanok
 \uses{lem:discrete_orthogonality}
+
+\textit{(See Theorem 2.3 in \href{../paper/chebyshev_circles.pdf}{the paper})}
 \end{theorem}
 
 An immediate consequence is that the elementary symmetric polynomials (and hence the coefficients of the monic polynomial with roots $\alpha_1, \ldots, \alpha_N$) are determined by the power sums.
@@ -278,6 +284,8 @@ For any $N \geq 2$ and any $\varphi \in \R$,
 \lean{realProjectionsList_sum}
 \leanok
 \uses{lem:discrete_orthogonality, Complex.exp_ofReal_mul_I_re, Complex.isPrimitiveRoot_exp}
+
+\textit{(See Lemma 3.1 in \href{../paper/chebyshev_circles.pdf}{the paper})}
 \end{lemma}
 
 \begin{proof}
@@ -296,6 +304,8 @@ For any integers $N \geq 1$, $m$ with $0 < m < N$, and any $\varphi \in \R$,
 \sum_{k=0}^{N-1} \cos\left(m\left(\varphi + \frac{2\pi k}{N}\right)\right) = 0.
 \end{equation}
 \uses{lem:discrete_orthogonality, sum_primitive_root_pow_mul}
+
+\textit{(See Lemma 3.2 in \href{../paper/chebyshev_circles.pdf}{the paper})}
 \end{lemma}
 
 \begin{proof}
@@ -438,6 +448,8 @@ is independent of $\varphi$.
 \lean{cos_cube_formula, cos_four_formula, cos_five_formula, cos_six_formula}
 \leanok
 \uses{lem:sum_cos_m_phi_vanishes, sum_cos_pow_eq_sum_binomial, exp_add_exp_pow}
+
+\textit{(See Theorem 4.1 in \href{../paper/chebyshev_circles.pdf}{the paper})}
 \end{theorem}
 
 \begin{proof}[Proof sketch]
@@ -500,7 +512,9 @@ By Theorem~\ref{lem:power_sum_invariance}, the power sums $p_j = \sum_{k=0}^{N-1
 \leanok
 For any $N \geq 1$ and any $k$ with $1 \leq k \leq N$, the coefficient of $x^k$ in $S_N(x; \varphi)$ is independent of $\varphi$.
 \uses{lem:power_sum_invariance, thm:newton_identities, esymm_rotated_roots_invariant}
-\end{theorem}
+
+\textit{(See Theorem 5.1 in \href{../paper/chebyshev_circles.pdf}{the paper})}
+\end{theorem>
 
 \begin{proof}
 The scaled polynomial $S_N(x; \varphi) = 2^{N-1} P_N(x; \varphi)$, where $P_N$ is the monic polynomial with roots $r_k(\varphi)$. By Lemma~\ref{lem:esymm_invariant}, the elementary symmetric polynomials of the roots are $\varphi$-independent. By Vieta's formulas, the coefficients of $P_N$ (except possibly the constant term) are $\varphi$-independent. Scaling by $2^{N-1}$ preserves this property.
@@ -596,6 +610,8 @@ Let $\xi_k = \cos((2k + 1)\pi/(2N))$ for $k = 0, \ldots, N-1$ denote the roots o
 \lean{ChebyshevCircles.sum_cos_pow_chebyshev_binomial}
 \leanok
 \uses{lem:chebyshev_angle_sum_odd, lem:chebyshev_angle_sum_even, exp_add_exp_pow_chebyshev}
+
+\textit{(See Lemma 6.1 in \href{../paper/chebyshev_circles.pdf}{the paper})}
 \end{lemma}
 
 \begin{proof}[Proof sketch]
@@ -616,6 +632,8 @@ For $1 \leq j < N$,
 \sum_{k=0}^{N-1} \cos^j\left(\varphi + \frac{2\pi k}{N}\right) = \sum_{k=0}^{N-1} \cos^j\left(\frac{(2k + 1)\pi}{2N}\right).
 \end{equation}
 \uses{lem:power_sum_invariance, lem:chebyshev_roots}
+
+\textit{(See Theorem 6.2 in \href{../paper/chebyshev_circles.pdf}{the paper})}
 \end{theorem}
 
 \begin{proof}

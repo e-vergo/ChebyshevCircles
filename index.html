@@ -249,6 +249,7 @@
             <h1>Chebyshev Circles</h1>
             <nav class="nav">
                 <a href="./blueprint/">Blueprint</a>
+                <a href="./paper/chebyshev_circles.pdf">Paper (PDF)</a>
                 <a href="./docs/">API Docs</a>
                 <a href="./graph/">Dependency Graph</a>
                 <a href="https://github.com/e-vergo/ChebyshevCircles">GitHub</a>
@@ -361,9 +362,48 @@ theorem rotated_roots_yield_chebyshev (N : ℕ) (φ : ℝ) (hN : 0 < N) :<br>
                     <h3>Research Paper</h3>
                     <p>Publication-ready mathematics paper (14 pages) with complete proofs in classical notation.</p>
                     <p>Traditional exposition targeting a general mathematical audience at graduate level.</p>
-                    <a href="https://github.com/e-vergo/ChebyshevCircles/tree/main/paper">Read Paper →</a>
+                    <a href="./paper/chebyshev_circles.pdf">Read Paper (PDF) →</a>
                 </div>
             </div>
+
+            <h2>Documentation Navigation</h2>
+
+            <p>
+                This formalization is documented across multiple interconnected resources. Each serves a distinct purpose
+                in understanding the mathematical result, its formalization, and the proof architecture.
+            </p>
+
+            <h3>Quick Links to Major Results</h3>
+
+            <p>
+                <strong>Main Theorem:</strong>
+                <a href="./docs/ChebyshevCircles/MainTheorem.html#rotated_roots_yield_chebyshev" style="color: #3498db;">API Docs</a> |
+                <a href="./blueprint/sect0001.html" style="color: #3498db;">Blueprint §1</a>
+            </p>
+
+            <p>
+                <strong>Power Sum Invariance (φ-independence):</strong>
+                <a href="./docs/ChebyshevCircles/PowerSums.html#powerSumCos_invariant" style="color: #3498db;">API Docs</a> |
+                <a href="./blueprint/sect0004.html" style="color: #3498db;">Blueprint §4</a>
+            </p>
+
+            <p>
+                <strong>Discrete Orthogonality:</strong>
+                <a href="./docs/ChebyshevCircles/ChebyshevOrthogonality.html" style="color: #3498db;">Module Documentation</a> |
+                <a href="./blueprint/sect0005.html" style="color: #3498db;">Blueprint §5</a>
+            </p>
+
+            <p>
+                <strong>Newton's Identities Application:</strong>
+                <a href="./docs/ChebyshevCircles/NewtonIdentities.html" style="color: #3498db;">Module Documentation</a> |
+                <a href="./blueprint/sect0006.html" style="color: #3498db;">Blueprint §6</a>
+            </p>
+
+            <p style="margin-top: 1.5rem;">
+                <strong>Visual Proof Structure:</strong> The <a href="./graph/" style="color: #3498db;">dependency graph</a>
+                provides an interactive visualization of all 200+ definitions, lemmas, and theorems, showing how foundational
+                results in discrete orthogonality and polynomial algebra combine to establish the main theorem.
+            </p>
 
             <h2>Proof Strategy</h2>
 
@@ -423,7 +463,8 @@ lake build
             </div>
 
             <p>
-                Explore the <a href="./blueprint/">Blueprint</a> for an interactive map of the formalization,
+                Read the <a href="./paper/chebyshev_circles.pdf">research paper</a> for traditional mathematical exposition,
+                explore the <a href="./blueprint/">Blueprint</a> for an interactive map of the formalization,
                 check the <a href="./docs/">API Documentation</a> for detailed proofs, or view the
                 <a href="./graph/">Dependency Graph</a> to understand the proof structure.
             </p>
