@@ -14,11 +14,21 @@ import ChebyshevCircles.PolynomialProperties
 import ChebyshevCircles.PowerSumEquality
 
 /-!
-# Main Theorem: Rotated Roots of Unity Yield Chebyshev Polynomials
+# Main Theorem: Rotated Roots Yield Chebyshev Polynomials
 
-This file proves that the polynomial constructed from N rotated roots of unity
-projected onto the real axis, when scaled by 2^(N-1), equals the N-th Chebyshev
-polynomial of the first kind plus a constant that depends on the rotation angle.
+This module contains the main theorem proving that rotated N-th roots of unity,
+when projected onto the real axis and used as polynomial roots (scaled by 2^(N-1)),
+yield the N-th Chebyshev polynomial of the first kind plus a constant.
+
+## Key Results
+- `rotated_roots_yield_chebyshev`: Main theorem statement
+- `rotated_roots_coeffs_match_chebyshev`: Coefficient-level result
+- `constant_term_only_varies`: Only constant term depends on rotation angle
+
+## References
+- [Blueprint §1](https://e-vergo.github.io/ChebyshevCircles/blueprint/sect0001.html) - Theorem statement and proof structure
+- [Research Paper](https://e-vergo.github.io/ChebyshevCircles/paper/chebyshev_circles.pdf) - Theorem 1.1 (page 2)
+- [Source Code](https://github.com/e-vergo/ChebyshevCircles/blob/main/ChebyshevCircles/MainTheorem.lean)
 
 ## Tags
 

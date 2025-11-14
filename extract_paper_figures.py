@@ -30,15 +30,15 @@ class LandscapePaperFigure(Scene):
     - Override pixel dimensions in subclass or via CLI
     """
 
-    # Color scheme (matching existing aesthetic)
-    COLOR_CIRCLE = "#B4B4B4"
-    COLOR_AXES = "#DCDCDC"
-    COLOR_POLYGON = "#FF6464"
-    COLOR_ROOT = "#DC3232"
-    COLOR_PROJECTION_LINE = "#FFB4B4"
-    COLOR_PROJECTION_POINT = "#FF7878"
-    COLOR_CURVE = "#2864C8"
-    COLOR_TEXT = "#3C3C3C"
+    # Color scheme (higher contrast for print quality)
+    COLOR_CIRCLE = "#909090"
+    COLOR_AXES = "#C0C0C0"
+    COLOR_POLYGON = "#FF4444"
+    COLOR_ROOT = "#C81010"
+    COLOR_PROJECTION_LINE = "#FF9090"
+    COLOR_PROJECTION_POINT = "#FF5050"
+    COLOR_CURVE = "#1850A0"
+    COLOR_TEXT = "#000000"
 
     def construct(self):
         """Override in subclasses to set N value."""
@@ -61,15 +61,23 @@ class LandscapePaperFigure(Scene):
 
         # ===== Axes - positioned right of center =====
         # For landscape: axes on right 60%, text on left 40%
+        # Symmetric square viewport: [-2.5, 2.5] for both axes
+        # Y-axis removed for cleaner presentation, x-axis with ticks retained
         axes = Axes(
-            x_range=[-1.5, 1.5, 0.5],
+            x_range=[-2.5, 2.5, 0.5],
             y_range=[-2.5, 2.5, 0.5],
             x_length=5,       # Horizontal extent
-            y_length=6.67,    # Vertical extent (maintains aspect ratio)
+            y_length=5,       # Vertical extent (square aspect ratio)
             axis_config={
                 "stroke_color": self.COLOR_AXES,
-                "stroke_width": 1.5,
+                "stroke_width": 2.25,  # 1.5 * 1.5x
                 "include_tip": False,
+                "include_ticks": True,
+                "tick_size": 0.05,
+            },
+            y_axis_config={
+                "stroke_opacity": 0,  # Hide y-axis
+                "include_ticks": False,
             }
         ).shift(RIGHT * 2.5).set_z_index(0)  # Shift right for landscape layout
 
@@ -78,7 +86,7 @@ class LandscapePaperFigure(Scene):
             lambda t: axes.c2p(np.cos(t), np.sin(t)),
             t_range=[0, 2*np.pi],
             color=self.COLOR_CIRCLE,
-            stroke_width=2
+            stroke_width=3  # 2 * 1.5x
         ).set_z_index(1)
 
         # ===== Roots of unity =====
@@ -88,8 +96,8 @@ class LandscapePaperFigure(Scene):
         root_dots = VGroup(*[
             Dot(axes.c2p(r.real, r.imag),
                 color=self.COLOR_ROOT,
-                radius=0.10,
-                stroke_width=1,
+                radius=0.25,  # 0.10 * 2.5x
+                stroke_width=2.5,  # 1 * 2.5x
                 stroke_color=BLACK).set_z_index(4)
             for r in roots
         ])
@@ -98,7 +106,7 @@ class LandscapePaperFigure(Scene):
         polygon = Polygon(
             *[axes.c2p(r.real, r.imag) for r in roots],
             color=self.COLOR_POLYGON,
-            stroke_width=3,
+            stroke_width=4.5,  # 3 * 1.5x
             fill_opacity=0
         ).set_z_index(3)
 
@@ -106,7 +114,7 @@ class LandscapePaperFigure(Scene):
         proj_lines = VGroup(*[
             Line(axes.c2p(r.real, r.imag), axes.c2p(r.real, 0),
                  color=self.COLOR_PROJECTION_LINE,
-                 stroke_width=2).set_opacity(0.4).set_z_index(2)
+                 stroke_width=3).set_opacity(0.4).set_z_index(2)  # 2 * 1.5x
             for r in roots
         ])
 
@@ -114,7 +122,7 @@ class LandscapePaperFigure(Scene):
         proj_dots = VGroup(*[
             Dot(axes.c2p(r.real, 0),
                 color=self.COLOR_PROJECTION_POINT,
-                radius=0.08).set_opacity(0.7).set_z_index(5)
+                radius=0.20).set_opacity(0.7).set_z_index(5)  # 0.08 * 2.5x
             for r in roots
         ])
 
@@ -134,9 +142,9 @@ class LandscapePaperFigure(Scene):
         # Dense sampling for smooth curve
         curve = ParametricFunction(
             lambda t: axes.c2p(t, poly_func(t)),
-            t_range=np.array([-1.5, 1.5, 0.002]),
+            t_range=np.array([-2.5, 2.5, 0.002]),  # Match extended x_range
             color=self.COLOR_CURVE,
-            stroke_width=4
+            stroke_width=6  # 4 * 1.5x
         ).set_z_index(6)
 
         # ===== Text - positioned on left side for landscape =====

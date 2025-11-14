@@ -312,29 +312,29 @@ class ChebyshevBase(Scene):
 
     N = 3  # Default, override in subclasses
 
-    # Color scheme (matching main.py)
-    COLOR_CIRCLE = "#B4B4B4"
-    COLOR_AXES = "#DCDCDC"
-    COLOR_POLYGON = "#FF6464"
-    COLOR_ROOT = "#DC3232"
-    COLOR_PROJECTION_LINE = "#FFB4B4"
-    COLOR_PROJECTION_POINT = "#FF7878"
-    COLOR_CURVE = "#2864C8"
-    COLOR_TEXT = "#3C3C3C"
+    # Color scheme (high contrast)
+    COLOR_CIRCLE = "#909090"
+    COLOR_AXES = "#C0C0C0"
+    COLOR_POLYGON = "#FF4444"
+    COLOR_ROOT = "#C81010"
+    COLOR_PROJECTION_LINE = "#FF9090"
+    COLOR_PROJECTION_POINT = "#FF5050"
+    COLOR_CURVE = "#1850A0"
+    COLOR_TEXT = "#000000"
 
     # Geometric parameters
-    CIRCLE_STROKE_WIDTH = 2
-    AXIS_STROKE_WIDTH = 1.5
-    POLYGON_STROKE_WIDTH = 3
-    ROOT_RADIUS = 0.10  # ~8pt at standard scale
-    PROJECTION_LINE_STROKE_WIDTH = 2
+    CIRCLE_STROKE_WIDTH = 3
+    AXIS_STROKE_WIDTH = 2.25
+    POLYGON_STROKE_WIDTH = 4.5
+    ROOT_RADIUS = 0.25  # ~8pt at standard scale
+    PROJECTION_LINE_STROKE_WIDTH = 3
     PROJECTION_LINE_OPACITY = 0.4
-    PROJECTION_POINT_RADIUS = 0.08  # ~6pt
+    PROJECTION_POINT_RADIUS = 0.20  # ~6pt
     PROJECTION_POINT_OPACITY = 0.7
-    CURVE_STROKE_WIDTH = 4
+    CURVE_STROKE_WIDTH = 6
 
     # Plot ranges
-    X_RANGE = [-1.5, 1.5, 0.5]
+    X_RANGE = [-2.5, 2.5, 0.5]
     Y_RANGE = [-2.5, 2.5, 0.5]
 
     # Typography
@@ -361,11 +361,15 @@ class ChebyshevBase(Scene):
             x_range=self.X_RANGE,
             y_range=self.Y_RANGE,
             x_length=6,
-            y_length=10.67,  # Maintain aspect ratio for portrait
+            y_length=6,  # 1:1 aspect ratio for square coordinate space
             axis_config={
                 "color": self.COLOR_AXES,
                 "stroke_width": self.AXIS_STROKE_WIDTH,
                 "include_tip": False,
+            },
+            y_axis_config={
+                "stroke_width": 0,  # Hide y-axis
+                "stroke_opacity": 0,
             },
         ).set_z_index(0)
 

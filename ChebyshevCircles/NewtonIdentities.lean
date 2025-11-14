@@ -12,11 +12,19 @@ import ChebyshevCircles.PowerSums
 import ChebyshevCircles.TrigonometricIdentities
 
 /-!
-# Newton's Identities Infrastructure
+# Newton's Identities
 
-Lemmas connecting elementary symmetric functions to power sums via Newton's identities.
-This section contains the machinery needed to show that φ-invariant power sums imply
-φ-invariant polynomial coefficients.
+This module implements Newton's identities relating power sums to elementary symmetric polynomials,
+enabling the translation from power sum equality to coefficient equality.
+
+## Key Results
+- `MvPolynomial.mul_esymm_eq_sum`: Newton's identities formula
+- `multiset_newton_identity`: Application to multisets of polynomial roots
+
+## References
+- [Blueprint §6](https://e-vergo.github.io/ChebyshevCircles/blueprint/sect0006.html) - Newton's identities framework
+- [Research Paper](https://e-vergo.github.io/ChebyshevCircles/paper/chebyshev_circles.pdf) - Theorem 2.3 (page 5)
+- [Source Code](https://github.com/e-vergo/ChebyshevCircles/blob/main/ChebyshevCircles/NewtonIdentities.lean)
 
 ## Main results
 

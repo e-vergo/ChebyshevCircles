@@ -9,12 +9,27 @@ Proves that sums of cosines at Chebyshev angles vanish for non-zero frequencies,
 which is the key property needed to extend the binomial expansion proof technique
 from rotated roots to Chebyshev roots.
 -/
-
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Complex
 import Mathlib.NumberTheory.Cyclotomic.PrimitiveRoots
 import Mathlib.Analysis.Complex.Exponential
 import ChebyshevCircles.TrigonometricIdentities
 import ChebyshevCircles.PowerSums
+
+/-!
+# Discrete Orthogonality Relations
+
+This module establishes discrete orthogonality of complex exponentials over N-th roots of unity,
+the fundamental tool used to prove power sum invariance.
+
+## Key Results
+- `IsPrimitiveRoot.geom_sum_eq_zero`: Geometric sum vanishes for primitive roots
+- `mul_geom_sum`: Multiplication by primitive root preserves orthogonality
+
+## References
+- [Blueprint §5](https://e-vergo.github.io/ChebyshevCircles/blueprint/sect0005.html) - Orthogonality proofs
+- [Research Paper](https://e-vergo.github.io/ChebyshevCircles/paper/chebyshev_circles.pdf) - Lemma 2.2 (page 4)
+- [Source Code](https://github.com/e-vergo/ChebyshevCircles/blob/main/ChebyshevCircles/ChebyshevOrthogonality.lean)
+-/
 
 noncomputable section
 open Complex Real Finset

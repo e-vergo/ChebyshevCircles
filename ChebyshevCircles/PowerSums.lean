@@ -11,11 +11,19 @@ import ChebyshevCircles.TrigonometricIdentities
 import ChebyshevCircles.RootsOfUnity
 
 /-!
-# Power Sum Lemmas
+# Power Sum Invariance
 
-Lemmas establishing the θ-invariance of power sums ∑ cos(θ + 2πk/N)^j for various j.
-These results are proven using power-reduction formulas and the vanishing sums from the
-TrigonometricIdentities module. The general case (for all j < N) is proven via binomial expansion.
+This module proves that power sums of rotated roots are independent of the rotation angle φ,
+which is the key insight enabling the main theorem.
+
+## Key Results
+- `powerSumCos_invariant`: Power sums invariant under rotation
+- `sum_cos_pow_theta_independent`: Explicit formula for power sums
+
+## References
+- [Blueprint §4](https://e-vergo.github.io/ChebyshevCircles/blueprint/sect0004.html) - Power sum proofs
+- [Research Paper](https://e-vergo.github.io/ChebyshevCircles/paper/chebyshev_circles.pdf) - Theorem 4.1 (page 7)
+- [Source Code](https://github.com/e-vergo/ChebyshevCircles/blob/main/ChebyshevCircles/PowerSums.lean)
 
 ## Main results
 
