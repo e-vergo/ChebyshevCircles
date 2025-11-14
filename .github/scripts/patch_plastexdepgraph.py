@@ -36,13 +36,8 @@ def apply_patch():
             node_class = node.__class__
             if not hasattr(node_class, '_hash_patched'):
                 def _node_hash(self):
-                    return hash(self.id)
-                def _node_eq(self, other):
-                    if not isinstance(other, self.__class__.__bases__[0]):
-                        return False
-                    return self.id == other.id
+                    return hash(id(self))  # Use object identity, not self.id
                 node_class.__hash__ = _node_hash
-                node_class.__eq__ = _node_eq
                 node_class._hash_patched = True
 '''
 
