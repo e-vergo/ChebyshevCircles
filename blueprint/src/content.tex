@@ -197,6 +197,7 @@ For any integer $m$,
 \end{lemma}
 
 \begin{proof}
+\leanok
 If $N \mid m$, then $\e^{2\pi i m k/N} = 1$ for all $k$, so the sum equals $N$.
 
 If $N \nmid m$, let $\omega = \e^{2\pi i m/N} \neq 1$. Then the sum is a geometric series:
@@ -287,6 +288,7 @@ For any $N \geq 2$ and any $\varphi \in \R$,
 \end{lemma}
 
 \begin{proof}
+\leanok
 We use Euler's formula: $\cos\theta = \Re(\e^{i\theta})$. Thus
 \begin{equation}
 \sum_{k=0}^{N-1} \cos\left(\varphi + \frac{2\pi k}{N}\right) = \Re\left(\sum_{k=0}^{N-1} \e^{i(\varphi + 2\pi k/N)}\right) = \Re\left(\e^{i\varphi} \sum_{k=0}^{N-1} \e^{2\pi i k/N}\right).
@@ -515,6 +517,7 @@ For any $N \geq 1$ and any $k$ with $1 \leq k \leq N$, the coefficient of $x^k$ 
 \end{theorem>
 
 \begin{proof}
+\leanok
 The scaled polynomial $S_N(x; \varphi) = 2^{N-1} P_N(x; \varphi)$, where $P_N$ is the monic polynomial with roots $r_k(\varphi)$. By Lemma~\ref{lem:esymm_invariant}, the elementary symmetric polynomials of the roots are $\varphi$-independent. By Vieta's formulas, the coefficients of $P_N$ (except possibly the constant term) are $\varphi$-independent. Scaling by $2^{N-1}$ preserves this property.
 \lean{polynomial_coeff_eq_of_esymm_eq}
 \leanok
@@ -598,6 +601,8 @@ The roots of $T_5(x) = 16x^5 - 20x^3 + 5x$ are:
 Power sums: $p_1 = 0$, $p_2 = 5/2$, $p_3 = 0$, $p_4 = 15/8$.
 \end{example}
 
+\section{Power sum equality}
+
 \begin{lemma}\label{lem:chebyshev_roots}
 \lean{chebyshev_roots_powersum_value}
 \leanok
@@ -612,7 +617,8 @@ Let $\xi_k = \cos((2k + 1)\pi/(2N))$ for $k = 0, \ldots, N-1$ denote the roots o
 \textit{(See Lemma 6.1 in \href{../paper/chebyshev_circles.pdf}{the paper})}
 \end{lemma}
 
-\begin{proof}[Proof sketch]
+\begin{proof}
+\leanok
 The proof parallels that of Theorem~\ref{lem:power_sum_invariance}. Expand $\xi_k^j = \cos^j((2k+1)\pi/(2N))$ using the binomial formula:
 \begin{equation}
 \cos^j\theta = \frac{1}{2^j}\sum_{\ell=0}^j \binom{j}{\ell} \e^{i(j-2\ell)\theta}.
@@ -635,6 +641,7 @@ For $1 \leq j < N$,
 \end{theorem}
 
 \begin{proof}
+\leanok
 Both sides are independent of $\varphi$ by Theorem~\ref{lem:power_sum_invariance}. Evaluating at any particular value of $\varphi$ establishes equality. The formalization uses $\varphi = \pi/(2N)$ as the bridge: the rotated roots at this angle coincide with a permutation of the Chebyshev roots, making the equality manifest.
 \lean{realProjectionsList_powersum, multiset_powersum_realProjectionsList}
 \leanok
@@ -645,6 +652,7 @@ Both sides are independent of $\varphi$ by Theorem~\ref{lem:power_sum_invariance
 We now have all the ingredients to prove the main theorem.
 
 \begin{proof}[Proof of Theorem~\ref{thm:main}]
+\leanok
 Let $r_k(\varphi) = \cos(\varphi + 2\pi k/N)$ for $k = 0, \ldots, N-1$ be the roots of $P_N(x; \varphi)$, and let $\xi_k = \cos((2k + 1)\pi/(2N))$ be the roots of $T_N(x)$.
 \lean{realProjectionsList, chebyshevRootsList}
 \leanok
