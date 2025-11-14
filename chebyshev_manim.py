@@ -591,7 +591,222 @@ class ChebyshevBase(Scene):
 # ============================================================================
 
 class Chebyshev_N3(ChebyshevBase):
+    """N=3 with radians display and full 2π rotation."""
     N = 3
+
+    def construct(self):
+        """Override to customize for radians and full rotation."""
+
+        # ===== Configuration =====
+        phi = ValueTracker(0)  # Rotation angle in radians
+
+        # For N=3, full 2π rotation instead of 2π/N
+        # Keep same angular velocity: (2π/3)/10 = 2π/30 rad/s
+        # New duration for 2π rotation: 2π / (2π/30) = 30 seconds
+        duration = 30.0
+
+        # ===== Static Elements (z=0 to z=1) =====
+
+        # Axes (z=0)
+        axes = Axes(
+            x_range=self.X_RANGE,
+            y_range=self.Y_RANGE,
+            x_length=self.X_LENGTH,
+            y_length=self.Y_LENGTH,
+            axis_config={
+                "stroke_color": self.COLOR_AXES,
+                "stroke_width": self.AXIS_STROKE_WIDTH,
+                "include_ticks": True,
+                "tick_size": 0.05,
+            },
+        ).set_z_index(0)
+
+        # Unit circle (z=1)
+        circle = ParametricFunction(
+            lambda t: axes.c2p(np.cos(t), np.sin(t)),
+            t_range=[0, 2*np.pi],
+            color=self.COLOR_CIRCLE,
+            stroke_width=self.CIRCLE_STROKE_WIDTH,
+        ).set_z_index(1)
+
+        # ===== Dynamic Elements (z=2 to z=6) =====
+
+        # Projection lines (z=2)
+        def get_projection_lines():
+            roots = roots_of_unity(self.N)
+            rotated_roots = rotate_complex_numbers(roots, phi.get_value())
+            lines = VGroup()
+            for root in rotated_roots:
+                start = axes.c2p(root.real, root.imag)
+                end = axes.c2p(root.real, 0)
+                line = Line(
+                    start, end,
+                    color=self.COLOR_PROJECTION_LINE,
+                    stroke_width=self.PROJECTION_LINE_STROKE_WIDTH,
+                    stroke_opacity=self.PROJECTION_LINE_OPACITY,
+                )
+                lines.add(line)
+            return lines.set_z_index(2)
+
+        projection_lines = always_redraw(get_projection_lines)
+
+        # Regular N-gon (z=3)
+        def get_polygon():
+            roots = roots_of_unity(self.N)
+            rotated_roots = rotate_complex_numbers(roots, phi.get_value())
+            points = [axes.c2p(root.real, root.imag) for root in rotated_roots]
+            return Polygon(
+                *points,
+                color=self.COLOR_POLYGON,
+                stroke_width=self.POLYGON_STROKE_WIDTH,
+                fill_opacity=0,
+            ).set_z_index(3)
+
+        polygon = always_redraw(get_polygon)
+
+        # Root dots (z=4)
+        def get_root_dots():
+            roots = roots_of_unity(self.N)
+            rotated_roots = rotate_complex_numbers(roots, phi.get_value())
+            dots = VGroup()
+            for root in rotated_roots:
+                pos = axes.c2p(root.real, root.imag)
+                dot = Dot(
+                    pos,
+                    radius=self.ROOT_RADIUS,
+                    color=self.COLOR_ROOT,
+                    stroke_width=1,
+                    stroke_color=BLACK,
+                )
+                glow = Dot(pos, radius=self.ROOT_RADIUS * 1.5, color=self.COLOR_ROOT, fill_opacity=0.2)
+                dots.add(glow, dot)
+            return dots.set_z_index(4)
+
+        root_dots = always_redraw(get_root_dots)
+
+        # Projection dots (z=5)
+        def get_projection_dots():
+            roots = roots_of_unity(self.N)
+            rotated_roots = rotate_complex_numbers(roots, phi.get_value())
+            dots = VGroup()
+            for root in rotated_roots:
+                pos = axes.c2p(root.real, 0)
+                dot = Dot(
+                    pos,
+                    radius=self.PROJECTION_POINT_RADIUS,
+                    color=self.COLOR_PROJECTION_POINT,
+                    stroke_width=1,
+                    stroke_color=BLACK,
+                )
+                glow = Dot(pos, radius=self.PROJECTION_POINT_RADIUS * 1.5, color=self.COLOR_PROJECTION_POINT, fill_opacity=0.15)
+                dots.add(glow, dot)
+            return dots.set_z_index(5)
+
+        projection_dots = always_redraw(get_projection_dots)
+
+        # Polynomial curve (z=6)
+        def get_polynomial_curve():
+            roots = roots_of_unity(self.N)
+            rotated_roots = rotate_complex_numbers(roots, phi.get_value())
+            coeffs_list, const_term, _ = compute_polynomial_coeffs(rotated_roots)
+            all_coeffs = coeffs_list + [const_term]
+
+            # Use ParametricFunction for smoothest rendering
+            def poly_func(t):
+                x = self.X_RANGE[0] + t * (self.X_RANGE[1] - self.X_RANGE[0])
+                y = eval_poly(all_coeffs, x)
+                # Clip y to visible range
+                y = np.clip(y, self.Y_RANGE[0], self.Y_RANGE[1])
+                return axes.c2p(x, y)
+
+            return ParametricFunction(
+                poly_func,
+                t_range=[0, 1],
+                color=self.COLOR_CURVE,
+                stroke_width=self.CURVE_STROKE_WIDTH,
+                discontinuities=None,
+                dt=0.002,
+            ).set_z_index(6)
+
+        polynomial_curve = always_redraw(get_polynomial_curve)
+
+        # ===== Text Overlays (z=9) =====
+
+        scale_init = 2 ** (self.N - 1)
+
+        # Line 1: Title
+        line1 = Tex(
+            f"$N = {self.N}$ Roots of Unity",
+            font_size=self.FONT_SIZE_LINE1,
+            color=self.COLOR_TEXT,
+        ).to_corner(UL, buff=0.3).shift(DOWN * 0.2)
+
+        # Line 2: Rotation angle in RADIANS with scaling
+        def get_line2():
+            angle_rad = phi.get_value()
+            # Format as 0.000 (4 sig figs, 3 decimal places, leading 0)
+            phi_formatted = f"{angle_rad:05.3f}"
+            return Tex(
+                f"$\\varphi = {phi_formatted}$ rad | Scaling: $2^{{{self.N-1}}} = {scale_init}$",
+                font_size=self.FONT_SIZE_LINE2,
+                color=self.COLOR_TEXT,
+            ).next_to(line1, DOWN, buff=0.15, aligned_edge=LEFT)
+
+        line2 = always_redraw(get_line2)
+
+        # Line 3: Polynomial S(x)
+        def get_line3():
+            roots = roots_of_unity(self.N)
+            rotated_roots = rotate_complex_numbers(roots, phi.get_value())
+            coeffs, const, _ = compute_polynomial_coeffs(rotated_roots)
+            poly_latex = format_polynomial_latex(coeffs, const)
+
+            return MathTex(
+                poly_latex,
+                font_size=self.FONT_SIZE_LINE3,
+                color=self.COLOR_TEXT,
+            ).next_to(line2, DOWN, buff=0.15, aligned_edge=LEFT)
+
+        line3 = always_redraw(get_line3)
+
+        # Line 4: = T_N(x) + c
+        line4 = MathTex(
+            f"= T_{{{self.N}}}(x) + c",
+            font_size=self.FONT_SIZE_LINE4,
+            color=self.COLOR_TEXT,
+        ).next_to(line3, DOWN, buff=0.15, aligned_edge=LEFT)
+
+        # Set all text to z=9
+        text_group = VGroup(line1, line2, line3, line4).set_z_index(9)
+
+        # ===== Add all elements to scene =====
+
+        self.add(
+            axes,
+            circle,
+            projection_lines,
+            polygon,
+            root_dots,
+            projection_dots,
+            polynomial_curve,
+            line1,
+            line2,
+            line3,
+            line4,
+        )
+
+        # ===== Animate full 2π rotation =====
+
+        rotation_amount = 2 * np.pi  # Full rotation instead of 2π/N
+
+        self.play(
+            phi.animate.increment_value(rotation_amount),
+            run_time=duration,
+            rate_func=linear,
+        )
+
+        # Hold final frame briefly
+        self.wait(0.5)
 
 class Chebyshev_N4(ChebyshevBase):
     N = 4

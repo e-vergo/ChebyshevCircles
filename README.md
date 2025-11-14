@@ -290,16 +290,16 @@ See [`chebyshev_videos/MANIFEST.md`](chebyshev_videos/MANIFEST.md) for available
 
 **Extract still frames:**
 ```bash
-# Single frame at specific angle
-python extract_frames.py --N 5 --phi 0 --format png
+# Single frame at specific angle (requires editing script to set N and phi)
+manim -s -qh extract_single_frame.py StaticFrame
 
-# Cardinal angles for paper/presentation
-python extract_frames.py --N 5 --batch-cardinal --all-formats
+# Or use extract_paper_figures.py for paper figures
+python extract_paper_figures.py
 
-# All N values at φ=0° (for comparison)
-python extract_frames.py --all-N --phi 0 --format pdf
+# For vector graphics suitable for publications
+python extract_paper_figures_vector.py
 ```
-Frames are saved to `chebyshev_frames/N{N}/phi_{angle}.{format}`
+Frames are saved to `media/images/extract_single_frame/` or `paper_figures/`
 
 **Customize visualizations:**
 Edit `chebyshev_manim.py` to change:
