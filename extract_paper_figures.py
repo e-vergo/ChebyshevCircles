@@ -61,13 +61,13 @@ class LandscapePaperFigure(Scene):
 
         # ===== Axes - positioned right of center =====
         # For landscape: axes on right 60%, text on left 40%
-        # Symmetric square viewport: [-2.5, 2.5] for both axes
-        # Y-axis removed for cleaner presentation, x-axis with ticks retained
+        # Viewport: [-1.5, 1.5] for x-axis, [-2, 2] for y-axis (16:9 aspect ratio)
+        # Y-axis removed for cleaner presentation, x-axis with unit tick marks
         axes = Axes(
-            x_range=[-2.5, 2.5, 0.5],
-            y_range=[-2.5, 2.5, 0.5],
+            x_range=[-1.5, 1.5, 1.0],  # Unit tick marks at -1, 0, 1
+            y_range=[-2, 2, 0.5],
             x_length=5,       # Horizontal extent
-            y_length=5,       # Vertical extent (square aspect ratio)
+            y_length=6.67,    # Adjusted for circular unit circle (5 * 4/3)
             axis_config={
                 "stroke_color": self.COLOR_AXES,
                 "stroke_width": 2.25,  # 1.5 * 1.5x
@@ -96,9 +96,9 @@ class LandscapePaperFigure(Scene):
         root_dots = VGroup(*[
             Dot(axes.c2p(r.real, r.imag),
                 color=self.COLOR_ROOT,
-                radius=0.25,  # 0.10 * 2.5x
-                stroke_width=2.5,  # 1 * 2.5x
-                stroke_color=BLACK).set_z_index(4)
+                radius=0.10,
+                stroke_width=1,
+                stroke_color=BLACK).set_z_index(7)
             for r in roots
         ])
 
@@ -122,7 +122,7 @@ class LandscapePaperFigure(Scene):
         proj_dots = VGroup(*[
             Dot(axes.c2p(r.real, 0),
                 color=self.COLOR_PROJECTION_POINT,
-                radius=0.20).set_opacity(0.7).set_z_index(5)  # 0.08 * 2.5x
+                radius=0.08).set_opacity(0.7).set_z_index(8)
             for r in roots
         ])
 
@@ -142,7 +142,7 @@ class LandscapePaperFigure(Scene):
         # Dense sampling for smooth curve
         curve = ParametricFunction(
             lambda t: axes.c2p(t, poly_func(t)),
-            t_range=np.array([-2.5, 2.5, 0.002]),  # Match extended x_range
+            t_range=np.array([-1.5, 1.5, 0.002]),  # Match x_range
             color=self.COLOR_CURVE,
             stroke_width=6  # 4 * 1.5x
         ).set_z_index(6)
@@ -159,14 +159,14 @@ class LandscapePaperFigure(Scene):
             f"$N = {N}$ Roots of Unity",
             font_size=44,
             color=text_color
-        ).move_to([text_x, text_y_start, 0], aligned_edge=LEFT).set_z_index(7)
+        ).move_to([text_x, text_y_start, 0], aligned_edge=LEFT).set_z_index(9)
 
         scaling_value = int(scale)
         line2 = Tex(
             f"$\\varphi = {phi_deg:.1f}^\\circ$ | Scaling: $2^{{{N-1}}} = {scaling_value}$",
             font_size=36,
             color=text_color
-        ).next_to(line1, DOWN, aligned_edge=LEFT, buff=0.25).set_z_index(7)
+        ).next_to(line1, DOWN, aligned_edge=LEFT, buff=0.25).set_z_index(9)
 
         # Format polynomial using LaTeX
         poly_str = self.format_poly_latex(scaled_coeffs, N)
@@ -182,13 +182,13 @@ class LandscapePaperFigure(Scene):
             poly_str,
             font_size=poly_font_size,
             color=text_color
-        ).next_to(line2, DOWN, aligned_edge=LEFT, buff=0.25).set_z_index(7)
+        ).next_to(line2, DOWN, aligned_edge=LEFT, buff=0.25).set_z_index(9)
 
         line4 = MathTex(
             f"= T_{{{N}}}(x) + c",
             font_size=36,
             color=text_color
-        ).next_to(line3, DOWN, aligned_edge=LEFT, buff=0.25).set_z_index(7)
+        ).next_to(line3, DOWN, aligned_edge=LEFT, buff=0.25).set_z_index(9)
 
         # ===== Add all elements to scene =====
         self.add(axes, circle, proj_lines, polygon, proj_dots, root_dots, curve)

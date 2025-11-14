@@ -326,15 +326,15 @@ class ChebyshevBase(Scene):
     CIRCLE_STROKE_WIDTH = 3
     AXIS_STROKE_WIDTH = 2.25
     POLYGON_STROKE_WIDTH = 4.5
-    ROOT_RADIUS = 0.25  # ~8pt at standard scale
+    ROOT_RADIUS = 0.10  # ~8pt at standard scale
     PROJECTION_LINE_STROKE_WIDTH = 3
     PROJECTION_LINE_OPACITY = 0.4
-    PROJECTION_POINT_RADIUS = 0.20  # ~6pt
+    PROJECTION_POINT_RADIUS = 0.08  # ~6pt
     PROJECTION_POINT_OPACITY = 0.7
     CURVE_STROKE_WIDTH = 6
 
     # Plot ranges
-    X_RANGE = [-2.5, 2.5, 0.5]
+    X_RANGE = [-1.5, 1.5, 1.0]  # Unit tick marks at -1, 0, 1
     Y_RANGE = [-2.5, 2.5, 0.5]
 
     # Typography
@@ -361,7 +361,7 @@ class ChebyshevBase(Scene):
             x_range=self.X_RANGE,
             y_range=self.Y_RANGE,
             x_length=6,
-            y_length=6,  # 1:1 aspect ratio for square coordinate space
+            y_length=10.67,  # Maintain aspect ratio for portrait
             axis_config={
                 "color": self.COLOR_AXES,
                 "stroke_width": self.AXIS_STROKE_WIDTH,
@@ -434,7 +434,7 @@ class ChebyshevBase(Scene):
                 # Subtle glow effect
                 glow = Dot(pos, radius=self.ROOT_RADIUS * 1.5, color=self.COLOR_ROOT, fill_opacity=0.2)
                 dots.add(glow, dot)
-            return dots.set_z_index(4)
+            return dots.set_z_index(7)
 
         root_dots = always_redraw(get_root_dots)
 
@@ -452,7 +452,7 @@ class ChebyshevBase(Scene):
                     fill_opacity=self.PROJECTION_POINT_OPACITY,
                 )
                 dots.add(dot)
-            return dots.set_z_index(5)
+            return dots.set_z_index(8)
 
         projection_dots = always_redraw(get_projection_dots)
 
@@ -547,8 +547,8 @@ class ChebyshevBase(Scene):
             color=self.COLOR_TEXT,
         ).next_to(line3, DOWN, buff=0.15, aligned_edge=LEFT)
 
-        # Set all text to z=7
-        text_group = VGroup(line1, line2, line3, line4).set_z_index(7)
+        # Set all text to z=9 (above everything including dots)
+        text_group = VGroup(line1, line2, line3, line4).set_z_index(9)
 
         # ===== Add all elements to scene =====
 
