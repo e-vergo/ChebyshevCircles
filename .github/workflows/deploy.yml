@@ -30,13 +30,13 @@ jobs:
           cp index.html _site/
           echo "Static landing page copied successfully"
 
-      - name: Copy visualization GIFs
+      - name: Copy visualization videos
         run: |
-          if [ -d "chebyshev_gifs" ]; then
-            cp -r chebyshev_gifs _site/
-            echo "Visualization GIFs copied successfully"
+          if [ -d "chebyshev_videos" ]; then
+            cp -r chebyshev_videos _site/
+            echo "Visualization videos copied successfully"
           else
-            echo "ERROR: Chebyshev GIFs directory not found"
+            echo "ERROR: Chebyshev videos directory not found"
             exit 1
           fi
 
@@ -177,13 +177,13 @@ jobs:
           cp index.html _site/
           echo "Static landing page copied to full deployment"
 
-      - name: Copy visualization GIFs
+      - name: Copy visualization videos
         run: |
-          if [ -d "chebyshev_gifs" ]; then
-            cp -r chebyshev_gifs _site/
-            echo "Visualization GIFs copied successfully"
+          if [ -d "chebyshev_videos" ]; then
+            cp -r chebyshev_videos _site/
+            echo "Visualization videos copied successfully"
           else
-            echo "WARNING: Chebyshev GIFs directory not found"
+            echo "WARNING: Chebyshev videos directory not found"
           fi
 
       - name: List full deployment contents

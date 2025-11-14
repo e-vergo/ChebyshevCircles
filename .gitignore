@@ -22,3 +22,15 @@ __pycache__/
 blueprint/src/web/
 blueprint/src/print/
 blueprint/*.pdf
+
+# Manim output (videos, images, TeX cache)
+media/
+
+# Old Pillow-based GIFs (to be removed after migration)
+chebyshev_gifs/
+
+# Extracted frames (optional - comment out if you want to commit these)
+chebyshev_frames/
+
+# Manim videos for GitHub Pages (DO commit these for web deployment)
+!chebyshev_videos/

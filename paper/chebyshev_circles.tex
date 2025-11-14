@@ -75,10 +75,11 @@ r_k(\varphi) = \cos\left(\varphi + \frac{2\pi k}{N}\right), \quad k = 0, 1, \ldo
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.7\textwidth]{figures/chebyshev_N5_angle0.png}
+\includegraphics[width=\textwidth]{../paper_figures/paper_figure_N5_phi0.pdf}
 \caption{Geometric construction for $N=5$ at rotation angle $\varphi = 0$.
 Red points on the unit circle represent rotated roots of unity; pink points on the real axis are their projections $r_k(\varphi)$.
-The blue curve shows the scaled polynomial $S_N(x; \varphi)$ with these projections as roots.}
+The blue curve shows the scaled polynomial $S_N(x; \varphi)$ with these projections as roots.
+Generated using Manim Community Edition v0.19.0.}
 \label{fig:N5_construction}
 \end{figure}
 
@@ -578,35 +579,28 @@ $90$ & 16 & 0 & $-20$ & 0 & 5 & $0.000$ \\
 
 \Cref{tab:N5_coeffs} shows numerical coefficients for $N=5$. As predicted by \Cref{thm:main}, only $a_0$ changes with $\varphi$.
 
-\begin{figure}[h]
+\begin{figure}[p]
 \centering
-\begin{subfigure}{0.48\textwidth}
-\includegraphics[width=\textwidth]{figures/chebyshev_N3_angle0.png}
-\caption{$N=3$, $\varphi = 0°$}
-\end{subfigure}
-\hfill
-\begin{subfigure}{0.48\textwidth}
-\includegraphics[width=\textwidth]{figures/chebyshev_N4_angle0.png}
-\caption{$N=4$, $\varphi = 0°$}
-\end{subfigure}
-
-\vspace{0.3cm}
-
-\begin{subfigure}{0.48\textwidth}
-\includegraphics[width=\textwidth]{figures/chebyshev_N5_angle0.png}
-\caption{$N=5$, $\varphi = 0°$}
-\end{subfigure}
-\hfill
-\begin{subfigure}{0.48\textwidth}
-\includegraphics[width=\textwidth]{figures/chebyshev_N6_angle0.png}
-\caption{$N=6$, $\varphi = 0°$}
-\end{subfigure}
-
-\caption{Polynomial constructions for $N \in \{3, 4, 5, 6\}$ at $\varphi = 0°$. In each case, the scaled polynomial $S_N(x; 0)$ equals the Chebyshev polynomial $T_N(x)$ exactly.}
-\label{fig:multiple_N}
+\includegraphics[width=0.95\textwidth]{../paper_figures/paper_figure_N3_phi0.pdf}
+\caption{Polynomial construction for $N = 3$ at $\varphi = 0$. The scaled polynomial $S_3(x; 0)$ equals the Chebyshev polynomial $T_3(x)$ exactly. Generated using Manim Community Edition v0.19.0.}
+\label{fig:N3}
 \end{figure}
 
-\Cref{fig:multiple_N} shows the geometric construction for $N = 3, 4, 5, 6$ at $\varphi = 0$. The characteristic oscillatory structure of Chebyshev polynomials is evident in all cases.
+\begin{figure}[p]
+\centering
+\includegraphics[width=0.95\textwidth]{../paper_figures/paper_figure_N5_phi0.pdf}
+\caption{Polynomial construction for $N = 5$ at $\varphi = 0$. The scaled polynomial $S_5(x; 0)$ equals the Chebyshev polynomial $T_5(x)$ exactly. Generated using Manim Community Edition v0.19.0.}
+\label{fig:N5}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=0.95\textwidth]{../paper_figures/paper_figure_N10_phi0.pdf}
+\caption{Polynomial construction for $N = 10$ at $\varphi = 0$. The scaled polynomial $S_{10}(x; 0)$ equals the Chebyshev polynomial $T_{10}(x)$ exactly. Generated using Manim Community Edition v0.19.0.}
+\label{fig:N10}
+\end{figure}
+
+\Cref{fig:N3,fig:N5,fig:N10} show the geometric construction for $N = 3, 5, 10$ at $\varphi = 0$. The characteristic oscillatory structure of Chebyshev polynomials is evident in all cases, with the polynomial complexity increasing naturally with $N$.
 
 
 \section{Discussion and Extensions}\label{sec:discussion}

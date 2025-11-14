@@ -21,29 +21,27 @@ theorem rotated_roots_yield_chebyshev (N : ℕ) (φ : ℝ) (hN : 0 < N) :
 
 The geometric intuition behind this theorem is best understood through animation. When roots of unity are rotated and projected onto the real axis, the resulting polynomial maintains a fixed shape (the Chebyshev polynomial) while only its constant term varies with the rotation angle.
 
-![N=5 Animation](chebyshev_gifs/chebyshev_animation_N5.gif)
-
-*Animation showing N=5 roots of unity being rotated. The regular pentagon (coral edges) rotates with the roots (red points). Vertical projection lines show how roots project to the real axis (pink points), which serve as roots for the blue polynomial curve. The displayed polynomial equation updates in real-time, showing that the curve's shape remains a 5th-degree Chebyshev polynomial (T₅(x)) while only the constant term c changes with rotation angle φ.*
+**Video Specifications:**
+- **Format:** 1080x1920 @ 60fps (portrait orientation, mobile-friendly)
+- **Duration:** 9 seconds per full rotation cycle
+- **Quality:** Manim Community Edition with anti-aliased graphics and professional LaTeX typography
 
 **Animation Features:**
 - **Regular N-gon:** Visual overlay connecting the N roots of unity, rotating in sync
-- **Normalized Speed:** All animations use consistent angular velocity (9 seconds per full rotation)
-- **Real-time Math:** LaTeX-rendered polynomial equation with exact integer coefficients and 2-decimal constant term
+- **Normalized Speed:** All animations use consistent angular velocity
+- **Real-time Math:** LaTeX-rendered polynomial equation with exact coefficients
 - **Chebyshev Link:** Explicit reference showing S(x) = T_N(x) + c relationship
 - **Scaling Display:** Shows the 2^(N-1) scaling factor applied to the polynomial
+- **High Quality:** Smooth video with anti-aliased graphics and professional typography
 
 <details>
-<summary>More examples (N=3, 4, 6, 12, 13)</summary>
+<summary>Example: N=3 (Triangle)</summary>
 
-| N=3 | N=4 |
-|-----|-----|
-| ![N=3](chebyshev_gifs/chebyshev_animation_N3.gif) | ![N=4](chebyshev_gifs/chebyshev_animation_N4.gif) |
+Animation showing N=3 roots of unity being rotated. The regular triangle (coral edges) rotates with the roots (red points). Vertical projection lines show how roots project to the real axis (pink points), which serve as roots for the blue polynomial curve. The displayed polynomial equation updates in real-time, showing that the curve's shape remains a 3rd-degree Chebyshev polynomial (T₃(x)) while only the constant term c changes with rotation angle φ.
 
-| N=6 | N=12 |
-|-----|------|
-| ![N=6](chebyshev_gifs/chebyshev_animation_N6.gif) | ![N=12](chebyshev_gifs/chebyshev_animation_N12.gif) |
+**View video:** [`chebyshev_videos/chebyshev_N3.mp4`](chebyshev_videos/chebyshev_N3.mp4)
 
-![N=13](chebyshev_gifs/chebyshev_animation_N13.gif)
+See [`chebyshev_videos/MANIFEST.md`](chebyshev_videos/MANIFEST.md) for complete video list and specifications.
 
 </details>
 
@@ -75,7 +73,7 @@ This project comprises four main components:
 1. **Research Paper** (`paper/`) - A traditional mathematics paper presenting the main theorem and complete proofs in classical mathematical notation (14 pages, LaTeX)
 2. **Formal Verification** (`ChebyshevCircles/`) - Complete Lean 4 formalization across 10 modules totaling 3,457 lines
 3. **Blueprint** (`blueprint/`) - Interactive documentation showing the dependency structure and formalization status
-4. **Visualizations** (Python scripts) - Animated GIFs demonstrating the geometric construction
+4. **Visualizations** (Manim animations) - High-quality video animations demonstrating the geometric construction
 
 ### Research Paper
 
@@ -150,7 +148,7 @@ An interactive formalization blueprint is available in the `blueprint/` director
   - Formalization status tracking (which theorems are proven)
   - Cross-references between mathematical exposition and Lean code
   - Interactive navigation through the proof structure
-- **Manual Building:** See [blueprint/README.md](blueprint/README.md) for detailed instructions
+- **Manual Building:** See [blueprint/BP_README.md](blueprint/BP_README.md) for detailed instructions
 
 The blueprint provides a "map" of the formalization, making it easier to understand the proof architecture and see which parts correspond to the paper. It's particularly useful for:
 - Understanding the dependency structure before diving into the code
@@ -168,10 +166,12 @@ The blueprint provides a "map" of the formalization, making it easier to underst
 **Software Requirements:**
 - [Lean 4](https://leanprover.github.io/) (v4.25.0-rc2)
 - [Lake](https://github.com/leanprover/lake) (Lean's build tool, included with Lean)
-- [Python 3.7+](https://www.python.org/) (for visualizations only)
-  - NumPy ≥ 1.20.0
-  - Pillow ≥ 9.0.0
-  - Matplotlib ≥ 3.5.0 (for LaTeX-rendered mathematical notation)
+- [Manim Community Edition](https://www.manim.community/) (v0.19.0+) - for visualizations
+- [FFmpeg](https://ffmpeg.org/) - required by Manim for video rendering
+- [LaTeX](https://www.latex-project.org/) - required by Manim for mathematical typography
+  - macOS: [MacTeX](https://www.tug.org/mactex/) or `brew install --cask mactex-no-gui`
+  - Linux: `sudo apt-get install texlive-full` or equivalent
+  - Windows: [MiKTeX](https://miktex.org/) or [TeX Live](https://www.tug.org/texlive/)
 
 **Expected Build Time:** ~5-10 minutes on first build (compiles Mathlib dependencies)
 
@@ -199,26 +199,37 @@ The blueprint provides a "map" of the formalization, making it easier to underst
    ```
    If successful, all 3,457 lines of proof are verified with no `sorry` statements.
 
-### Python Visualizations
+### Manim Visualizations
 
-1. **Create virtual environment:**
+1. **Install system dependencies:**
+   ```bash
+   # macOS
+   brew install ffmpeg cairo pkg-config
+   brew install --cask mactex-no-gui  # LaTeX required for mathematical typography
+
+   # Linux (Ubuntu/Debian)
+   sudo apt-get install ffmpeg libcairo2-dev pkg-config python3-dev
+   sudo apt-get install texlive-latex-base texlive-fonts-recommended texlive-latex-extra
+
+   # Windows
+   # Install FFmpeg from https://ffmpeg.org/download.html
+   # Install MiKTeX from https://miktex.org/ or TeX Live from https://www.tug.org/texlive/
+   ```
+
+   **Note:** FFmpeg and LaTeX are required by Manim for video rendering and mathematical typography. Without these system dependencies, Manim cannot generate videos.
+
+2. **Create virtual environment and install Python dependencies:**
    ```bash
    python3 -m venv .venv
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   ```
-
-2. **Install dependencies:**
-   ```bash
    pip install -r requirements.txt
    ```
-   This installs NumPy (array operations), Pillow (image generation), and Matplotlib (LaTeX rendering).
+   This installs Manim Community Edition v0.19.0+ along with NumPy and other dependencies.
 
-3. **Generate animations:**
+3. **Verify installation:**
    ```bash
-   python main.py
+   manim --version  # Should show: Manim Community v0.19.0 (or later)
    ```
-   This creates 6 GIF files in `chebyshev_gifs/` (one for each N ∈ {3,4,5,6,12,13}).
-   Each animation takes approximately 1-2 minutes to generate (300 frames with LaTeX rendering).
 
 ## Usage
 
@@ -259,15 +270,43 @@ The Lean 4 VS Code extension shows the proof state (goals and hypotheses) at any
 - `ChebyshevOrthogonality.lean:412` - Discrete orthogonality
 - `NewtonIdentities.lean:156` - Newton's identities application
 
+**Generate animations:**
+```bash
+# Render specific N value
+manim chebyshev_manim.py Chebyshev_N5
+
+# Render at different quality levels
+manim -ql chebyshev_manim.py Chebyshev_N5  # Low quality preview (faster)
+manim -qh chebyshev_manim.py Chebyshev_N5  # High quality (default)
+```
+Videos are saved to `media/videos/chebyshev_manim/Chebyshev_N{N}/Chebyshev_N{N}.mp4`
+
+After rendering, copy the final video to `chebyshev_videos/`:
+```bash
+cp media/videos/chebyshev_manim/Chebyshev_N{N}/Chebyshev_N{N}.mp4 chebyshev_videos/chebyshev_N{N}.mp4
+```
+
+See [`chebyshev_videos/MANIFEST.md`](chebyshev_videos/MANIFEST.md) for available videos and specifications.
+
+**Extract still frames:**
+```bash
+# Single frame at specific angle
+python extract_frames.py --N 5 --phi 0 --format png
+
+# Cardinal angles for paper/presentation
+python extract_frames.py --N 5 --batch-cardinal --all-formats
+
+# All N values at φ=0° (for comparison)
+python extract_frames.py --all-N --phi 0 --format pdf
+```
+Frames are saved to `chebyshev_frames/N{N}/phi_{angle}.{format}`
+
 **Customize visualizations:**
-Edit `main.py` to change:
-- `N_values` (line 298): Which roots of unity to animate
-- `num_frames` (line 303): Animation smoothness (default: 300 frames)
-- `frame_duration` (line 304): Milliseconds per frame (default: 30ms)
-- `plot_x_range`, `plot_y_range` (lines 161-162): Axis ranges
-- `line_spacing` (line 252): Vertical spacing between text lines
-- `text_fontsize` (line 253): Font size for all LaTeX-rendered text
-- Color scheme (lines 164-172): Customize colors for axes, circle, polygon, roots, and curve
+Edit `chebyshev_manim.py` to change:
+- `N_VALUES` (near top of file): Which roots of unity to animate
+- Color scheme: Customize colors for all graphical elements
+- Frame rate/resolution: Edit `manim.cfg`
+- Animation duration: Modify oscillation normalization in scene classes
 
 ## Contributing
 
@@ -319,5 +358,5 @@ Copyright (c) 2025 Eric. All rights reserved.
 ## Acknowledgments
 
 - Built with [Lean 4](https://leanprover.github.io/) and [Mathlib](https://leanprover-community.github.io/)
-- Visualizations created with NumPy and Pillow
+- Visualizations created with [Manim Community Edition](https://www.manim.community/)
 - CI infrastructure via [lean-action](https://github.com/leanprover/lean-action)
