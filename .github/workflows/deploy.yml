@@ -119,7 +119,10 @@ jobs:
             latexmk
 
       - name: Install Python dependencies
-        run: pip install leanblueprint
+        run: pip install -r blueprint/requirements.txt
+
+      - name: Patch plastexdepgraph for hashable nodes
+        run: python3 .github/scripts/patch_plastexdepgraph.py
 
       - name: Build blueprint (web)
         run: |

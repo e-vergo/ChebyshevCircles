@@ -33,4 +33,5 @@ chebyshev_gifs/
 chebyshev_frames/
 
 # Manim videos for GitHub Pages (DO commit these for web deployment)
-!chebyshev_videos/
+!chebyshev_videos/blueprint/lean_decls
+blueprint/src/web.paux
