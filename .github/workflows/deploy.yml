@@ -6,6 +6,15 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      build_mode:
+        description: 'Build mode'
+        required: false
+        default: 'full'
+        type: choice
+        options:
+          - quick
+          - full
 
 permissions:
   contents: read
@@ -17,9 +26,29 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Quick validation - runs first to fail fast
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Lean
+        uses: leanprover/lean-action@v1
+        with:
+          auto-build: false
+
+      - name: Get Lean build cache
+        run: lake exe cache get
+
+      - name: Build Lean project (fail fast)
+        run: lake build
+
   # Fast build - just landing page and GIFs
   build-landing:
     runs-on: ubuntu-latest
+    needs: validate
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -67,9 +96,12 @@ jobs:
           artifact_name: 'github-pages-landing'
 
   # Full build - everything including docs and blueprint
+  # Only runs on manual workflow_dispatch with build_mode='full'
   build-full:
+    if: github.event_name == 'workflow_dispatch' && inputs.build_mode == 'full'
     runs-on: ubuntu-latest
-    needs: deploy-landing
+    timeout-minutes: 60
+    needs: validate
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -105,6 +137,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+          cache: 'pip'
 
       - name: Install system dependencies
         run: |
@@ -205,7 +238,7 @@ jobs:
 
   # Deploy full site
   deploy-full:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.event_name == 'workflow_dispatch' && inputs.build_mode == 'full'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
