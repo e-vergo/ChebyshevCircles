@@ -23,7 +23,7 @@ The geometric intuition behind this theorem is best understood through animation
 
 **Video Specifications:**
 - **Format:** 1080x1920 @ 60fps (portrait orientation, mobile-friendly)
-- **Duration:** 9 seconds per full rotation cycle
+- **Duration:** N × 10 seconds (e.g., 30s for N=3, 50s for N=5, 100s for N=10)
 - **Quality:** Manim Community Edition with anti-aliased graphics and professional LaTeX typography
 
 **Animation Features:**
@@ -290,16 +290,11 @@ See [`chebyshev_videos/MANIFEST.md`](chebyshev_videos/MANIFEST.md) for available
 
 **Extract still frames:**
 ```bash
-# Single frame at specific angle (requires editing script to set N and phi)
-manim -s -qh extract_single_frame.py StaticFrame
-
-# Or use extract_paper_figures.py for paper figures
-python extract_paper_figures.py
-
-# For vector graphics suitable for publications
-python extract_paper_figures_vector.py
+# Extract frames from rendered videos at specified angles
+python extract_frames_from_videos.py
 ```
-Frames are saved to `media/images/extract_single_frame/` or `paper_figures/`
+Frames are saved to `paper_figures/` as both PNG and PDF formats (portrait 1080×1920).
+Edit the script to customize N values and rotation angles (φ in radians).
 
 **Customize visualizations:**
 Edit `chebyshev_manim.py` to change:

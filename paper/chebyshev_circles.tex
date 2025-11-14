@@ -75,11 +75,11 @@ r_k(\varphi) = \cos\left(\varphi + \frac{2\pi k}{N}\right), \quad k = 0, 1, \ldo
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\textwidth]{../paper_figures/paper_figure_N5_phi0.pdf}
-\caption{Geometric construction for $N=5$ at rotation angle $\varphi = 0$.
+\includegraphics[height=0.35\textheight]{../paper_figures/paper_figure_N5_phi0.pdf}
+\caption{Geometric construction for $N=5$ at rotation angle $\varphi = 0$ radians.
 Red points on the unit circle represent rotated roots of unity; pink points on the real axis are their projections $r_k(\varphi)$.
 The blue curve shows the scaled polynomial $S_N(x; \varphi)$ with these projections as roots.
-Generated using Manim Community Edition v0.19.0.}
+Portrait-oriented visualization (1080×1920) generated using Manim Community Edition v0.19.0.}
 \label{fig:N5_construction}
 \end{figure}
 
@@ -103,7 +103,7 @@ S_N(x; \varphi) = T_N(x) + c(\varphi).
 Moreover, all coefficients of $S_N(x; \varphi)$ of degree $k \geq 1$ are independent of $\varphi$ and equal the corresponding coefficients of $T_N(x)$.
 \end{theorem}
 
-\Cref{fig:N5_construction} illustrates the geometric construction for $N=5$. As $\varphi$ varies, the roots of unity rotate around the unit circle, their projections sweep across the real axis, and the polynomial curve maintains its characteristic Chebyshev shape while only the vertical offset changes.
+\Cref{fig:N5_construction} illustrates the geometric construction for $N=5$ at rotation angle $\varphi = 0$ radians. As $\varphi$ varies, the roots of unity rotate around the unit circle, their projections sweep across the real axis, and the polynomial curve maintains its characteristic Chebyshev shape while only the vertical offset changes. This invariance is demonstrated explicitly in \Cref{fig:N5_rotation_sequence}, which shows the construction at four different rotation angles: $\varphi = 0, 0.5, 1.0, \pi/2$ radians. In each panel, the polynomial curve retains the same fifth-degree Chebyshev shape, with only the constant term varying.
 
 \subsection{Significance and context}
 
@@ -581,22 +581,58 @@ $90$ & 16 & 0 & $-20$ & 0 & 5 & $0.000$ \\
 
 \begin{figure}[p]
 \centering
-\includegraphics[width=0.95\textwidth]{../paper_figures/paper_figure_N3_phi0.pdf}
-\caption{Polynomial construction for $N = 3$ at $\varphi = 0$. The scaled polynomial $S_3(x; 0)$ equals the Chebyshev polynomial $T_3(x)$ exactly. Generated using Manim Community Edition v0.19.0.}
+\includegraphics[height=0.4\textheight]{../paper_figures/paper_figure_N3_phi0.pdf}
+\caption{Polynomial construction for $N = 3$ at $\varphi = 0$ radians. The scaled polynomial $S_3(x; 0)$ equals the Chebyshev polynomial $T_3(x)$ exactly. Portrait-oriented visualization (1080×1920) generated using Manim Community Edition v0.19.0.}
 \label{fig:N3}
 \end{figure}
 
 \begin{figure}[p]
 \centering
-\includegraphics[width=0.95\textwidth]{../paper_figures/paper_figure_N5_phi0.pdf}
-\caption{Polynomial construction for $N = 5$ at $\varphi = 0$. The scaled polynomial $S_5(x; 0)$ equals the Chebyshev polynomial $T_5(x)$ exactly. Generated using Manim Community Edition v0.19.0.}
+\includegraphics[height=0.4\textheight]{../paper_figures/paper_figure_N5_phi0.pdf}
+\caption{Polynomial construction for $N = 5$ at $\varphi = 0$ radians. The scaled polynomial $S_5(x; 0)$ equals the Chebyshev polynomial $T_5(x)$ exactly. Portrait-oriented visualization (1080×1920) generated using Manim Community Edition v0.19.0.}
 \label{fig:N5}
 \end{figure}
 
 \begin{figure}[p]
 \centering
-\includegraphics[width=0.95\textwidth]{../paper_figures/paper_figure_N10_phi0.pdf}
-\caption{Polynomial construction for $N = 10$ at $\varphi = 0$. The scaled polynomial $S_{10}(x; 0)$ equals the Chebyshev polynomial $T_{10}(x)$ exactly. Generated using Manim Community Edition v0.19.0.}
+\begin{subfigure}[b]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{../paper_figures/paper_figure_N5_phi0.pdf}
+\caption{$\varphi = 0$ radians}
+\label{fig:N5_rot_a}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{../paper_figures/paper_figure_N5_phi05.pdf}
+\caption{$\varphi = 0.5$ radians}
+\label{fig:N5_rot_b}
+\end{subfigure}
+
+\vspace{1em}
+
+\begin{subfigure}[b]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{../paper_figures/paper_figure_N5_phi10.pdf}
+\caption{$\varphi = 1.0$ radians}
+\label{fig:N5_rot_c}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{../paper_figures/paper_figure_N5_phi157.pdf}
+\caption{$\varphi = \pi/2 \approx 1.57$ radians}
+\label{fig:N5_rot_d}
+\end{subfigure}
+
+\caption{Rotation sequence demonstrating shape invariance for $N=5$. As the roots of unity rotate through angles $\varphi = 0, 0.5, 1.0, \pi/2$ radians, the polynomial $S_5(x; \varphi)$ maintains the characteristic fifth-degree Chebyshev shape $T_5(x) = 16x^5 - 20x^3 + 5x$, with only the constant term $c(\varphi)$ changing. The red points rotate on the unit circle, their pink projections shift on the real axis, and the blue polynomial curve translates vertically while preserving its oscillatory structure.}
+\label{fig:N5_rotation_sequence}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\includegraphics[height=0.4\textheight]{../paper_figures/paper_figure_N10_phi0.pdf}
+\caption{Polynomial construction for $N = 10$ at $\varphi = 0$ radians. The scaled polynomial $S_{10}(x; 0)$ equals the Chebyshev polynomial $T_{10}(x)$ exactly. Portrait-oriented visualization (1080×1920) generated using Manim Community Edition v0.19.0.}
 \label{fig:N10}
 \end{figure}
 
