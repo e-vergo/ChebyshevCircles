@@ -18,46 +18,45 @@ In this project, we present a novel geometric construction of Chebyshev polynomi
 \end{equation}
 These form a regular $N$-gon inscribed in the unit circle, with vertices equally spaced at angular intervals of $2\pi/N$.
 
-When these roots are rotated by an angle $\varphi$ (equivalently, multiplied by $\e^{i\varphi}$) and projected onto the real axis, we obtain the $N$ real numbers
-\begin{equation}\label{eq:rotated_roots}
-r_k(\varphi) = \cos\left(\varphi + \frac{2\pi k}{N}\right), \quad k = 0, 1, \ldots, N-1.
-\end{equation}
+\begin{definition}[Rotated roots]\label{def:rotated_roots}
 \lean{rotatedRootsOfUnity, realProjections, realProjectionsList}
 \leanok
-
-The rotation angle $\varphi$ controls the orientation of the $N$-gon, while the projection onto the real axis yields a multiset of real values in $[-1, 1]$.
-\lean{realProjection_eq_cos, realProjection_mem_Icc}
-\leanok
-As $\varphi$ varies from $0$ to $2\pi$, the projected roots sweep through all possible configurations of $N$ points on $[-1, 1]$ constrained by the symmetry of the roots of unity.
-\lean{rotatedRoot_eq_exp, card_realProjectionsList}
-\leanok
-
-Let $P_N(x; \varphi)$ denote the monic polynomial having these projected values as roots:
-\begin{equation}\label{eq:monic_poly}
-P_N(x; \varphi) = \prod_{k=0}^{N-1} \left(x - \cos\left(\varphi + \frac{2\pi k}{N}\right)\right).
+When the $N$-th roots of unity are rotated by an angle $\varphi$ (equivalently, multiplied by $\e^{i\varphi}$) and projected onto the real axis, we obtain the $N$ real numbers
+\begin{equation}
+r_k(\varphi) = \cos\left(\varphi + \frac{2\pi k}{N}\right), \quad k = 0, 1, \ldots, N-1.
 \end{equation}
+The rotation angle $\varphi$ controls the orientation of the $N$-gon, while the projection yields a multiset of real values in $[-1, 1]$.
+\lean{realProjection_eq_cos, realProjection_mem_Icc, rotatedRoot_eq_exp, card_realProjectionsList}
+\leanok
+\end{definition}
+
+As $\varphi$ varies from $0$ to $2\pi$, the projected roots sweep through all possible configurations of $N$ points on $[-1, 1]$ constrained by the symmetry of the roots of unity.
+
+\begin{definition}[Unscaled polynomial]\label{def:unscaled_poly}
 \lean{polynomialFromRealRoots, unscaledPolynomial}
 \leanok
-\uses{rotatedRootsOfUnity, realProjectionsList}
-
-Since the roots are real and lie in $[-1, 1]$, this polynomial has real coefficients and degree $N$.
-\lean{polynomialFromRealRoots_degree, unscaledPolynomial_degree, unscaledPolynomial_monic}
-\leanok
-Moreover, for each root $r_k(\varphi)$, we have $P_N(r_k(\varphi); \varphi) = 0$.
-\lean{polynomialFromRealRoots_eval_mem, realProjection_mem_list, unscaledPolynomial_eval_at_projection}
-\leanok
-
-To match the normalization of Chebyshev polynomials, which have leading coefficient $2^{N-1}$ for $N \geq 1$, we define the scaled polynomial:
-\begin{equation}\label{eq:scaled_poly}
-S_N(x; \varphi) = 2^{N-1} \cdot P_N(x; \varphi).
+\uses{def:rotated_roots}
+Let $P_N(x; \varphi)$ denote the monic polynomial having the rotated roots as roots:
+\begin{equation}
+P_N(x; \varphi) = \prod_{k=0}^{N-1} \left(x - r_k(\varphi)\right).
 \end{equation}
+Since the roots are real and lie in $[-1, 1]$, this polynomial has real coefficients and degree $N$, and each $r_k(\varphi)$ is a root.
+\lean{polynomialFromRealRoots_degree, unscaledPolynomial_degree, unscaledPolynomial_monic, polynomialFromRealRoots_eval_mem, realProjection_mem_list, unscaledPolynomial_eval_at_projection}
+\leanok
+\end{definition}
+
+\begin{definition}[Scaled polynomial]\label{def:scaled_poly}
 \lean{scaledPolynomial}
 \leanok
-\uses{unscaledPolynomial}
-
-The scaled polynomial inherits the degree and roots from $P_N$:
+\uses{def:unscaled_poly}
+To match the normalization of Chebyshev polynomials, which have leading coefficient $2^{N-1}$ for $N \geq 1$, we define the scaled polynomial:
+\begin{equation}
+S_N(x; \varphi) = 2^{N-1} \cdot P_N(x; \varphi).
+\end{equation}
+The scaled polynomial inherits the degree and roots from $P_N$.
 \lean{scaledPolynomial_degree, scaledPolynomial_leadingCoeff, scaledPolynomial_eval_at_projection}
 \leanok
+\end{definition}
 
 Our main result establishes that this construction yields the Chebyshev polynomial up to an additive constant.
 
@@ -71,7 +70,7 @@ S_N(x; \varphi) = T_N(x) + c(\varphi).
 Moreover, all coefficients of $S_N(x; \varphi)$ of degree $k \geq 1$ are independent of $\varphi$ and equal the corresponding coefficients of $T_N(x)$.
 \lean{constant_term_only_varies}
 \leanok
-\uses{lem:power_sum_invariance, thm:newton_identities, lem:chebyshev_roots, scaledPolynomial}
+\uses{lem:power_sum_invariance, thm:newton_identities, lem:chebyshev_roots, def:scaled_poly}
 
 \begin{remark}
 \textit{(See \href{/docs/ChebyshevCircles/MainTheorem.html\#rotated_roots_yield_chebyshev}{API Documentation} | \href{../paper/chebyshev_circles.pdf}{Paper Theorem 1.1})}
@@ -193,7 +192,6 @@ For any integer $m$,
 \end{equation}
 \lean{sum_primitive_root_pow_mul, sum_pow_primitive_root_mul}
 \leanok
-\uses{primitiveRoots}
 
 \textit{(See \href{/docs/ChebyshevCircles/ChebyshevOrthogonality.html}{API Documentation} | \href{../paper/chebyshev_circles.pdf}{Paper Lemma 2.2})}
 \end{lemma}
@@ -257,7 +255,7 @@ Let $\alpha_1, \ldots, \alpha_N$ and $\beta_1, \ldots, \beta_N$ be two collectio
 then the monic polynomials with roots $\{\alpha_i\}$ and $\{\beta_i\}$ have identical coefficients of degree $k \geq 1$. They may differ in the constant term if $\sum \alpha_i \neq \sum \beta_i$ (i.e., if $p_0$ differs).
 \lean{Multiset.prod_X_sub_C_coeff}
 \leanok
-\uses{thm:newton_identities, esymm_eq_of_psum_eq}
+\uses{thm:newton_identities}
 \end{corollary}
 
 \begin{proof}
@@ -283,7 +281,7 @@ For any $N \geq 2$ and any $\varphi \in \R$,
 \end{equation}
 \lean{realProjectionsList_sum}
 \leanok
-\uses{lem:discrete_orthogonality, Complex.exp_ofReal_mul_I_re, Complex.isPrimitiveRoot_exp}
+\uses{lem:discrete_orthogonality}
 
 \textit{(See Lemma 3.1 in \href{../paper/chebyshev_circles.pdf}{the paper})}
 \end{lemma}
@@ -303,7 +301,7 @@ For any integers $N \geq 1$, $m$ with $0 < m < N$, and any $\varphi \in \R$,
 \begin{equation}
 \sum_{k=0}^{N-1} \cos\left(m\left(\varphi + \frac{2\pi k}{N}\right)\right) = 0.
 \end{equation}
-\uses{lem:discrete_orthogonality, sum_primitive_root_pow_mul}
+\uses{lem:discrete_orthogonality}
 
 \textit{(See Lemma 3.2 in \href{../paper/chebyshev_circles.pdf}{the paper})}
 \end{lemma}
@@ -342,7 +340,7 @@ For odd $m$ with $0 < m < N$,
 \begin{equation}
 \sum_{k=0}^{N-1} \cos\left(m \cdot \frac{(2k + 1)\pi}{2N}\right) = 0.
 \end{equation}
-\uses{lem:discrete_orthogonality, Real.cos_int_mul_pi_sub}
+\uses{lem:discrete_orthogonality}
 \end{lemma}
 
 \begin{proof}[Sketch]
@@ -360,7 +358,7 @@ For even $m$ with $0 < m < N$,
 \end{equation}
 \lean{ChebyshevCircles.binomial_terms_vanish_chebyshev}
 \leanok
-\uses{lem:discrete_orthogonality, sum_exp_chebyshev_angles}
+\uses{lem:discrete_orthogonality}
 \end{lemma}
 
 \begin{proof}[Sketch]
@@ -369,7 +367,7 @@ For even $m = 2\ell$, convert to complex exponentials. The sum becomes
 \Re\left(\e^{i\ell\pi/N} \sum_{k=0}^{N-1} \e^{2\pi i \ell k/N}\right).
 \end{equation}
 Since $0 < \ell < N$, the geometric sum vanishes by Lemma~\ref{lem:discrete_orthogonality}.
-\lean{sum_exp_chebyshev_angles}
+\lean{ChebyshevCircles.sum_exp_chebyshev_angles}
 \leanok
 \end{proof}
 
@@ -447,7 +445,7 @@ is independent of $\varphi$.
 \leanok
 \lean{cos_cube_formula, cos_four_formula, cos_five_formula, cos_six_formula}
 \leanok
-\uses{lem:sum_cos_m_phi_vanishes, sum_cos_pow_eq_sum_binomial, exp_add_exp_pow}
+\uses{lem:sum_cos_m_phi_vanishes}
 
 \textit{(See \href{/docs/ChebyshevCircles/PowerSums.html\#powerSumCos_invariant}{API Documentation} | \href{../paper/chebyshev_circles.pdf}{Paper Theorem 4.1})}
 \end{theorem}
@@ -511,7 +509,7 @@ By Theorem~\ref{lem:power_sum_invariance}, the power sums $p_j = \sum_{k=0}^{N-1
 \lean{constant_term_only_varies}
 \leanok
 For any $N \geq 1$ and any $k$ with $1 \leq k \leq N$, the coefficient of $x^k$ in $S_N(x; \varphi)$ is independent of $\varphi$.
-\uses{lem:power_sum_invariance, thm:newton_identities, esymm_rotated_roots_invariant}
+\uses{lem:power_sum_invariance, thm:newton_identities, lem:esymm_invariant}
 
 \textit{(See Theorem 5.1 in \href{../paper/chebyshev_circles.pdf}{the paper})}
 \end{theorem>
@@ -609,7 +607,7 @@ Let $\xi_k = \cos((2k + 1)\pi/(2N))$ for $k = 0, \ldots, N-1$ denote the roots o
 \end{equation}
 \lean{ChebyshevCircles.sum_cos_pow_chebyshev_binomial}
 \leanok
-\uses{lem:chebyshev_angle_sum_odd, lem:chebyshev_angle_sum_even, exp_add_exp_pow_chebyshev}
+\uses{lem:chebyshev_angle_sum_odd, lem:chebyshev_angle_sum_even}
 
 \textit{(See Lemma 6.1 in \href{../paper/chebyshev_circles.pdf}{the paper})}
 \end{lemma}
