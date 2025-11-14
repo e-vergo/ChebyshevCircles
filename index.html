@@ -373,6 +373,23 @@ theorem rotated_roots_yield_chebyshev (N : ℕ) (φ : ℝ) (hN : 0 < N) :<br>
                 in understanding the mathematical result, its formalization, and the proof architecture.
             </p>
 
+            <h3>Complete Module Reference</h3>
+
+            <p>The formalization is structured across 10 modules (3,457 lines total). Each module's API documentation contains the complete, type-checked Lean code:</p>
+
+            <ul style="margin-left: 2rem; margin-bottom: 1.5rem; line-height: 1.8;">
+                <li><a href="./docs/ChebyshevCircles/RootsOfUnity.html" style="color: #3498db;">RootsOfUnity</a> (108 lines) - Root definitions and list properties</li>
+                <li><a href="./docs/ChebyshevCircles/PolynomialConstruction.html" style="color: #3498db;">PolynomialConstruction</a> (541 lines) - Polynomial construction from roots</li>
+                <li><a href="./docs/ChebyshevCircles/TrigonometricIdentities.html" style="color: #3498db;">TrigonometricIdentities</a> (137 lines) - Trigonometric sum identities</li>
+                <li><a href="./docs/ChebyshevCircles/ChebyshevRoots.html" style="color: #3498db;">ChebyshevRoots</a> (235 lines) - Chebyshev root characterization</li>
+                <li><a href="./docs/ChebyshevCircles/PowerSums.html" style="color: #3498db;">PowerSums</a> (705 lines) - Power sum φ-invariance</li>
+                <li><a href="./docs/ChebyshevCircles/NewtonIdentities.html" style="color: #3498db;">NewtonIdentities</a> (317 lines) - Newton's identities framework</li>
+                <li><a href="./docs/ChebyshevCircles/PolynomialProperties.html" style="color: #3498db;">PolynomialProperties</a> (130 lines) - Polynomial degree and coefficient properties</li>
+                <li><a href="./docs/ChebyshevCircles/PowerSumEquality.html" style="color: #3498db;">PowerSumEquality</a> (273 lines) - General power sum equality</li>
+                <li><a href="./docs/ChebyshevCircles/ChebyshevOrthogonality.html" style="color: #3498db;">ChebyshevOrthogonality</a> (538 lines) - Discrete orthogonality relations</li>
+                <li><a href="./docs/ChebyshevCircles/MainTheorem.html" style="color: #3498db;">MainTheorem</a> (473 lines) - Main theorem and supporting results</li>
+            </ul>
+
             <h3>Quick Links to Major Results</h3>
 
             <p>
@@ -389,13 +406,15 @@ theorem rotated_roots_yield_chebyshev (N : ℕ) (φ : ℝ) (hN : 0 < N) :<br>
 
             <p>
                 <strong>Discrete Orthogonality:</strong>
-                <a href="./docs/ChebyshevCircles/ChebyshevOrthogonality.html" style="color: #3498db;">Module Documentation</a> |
+                <a href="./docs/ChebyshevCircles/ChebyshevOrthogonality.html#sum_exp_chebyshev_angles" style="color: #3498db;">sum_exp_chebyshev_angles</a> |
+                <a href="./docs/ChebyshevCircles/ChebyshevOrthogonality.html" style="color: #3498db;">Module Docs</a> |
                 <a href="./blueprint/sect0005.html" style="color: #3498db;">Blueprint §5</a>
             </p>
 
             <p>
                 <strong>Newton's Identities Application:</strong>
-                <a href="./docs/ChebyshevCircles/NewtonIdentities.html" style="color: #3498db;">Module Documentation</a> |
+                <a href="./docs/ChebyshevCircles/NewtonIdentities.html#esymm_eq_of_psum_eq" style="color: #3498db;">esymm_eq_of_psum_eq</a> |
+                <a href="./docs/ChebyshevCircles/NewtonIdentities.html" style="color: #3498db;">Module Docs</a> |
                 <a href="./blueprint/sect0006.html" style="color: #3498db;">Blueprint §6</a>
             </p>
 
@@ -427,7 +446,9 @@ theorem rotated_roots_yield_chebyshev (N : ℕ) (φ : ℝ) (hN : 0 < N) :<br>
 
             <p>
                 <strong>Discrete Orthogonality (<a href="./docs/ChebyshevCircles/ChebyshevOrthogonality.html" style="color: #3498db;">ChebyshevOrthogonality module</a>):</strong>
-                Proves that ∑<sub>k=0</sub><sup>N-1</sup> exp(2πikm/N) = 0 for 0 < m < N and equals N when m = 0 or N divides m.
+                Proves that ∑<sub>k=0</sub><sup>N-1</sup> exp(2πikm/N) = 0 for 0 < m < N and equals N when m = 0 or N divides m
+                (see <a href="./docs/ChebyshevCircles/ChebyshevOrthogonality.html#sum_exp_chebyshev_angles" style="color: #3498db;">sum_exp_chebyshev_angles</a>,
+                <a href="./docs/ChebyshevCircles/ChebyshevOrthogonality.html#sum_cos_chebyshev_angles_vanishes" style="color: #3498db;">sum_cos_chebyshev_angles_vanishes</a>).
                 This is the discrete analog of continuous Fourier orthogonality on the circle. The proof uses properties of
                 geometric series and the fact that N-th roots of unity satisfy ω<sup>N</sup> = 1. This orthogonality is what
                 causes most terms in the power sum expansion to vanish, leaving only the φ-independent contributions. It connects
@@ -436,10 +457,12 @@ theorem rotated_roots_yield_chebyshev (N : ℕ) (φ : ℝ) (hN : 0 < N) :<br>
 
             <p>
                 <strong>Newton's Identities (<a href="./docs/ChebyshevCircles/NewtonIdentities.html" style="color: #3498db;">NewtonIdentities module</a>):</strong>
-                Establishes the relationship between power sums of roots and elementary symmetric polynomials (coefficients).
+                Establishes the relationship between power sums of roots and elementary symmetric polynomials (coefficients)
+                via <a href="./docs/ChebyshevCircles/NewtonIdentities.html#multiset_newton_identity" style="color: #3498db;">multiset_newton_identity</a>.
                 Specifically, if two monic polynomials have roots with matching power sums S<sub>1</sub>, S<sub>2</sub>, ..., S<sub>N</sub>,
-                then the polynomials have identical coefficients except possibly the constant term. This is the bridge that converts
-                power sum equality into polynomial equality up to a constant. The formalization handles the recursive structure
+                then the polynomials have identical coefficients except possibly the constant term
+                (<a href="./docs/ChebyshevCircles/NewtonIdentities.html#esymm_eq_of_psum_eq" style="color: #3498db;">esymm_eq_of_psum_eq</a>).
+                This is the bridge that converts power sum equality into polynomial equality up to a constant. The formalization handles the recursive structure
                 of Newton's identities and proves the converse direction needed: power sum agreement implies coefficient agreement.
                 This classical result from polynomial algebra is indispensable for connecting root properties to polynomial identity.
             </p>

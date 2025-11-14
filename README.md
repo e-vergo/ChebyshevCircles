@@ -93,43 +93,43 @@ The complete verification is structured into 10 modules totaling 3,457 lines of 
 
 | Module | Lines | Purpose |
 |--------|-------|---------|
-| [RootsOfUnity.lean](ChebyshevCircles/RootsOfUnity.lean) | 108 | Root definitions and list properties |
-| [PolynomialConstruction.lean](ChebyshevCircles/PolynomialConstruction.lean) | 541 | Polynomial construction from roots |
-| [TrigonometricIdentities.lean](ChebyshevCircles/TrigonometricIdentities.lean) | 137 | Trigonometric sum identities |
-| [ChebyshevRoots.lean](ChebyshevCircles/ChebyshevRoots.lean) | 235 | Chebyshev root characterization |
-| [PowerSums.lean](ChebyshevCircles/PowerSums.lean) | 705 | Power sum φ-invariance |
-| [NewtonIdentities.lean](ChebyshevCircles/NewtonIdentities.lean) | 317 | Newton's identities framework |
-| [PolynomialProperties.lean](ChebyshevCircles/PolynomialProperties.lean) | 130 | Polynomial degree and coefficient properties |
-| [PowerSumEquality.lean](ChebyshevCircles/PowerSumEquality.lean) | 273 | General power sum equality |
-| [ChebyshevOrthogonality.lean](ChebyshevCircles/ChebyshevOrthogonality.lean) | 538 | Discrete orthogonality relations |
-| [MainTheorem.lean](ChebyshevCircles/MainTheorem.lean) | 473 | Main theorem and supporting results |
+| [RootsOfUnity.lean](ChebyshevCircles/RootsOfUnity.lean) ([docs](https://e-vergo.github.io/ChebyshevCircles/docs/ChebyshevCircles/RootsOfUnity.html)) | 108 | Root definitions and list properties |
+| [PolynomialConstruction.lean](ChebyshevCircles/PolynomialConstruction.lean) ([docs](https://e-vergo.github.io/ChebyshevCircles/docs/ChebyshevCircles/PolynomialConstruction.html)) | 541 | Polynomial construction from roots |
+| [TrigonometricIdentities.lean](ChebyshevCircles/TrigonometricIdentities.lean) ([docs](https://e-vergo.github.io/ChebyshevCircles/docs/ChebyshevCircles/TrigonometricIdentities.html)) | 137 | Trigonometric sum identities |
+| [ChebyshevRoots.lean](ChebyshevCircles/ChebyshevRoots.lean) ([docs](https://e-vergo.github.io/ChebyshevCircles/docs/ChebyshevCircles/ChebyshevRoots.html)) | 235 | Chebyshev root characterization |
+| [PowerSums.lean](ChebyshevCircles/PowerSums.lean) ([docs](https://e-vergo.github.io/ChebyshevCircles/docs/ChebyshevCircles/PowerSums.html)) | 705 | Power sum φ-invariance |
+| [NewtonIdentities.lean](ChebyshevCircles/NewtonIdentities.lean) ([docs](https://e-vergo.github.io/ChebyshevCircles/docs/ChebyshevCircles/NewtonIdentities.html)) | 317 | Newton's identities framework |
+| [PolynomialProperties.lean](ChebyshevCircles/PolynomialProperties.lean) ([docs](https://e-vergo.github.io/ChebyshevCircles/docs/ChebyshevCircles/PolynomialProperties.html)) | 130 | Polynomial degree and coefficient properties |
+| [PowerSumEquality.lean](ChebyshevCircles/PowerSumEquality.lean) ([docs](https://e-vergo.github.io/ChebyshevCircles/docs/ChebyshevCircles/PowerSumEquality.html)) | 273 | General power sum equality |
+| [ChebyshevOrthogonality.lean](ChebyshevCircles/ChebyshevOrthogonality.lean) ([docs](https://e-vergo.github.io/ChebyshevCircles/docs/ChebyshevCircles/ChebyshevOrthogonality.html)) | 538 | Discrete orthogonality relations |
+| [MainTheorem.lean](ChebyshevCircles/MainTheorem.lean) ([docs](https://e-vergo.github.io/ChebyshevCircles/docs/ChebyshevCircles/MainTheorem.html)) | 473 | Main theorem and supporting results |
 
 ## Proof Strategy
 
 The verification follows a carefully structured approach:
 
 **Step 1: Root Characterization**
-Both the rotated roots and Chebyshev roots can be expressed as cosines of equally-spaced angles (modulo phase shifts). This parallel structure is established in `ChebyshevRoots.lean`.
+Both the rotated roots and Chebyshev roots can be expressed as cosines of equally-spaced angles (modulo phase shifts). This parallel structure is established in [`ChebyshevRoots.lean`](https://e-vergo.github.io/ChebyshevCircles/docs/ChebyshevCircles/ChebyshevRoots.html).
 
 **Step 2: Power Sum Invariance**
-The key insight: For any polynomial, power sums of its roots determine all coefficients (via Newton's identities). We prove in `PowerSums.lean` that:
+The key insight: For any polynomial, power sums of its roots determine all coefficients (via Newton's identities). We prove in [`PowerSums.lean`](https://e-vergo.github.io/ChebyshevCircles/docs/ChebyshevCircles/PowerSums.html) that:
 ```lean
 ∑_{k=0}^{N-1} cos(φ + 2πk/N)^m = ∑_{k=0}^{N-1} cos(2πk/N)^m
 ```
-for all m > 0. This shows the rotated roots and unrotated roots have identical power sums (except m=0).
+for all m > 0 ([`powerSumCos_invariant`](https://e-vergo.github.io/ChebyshevCircles/docs/ChebyshevCircles/PowerSums.html#powerSumCos_invariant)). This shows the rotated roots and unrotated roots have identical power sums (except m=0).
 
 **Step 3: Discrete Orthogonality**
-The power sum equality relies on discrete orthogonality of complex exponentials over N-th roots of unity. `ChebyshevOrthogonality.lean` proves:
+The power sum equality relies on discrete orthogonality of complex exponentials over N-th roots of unity. [`ChebyshevOrthogonality.lean`](https://e-vergo.github.io/ChebyshevCircles/docs/ChebyshevCircles/ChebyshevOrthogonality.html) proves:
 ```lean
 ∑_{k=0}^{N-1} exp(i·j·2πk/N) = 0  (when j ≠ 0 mod N)
 ```
-This is the discrete analog of continuous Fourier orthogonality.
+([`sum_exp_chebyshev_angles`](https://e-vergo.github.io/ChebyshevCircles/docs/ChebyshevCircles/ChebyshevOrthogonality.html#sum_exp_chebyshev_angles)). This is the discrete analog of continuous Fourier orthogonality.
 
 **Step 4: Newton's Identities**
-`NewtonIdentities.lean` implements the bridge between power sums and elementary symmetric polynomials (which determine polynomial coefficients). For polynomials of the same degree with identical power sums (except the 0-th), all coefficients match except the constant term.
+[`NewtonIdentities.lean`](https://e-vergo.github.io/ChebyshevCircles/docs/ChebyshevCircles/NewtonIdentities.html) implements the bridge between power sums and elementary symmetric polynomials (which determine polynomial coefficients). For polynomials of the same degree with identical power sums (except the 0-th), all coefficients match except the constant term ([`esymm_eq_of_psum_eq`](https://e-vergo.github.io/ChebyshevCircles/docs/ChebyshevCircles/NewtonIdentities.html#esymm_eq_of_psum_eq)).
 
 **Step 5: Assembly**
-`MainTheorem.lean` combines these results: since scaled polynomials from rotated and unrotated roots have identical non-constant coefficients and the same degree, they differ only by a constant. The unrotated case (φ=0) is shown to equal T_N.
+[`MainTheorem.lean`](https://e-vergo.github.io/ChebyshevCircles/docs/ChebyshevCircles/MainTheorem.html) combines these results: since scaled polynomials from rotated and unrotated roots have identical non-constant coefficients and the same degree, they differ only by a constant ([`rotated_roots_yield_chebyshev`](https://e-vergo.github.io/ChebyshevCircles/docs/ChebyshevCircles/MainTheorem.html#rotated_roots_yield_chebyshev)). The unrotated case (φ=0) is shown to equal T_N.
 
 **Technical Challenges Overcome:**
 - Handling complex/real conversions in power sum computations
@@ -259,16 +259,16 @@ code ChebyshevCircles/MainTheorem.lean
 # Check a specific module
 lake build ChebyshevCircles.PowerSums
 
-# View generated documentation (after GitHub Pages deployment)
-# Navigate to: https://e-vergo.github.io/ChebyshevCircles/
+# View API documentation online
+open https://e-vergo.github.io/ChebyshevCircles/docs/
 ```
 
 **Examine proof states:**
 The Lean 4 VS Code extension shows the proof state (goals and hypotheses) at any cursor position. Key theorems to explore:
-- `MainTheorem.lean:446` - Main theorem statement
-- `PowerSums.lean:287` - Power sum invariance
-- `ChebyshevOrthogonality.lean:412` - Discrete orthogonality
-- `NewtonIdentities.lean:156` - Newton's identities application
+- `MainTheorem.lean:446` - Main theorem statement ([API docs](https://e-vergo.github.io/ChebyshevCircles/docs/ChebyshevCircles/MainTheorem.html#rotated_roots_yield_chebyshev))
+- `PowerSums.lean:287` - Power sum invariance ([API docs](https://e-vergo.github.io/ChebyshevCircles/docs/ChebyshevCircles/PowerSums.html#powerSumCos_invariant))
+- `ChebyshevOrthogonality.lean:412` - Discrete orthogonality ([API docs](https://e-vergo.github.io/ChebyshevCircles/docs/ChebyshevCircles/ChebyshevOrthogonality.html#sum_exp_chebyshev_angles))
+- `NewtonIdentities.lean:156` - Newton's identities application ([API docs](https://e-vergo.github.io/ChebyshevCircles/docs/ChebyshevCircles/NewtonIdentities.html#esymm_eq_of_psum_eq))
 
 **Generate animations:**
 ```bash
