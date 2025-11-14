@@ -337,6 +337,10 @@ class ChebyshevBase(Scene):
     X_RANGE = [-1.5, 1.5, 1.0]  # Unit tick marks at -1, 0, 1
     Y_RANGE = [-2.5, 2.5, 0.5]
 
+    # Axes dimensions
+    X_LENGTH = 6
+    Y_LENGTH = 10.67  # Calculated for circular unit circle with default ranges
+
     # Typography
     TEXT_LINE_SPACING = 0.65  # ~55px at portrait scale
     TEXT_TOP_MARGIN = 0.5    # ~40px
@@ -360,8 +364,8 @@ class ChebyshevBase(Scene):
         axes = Axes(
             x_range=self.X_RANGE,
             y_range=self.Y_RANGE,
-            x_length=6,
-            y_length=10.67,  # Maintain aspect ratio for portrait
+            x_length=self.X_LENGTH,
+            y_length=self.Y_LENGTH,  # Maintain aspect ratio for portrait
             axis_config={
                 "color": self.COLOR_AXES,
                 "stroke_width": self.AXIS_STROKE_WIDTH,
@@ -618,3 +622,12 @@ class Chebyshev_N15(ChebyshevBase):
 
 class Chebyshev_N20(ChebyshevBase):
     N = 20
+
+
+class Chebyshev_N3_Extended(ChebyshevBase):
+    """N=3 with extended Y range [-2.2, 3.5] for better visualization."""
+    N = 3
+
+    # Override Y range and dimensions for circular unit circle
+    Y_RANGE = [-2.2, 3.5, 0.5]
+    Y_LENGTH = 11.4  # Calculated: 6 × (5.7 / 3.0) for circular unit circle
