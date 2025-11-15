@@ -197,8 +197,8 @@ jobs:
       - name: Copy blueprint to deployment directory
         run: |
           mkdir -p _site/blueprint
-          if [ -d "blueprint/src/web" ] && [ "$(ls -A blueprint/src/web)" ]; then
-            cp -r blueprint/src/web/* _site/blueprint/
+          if [ -d "blueprint/web" ] && [ "$(ls -A blueprint/web)" ]; then
+            cp -r blueprint/web/* _site/blueprint/
             echo "Blueprint web files copied successfully"
           else
             echo "ERROR: Blueprint web build not found or empty"
