@@ -194,6 +194,11 @@ jobs:
           cd blueprint
           leanblueprint checkdecls || echo "Some declarations could not be verified"
 
+      - name: Fix dependency graph for browser back/forward cache
+        run: |
+          python3 .github/scripts/fix_dep_graph_bfcache.py blueprint/web/dep_graph_document.html
+          echo "Dependency graph patched for bfcache handling"
+
       - name: Copy blueprint to deployment directory
         run: |
           mkdir -p _site/blueprint
