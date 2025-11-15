@@ -210,6 +210,80 @@
             text-decoration: underline;
         }
 
+        .acknowledgments {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .ack-card {
+            border: 2px solid;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            display: block;
+            color: inherit;
+        }
+
+        .ack-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .ack-card.girls-angle {
+            background: #fef5e7;
+            border-color: #d4a574;
+        }
+
+        .ack-card.mastodon {
+            background: #f3f0ff;
+            border-color: #6364ff;
+        }
+
+        .ack-card h3 {
+            margin-top: 0;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ack-card.girls-angle h3 {
+            color: #8b6914;
+        }
+
+        .ack-card.mastodon h3 {
+            color: #6364ff;
+        }
+
+        .ack-card p {
+            font-size: 0.95rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .ack-card .ack-label {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            margin-top: 0.5rem;
+        }
+
+        .ack-card.girls-angle .ack-label {
+            background: #d4a574;
+            color: #fff;
+        }
+
+        .ack-card.mastodon .ack-label {
+            background: #6364ff;
+            color: #fff;
+        }
+
         .stats {
             display: flex;
             gap: 2rem;
@@ -324,7 +398,7 @@ theorem rotated_roots_yield_chebyshev (N : ℕ) (φ : ℝ) (hN : 0 < N) :<br>
                     <p>Complete Lean 4 formalization across 10 modules with full proofs.</p>
                     <div class="stats">
                         <div class="stat">
-                            <div class="stat-number">3,457</div>
+                            <div class="stat-number">3,498</div>
                             <div class="stat-label">Lines of Proof</div>
                         </div>
                         <div class="stat">
@@ -375,7 +449,7 @@ theorem rotated_roots_yield_chebyshev (N : ℕ) (φ : ℝ) (hN : 0 < N) :<br>
 
             <h3>Complete Module Reference</h3>
 
-            <p>The formalization is structured across 10 modules (3,457 lines total). Each module's API documentation contains the complete, type-checked Lean code:</p>
+            <p>The formalization is structured across 10 modules (3,498 lines total). Each module's API documentation contains the complete, type-checked Lean code:</p>
 
             <ul style="margin-left: 2rem; margin-bottom: 1.5rem; line-height: 1.8;">
                 <li><a href="./docs/ChebyshevCircles/RootsOfUnity.html" style="color: #3498db;">RootsOfUnity</a> (108 lines) - Root definitions and list properties</li>
@@ -491,6 +565,41 @@ lake build
                 check the <a href="./docs/">API Documentation</a> for detailed proofs, or view the
                 <a href="./graph/">Dependency Graph</a> to understand the proof structure.
             </p>
+
+            <h2>Acknowledgments & Inspiration</h2>
+
+            <div class="acknowledgments">
+                <a href="https://girlsangle.wordpress.com/2016/12/01/chebyshev-polynomials-of-the-first-kind/" class="ack-card girls-angle" target="_blank" rel="noopener noreferrer">
+                    <h3>
+                        <span>🎓</span>
+                        <span>Early Visualization</span>
+                    </h3>
+                    <p>
+                        The <strong>Girls' Angle</strong> blog post "Chebyshev Polynomials of the First Kind" (December 2016)
+                        appears to be the first published visualization and animation of this geometric connection between
+                        rotated roots of unity and Chebyshev polynomials.
+                    </p>
+                    <p style="font-size: 0.85rem; color: #666; margin-bottom: 0;">
+                        This foundational work demonstrated the visual beauty of the relationship years before this formal verification.
+                    </p>
+                    <span class="ack-label">Prior Art</span>
+                </a>
+
+                <a href="https://mastodon.social/@acegikmo/109404591565628134" class="ack-card mastodon" target="_blank" rel="noopener noreferrer">
+                    <h3>
+                        <span>💡</span>
+                        <span>Initial Inspiration</span>
+                    </h3>
+                    <p>
+                        A <strong>Mastodon post</strong> by @acegikmo (November 2022) on visual patterns in rotated roots of unity
+                        sparked the investigation that led to this formalization.
+                    </p>
+                    <p style="font-size: 0.85rem; color: #666; margin-bottom: 0;">
+                        Sometimes the most profound mathematical journeys begin with a single compelling visualization shared on social media.
+                    </p>
+                    <span class="ack-label">Inspiration Source</span>
+                </a>
+            </div>
         </div>
     </div>
 </body>
