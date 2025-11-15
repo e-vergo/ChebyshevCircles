@@ -3,7 +3,6 @@ Copyright (c) 2025 Eric. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Eric
 -/
-import Mathlib.RingTheory.RootsOfUnity.Complex
 import Mathlib.Analysis.Complex.Exponential
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 
@@ -17,9 +16,7 @@ to Chebyshev polynomials of the first kind.
 
 ## Main definitions
 
-* `rotatedRootsOfUnity`: The N-th roots of unity rotated by an angle φ
-* `realProjections`: The real parts of rotated roots of unity
-* `realProjectionsList`: A list version for computational purposes
+* `realProjectionsList`: Real projections of N-th rotated roots of unity as a list
 
 ## Main results
 
@@ -36,16 +33,6 @@ noncomputable section
 open Complex Real
 open scoped Real
 
-/-- The N-th primitive roots of unity rotated by angle φ in the complex plane.
-Each root ω is multiplied by exp(iφ), giving elements of the form exp(i(φ + 2πk/N)). -/
-def rotatedRootsOfUnity (N : ℕ) (φ : ℝ) : Finset ℂ :=
-  (primitiveRoots N ℂ).image (fun ω => exp (φ * I) * ω)
-
-/-- The real parts (projections onto the real axis) of the N-th rotated roots of unity.
-These are the values cos(φ + 2πk/N) for k ranging over the primitive roots. -/
-def realProjections (N : ℕ) (φ : ℝ) : Finset ℝ :=
-  (rotatedRootsOfUnity N φ).image (fun z => z.re)
-
 /-- A list of the N-th roots of unity rotated by φ.
 Computed as exp(i(φ + 2πk/N)) for k ∈ [0, N), providing an ordered list. -/
 def rotatedRootsOfUnityList (N : ℕ) (φ : ℝ) : List ℂ :=
@@ -55,11 +42,6 @@ def rotatedRootsOfUnityList (N : ℕ) (φ : ℝ) : List ℂ :=
 Values are cos(φ + 2πk/N) for k ∈ [0, N), ordered for computational use. -/
 def realProjectionsList (N : ℕ) (φ : ℝ) : List ℝ :=
   (List.range N).map (fun (k : ℕ) => Real.cos (φ + 2 * π * k / N))
-
-/-- The k-th rotated root of unity has a specific exponential form. -/
-theorem rotatedRoot_eq_exp (N : ℕ) (φ : ℝ) (k : ℕ) (hk : k < N) :
-    ∃ i < N, exp (I * (φ + 2 * π * i / N)) = exp (I * (φ + 2 * π * k / N)) := by
-  exact ⟨k, hk, rfl⟩
 
 /-- The real projection of a rotated root of unity equals cos(φ + 2πk/N). -/
 theorem realProjection_eq_cos (N : ℕ) (φ : ℝ) (k : ℕ) (_hk : k < N) :
